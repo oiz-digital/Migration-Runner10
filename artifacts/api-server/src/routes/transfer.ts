@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and, sql, desc } from "drizzle-orm";
-import { db, walletsTable, coinsTable, transfersTable } from "@workspace/db";
+import { db, walletsTable, coinsTable, transfersTable, walletLedgerTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/auth";
 
 const router: IRouter = Router();
@@ -58,6 +58,30 @@ router.post("/transfer", requireAuth, async (req, res): Promise<void> => {
       const [trf] = await tx.insert(transfersTable).values({
         userId, fromWallet, toWallet, coinId: coin.id, amount: String(amt), status: "completed",
       }).returning();
+
+      // Write wallet ledger: one debit (transfer_out) + one credit (transfer_in)
+      const srcBalBefore = parseFloat(src.balance ?? "0");
+      const dstBalBefore = parseFloat(dstExisting?.balance ?? "0");
+      const note = `${fromWallet} → ${toWallet}`;
+      await tx.insert(walletLedgerTable).values([
+        {
+          userId, coinId: coin.id, walletType: fromWallet,
+          type: "transfer_out", amount: String(-amt),
+          balanceBefore: String(srcBalBefore),
+          balanceAfter: String(srcBalBefore - amt),
+          refType: "transfer", refId: String(trf.id),
+          note,
+        },
+        {
+          userId, coinId: coin.id, walletType: toWallet,
+          type: "transfer_in", amount: String(amt),
+          balanceBefore: String(dstBalBefore),
+          balanceAfter: String(dstBalBefore + amt),
+          refType: "transfer", refId: String(trf.id),
+          note,
+        },
+      ]);
+
       return trf;
     });
     res.status(201).json(result);
