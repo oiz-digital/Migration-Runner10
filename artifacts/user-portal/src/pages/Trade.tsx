@@ -65,6 +65,10 @@ function fmtNum(n: number, digits = 2): string {
   if (!isFinite(n) || n === 0) return "—";
   return n.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
 }
+function fmtBal(n: number, digits = 2): string {
+  if (!isFinite(n)) return "—";
+  return n.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
 function fmtPrice(n: number, quote: string): string {
   if (!isFinite(n) || n === 0) return "—";
   const inr = quote === "INR";
@@ -1048,7 +1052,9 @@ export default function Trade() {
             <div className="text-[11px] text-muted-foreground space-y-1 border-t border-border pt-3">
               <SummaryRow label="Available">
                 <span className="tabular-nums font-mono text-foreground">
-                  {side === "buy" ? `${fmtNum(availBuy, 2)} ${quote}` : `${fmtNum(availSell, 6)} ${base}`}
+                  {user
+                    ? (side === "buy" ? `${fmtBal(availBuy, 2)} ${quote}` : `${fmtBal(availSell, 6)} ${base}`)
+                    : `— ${side === "buy" ? quote : base}`}
                 </span>
                 {user && (
                   <Link href="/wallet" className="ml-1.5 text-primary hover:underline inline-flex items-center gap-0.5">
