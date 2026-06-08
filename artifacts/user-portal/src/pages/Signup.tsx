@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { useAuth, type AuthChallenge } from "@/lib/auth";
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
@@ -28,6 +28,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -401,26 +402,26 @@ export default function Signup() {
                         (optional)
                       </span>
                     </Label>
-                    <div className="relative">
-                      <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
-                        <Phone className="h-4 w-4" />
-                      </span>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        autoComplete="tel"
-                        placeholder="+91 98765 43210"
-                        className="pl-10 h-11"
-                        aria-invalid={!!form.formState.errors.phone}
-                        data-testid="input-phone"
-                        {...form.register("phone", {
-                          pattern: {
-                            value: /^[+]?[\d\s\-()]{6,}$/,
-                            message: "Enter a valid phone number",
-                          },
-                        })}
-                      />
-                    </div>
+                    <Controller
+                      name="phone"
+                      control={form.control}
+                      rules={{
+                        validate: (v: string) =>
+                          !v?.trim() ||
+                          /^[+]?[\d\s\-()]{6,}$/.test(v.trim()) ||
+                          "Enter a valid phone number",
+                      }}
+                      render={({ field }) => (
+                        <PhoneInput
+                          id="phone"
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          aria-invalid={!!form.formState.errors.phone}
+                          data-testid="input-phone"
+                        />
+                      )}
+                    />
                     {form.formState.errors.phone && (
                       <p
                         className="text-xs text-destructive"

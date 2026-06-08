@@ -13,6 +13,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
@@ -247,7 +248,7 @@ export default function Profile() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="phone">Phone</Label>
-              <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 9xxx" data-testid="input-phone" />
+              <PhoneInput id="phone" value={phone} onChange={setPhone} data-testid="input-phone" />
             </div>
             <div className="sm:col-span-3 flex justify-end gap-2">
               <Button variant="ghost" onClick={() => setEditing(false)}>Cancel</Button>
