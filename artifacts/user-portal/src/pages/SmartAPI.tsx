@@ -7,7 +7,7 @@ import {
   TrendingUp, TrendingDown, RefreshCw, PlugZap, X, Search,
   Shield, AlertTriangle, CheckCircle2, Wifi, WifiOff, Eye, EyeOff,
   BarChart3, BookOpen, Wallet, List, Activity, ChevronRight,
-  ArrowUpRight, ArrowDownRight, Clock, Info, Zap, LogOut,
+  ArrowUpRight, ArrowDownRight, Clock, Info, Zap, LogOut, Bot,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -844,6 +844,29 @@ type TabId = typeof TABS[number]["id"];
 export default function SmartAPI() {
   const { user } = useAuth();
   const qc = useQueryClient();
+
+  const COMING_SOON_SMARTAPI: boolean = true;
+  if (COMING_SOON_SMARTAPI) {
+    return (
+      <div className="min-h-[calc(100vh-56px)] flex flex-col items-center justify-center gap-6 px-4 text-center bg-background">
+        <div className="w-20 h-20 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
+          <Bot className="w-9 h-9 text-violet-400" />
+        </div>
+        <div className="max-w-sm space-y-2">
+          <p className="text-xs font-bold uppercase tracking-widest text-violet-400">Coming Soon</p>
+          <h1 className="text-3xl font-bold tracking-tight">Smart API</h1>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Connect your Angel One broker account for automated trading, live holdings, and real-time P&amp;L — coming soon to Zebvix.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-800/60 border border-zinc-700/50">
+          <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
+          <span className="text-xs text-zinc-400 font-medium">Launching soon on Zebvix</span>
+        </div>
+      </div>
+    );
+  }
+
   const [showModal, setShowModal] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("holdings");
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
