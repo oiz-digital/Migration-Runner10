@@ -46,7 +46,12 @@ import {
   Sparkles,
   Wallet as WalletIcon,
   Building2,
+  QrCode,
+  Download,
+  ScanLine,
+  Shield,
 } from "lucide-react";
+import QRCodeSVG from "react-qr-code";
 
 const HIDE_KEY = "zebvix:wallet:hide";
 
@@ -1190,6 +1195,8 @@ function DepositDialog({
   const [selectedChain, setSelectedChain] = useState("");
   const [copied, setCopied] = useState(false);
   const [addrExpanded, setAddrExpanded] = useState(false);
+  const [showQr, setShowQr] = useState(true);
+  const [qrDownloading, setQrDownloading] = useState(false);
 
   const enabledQ = useQuery<{ currency: string; name?: string; networks: string[] }[]>({
     queryKey: ["enabled-coins", type === "FIAT" ? "fiat" : "spot", "deposit"],
@@ -1260,6 +1267,28 @@ function DepositDialog({
       toast.success("Memo copied");
     } catch {
       toast.error("Copy failed");
+    }
+  };
+
+  const downloadQr = async () => {
+    if (!activeNet?.address) return;
+    setQrDownloading(true);
+    try {
+      const svg = document.getElementById("cryptox-deposit-qr");
+      if (!svg) { toast.error("QR not visible"); return; }
+      const serialized = new XMLSerializer().serializeToString(svg);
+      const blob = new Blob([serialized], { type: "image/svg+xml" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `deposit-${currency}-${activeNet.chain}.svg`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("QR saved");
+    } catch {
+      toast.error("Download failed");
+    } finally {
+      setQrDownloading(false);
     }
   };
 
@@ -1404,25 +1433,67 @@ function DepositDialog({
                   {/* Deposit address panel */}
                   {activeNet?.address && (
                     <div
-                      className="rounded-xl border p-4 space-y-3"
+                      className="rounded-xl border p-4 space-y-4"
                       style={{ borderColor: brand?.border ?? "hsl(var(--border))", backgroundColor: `${brand?.bg ?? ""}` }}
                     >
-                      {/* Address header */}
+                      {/* Header row */}
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: brand?.color ?? "#94a3b8" }}>
                           Your Deposit Address
                         </span>
                         <button
-                          className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-                          onClick={() => setAddrExpanded(p => !p)}
+                          className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-background/40"
+                          onClick={() => setShowQr(p => !p)}
                         >
-                          {addrExpanded ? "Compact" : "Full"}
+                          <QrCode className="h-3 w-3" />
+                          {showQr ? "Hide QR" : "Show QR"}
                         </button>
                       </div>
 
+                      {/* QR Code */}
+                      {showQr && (
+                        <div className="flex flex-col items-center gap-3 pb-1">
+                          <div
+                            className="p-3 rounded-2xl bg-white shadow-lg cursor-pointer hover:opacity-90 transition-opacity"
+                            style={{ border: `3px solid ${brand?.color ?? "#f0b429"}`, boxShadow: `0 4px 24px ${brand?.color ?? "#f0b429"}30` }}
+                            onClick={copyAddr}
+                            title="Click to copy address"
+                          >
+                            <QRCodeSVG
+                              id="cryptox-deposit-qr"
+                              value={activeNet.address}
+                              size={168}
+                              fgColor="#111827"
+                              bgColor="#ffffff"
+                              style={{ display: "block" }}
+                            />
+                          </div>
+                          <p className="text-[11px] text-muted-foreground">Click QR to copy · Scan with your wallet app</p>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={copyAddr}
+                              className="flex items-center gap-1.5 text-xs px-3.5 py-2 rounded-lg border border-border/60 bg-background/40 hover:bg-background/80 transition-colors font-medium"
+                            >
+                              {copied
+                                ? <><CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" /> Copied!</>
+                                : <><Copy className="h-3.5 w-3.5" /> Copy Address</>}
+                            </button>
+                            <button
+                              onClick={downloadQr}
+                              disabled={qrDownloading}
+                              className="flex items-center gap-1.5 text-xs px-3.5 py-2 rounded-lg border border-border/60 bg-background/40 hover:bg-background/80 transition-colors font-medium disabled:opacity-50"
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                              {qrDownloading ? "Saving…" : "Save QR"}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
                       {/* Address display */}
-                      <div className="relative group">
-                        <div className="rounded-lg bg-background/60 border border-border/50 p-3 pr-12">
+                      <div className="relative">
+                        <div className="rounded-lg bg-background/60 border border-border/50 p-3 pr-20">
+                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 font-semibold">Address</div>
                           <code
                             className="font-mono text-xs break-all leading-relaxed select-all"
                             data-testid="text-deposit-address"
@@ -1430,42 +1501,42 @@ function DepositDialog({
                             {addrExpanded
                               ? activeNet.address
                               : activeNet.address.startsWith("0x")
-                                ? activeNet.address.slice(0, 8) + " ···· " + activeNet.address.slice(-8)
-                                : activeNet.address.slice(0, 12) + " ···· " + activeNet.address.slice(-8)
+                                ? activeNet.address.slice(0, 10) + " ···· " + activeNet.address.slice(-8)
+                                : activeNet.address.slice(0, 14) + " ···· " + activeNet.address.slice(-8)
                             }
                           </code>
                         </div>
-                        <button
-                          onClick={copyAddr}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150 hover:bg-muted"
-                          style={copied ? { backgroundColor: `${brand?.bg ?? ""}`, color: brand?.color ?? "#10b981" } : {}}
-                          data-testid="button-copy-address"
-                          title="Copy address"
-                        >
-                          {copied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4 text-muted-foreground" />}
-                        </button>
+                        <div className="absolute right-2 top-2 flex gap-1">
+                          <button
+                            onClick={copyAddr}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150 hover:bg-muted/60"
+                            style={copied ? { backgroundColor: `${brand?.bg ?? ""}`, color: brand?.color ?? "#10b981" } : {}}
+                            data-testid="button-copy-address"
+                            title="Copy address"
+                          >
+                            {copied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4 text-muted-foreground" />}
+                          </button>
+                          <button
+                            onClick={() => setAddrExpanded(p => !p)}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all text-[9px] font-black"
+                            title={addrExpanded ? "Collapse" : "Show full address"}
+                          >
+                            {addrExpanded ? "···" : "↔"}
+                          </button>
+                        </div>
                       </div>
-
-                      {/* Full address (expand mode) */}
-                      {addrExpanded && (
-                        <button
-                          onClick={copyAddr}
-                          className="w-full text-xs font-medium py-2 rounded-lg border transition-colors hover:opacity-80 active:scale-[0.99]"
-                          style={{ borderColor: brand?.border, color: brand?.color, backgroundColor: brand?.bg }}
-                        >
-                          {copied ? <span className="flex items-center justify-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5" /> Copied!</span> : "Copy Full Address"}
-                        </button>
-                      )}
 
                       {/* Memo/Tag if required */}
                       {activeNet.memoRequired && activeNet.memo && (
                         <div className="rounded-lg bg-background/60 border border-amber-500/30 p-3">
-                          <div className="text-[10px] uppercase tracking-wider text-amber-500 mb-1 font-semibold">Memo / Tag (Required)</div>
+                          <div className="text-[10px] uppercase tracking-wider text-amber-500 mb-1.5 font-semibold flex items-center gap-1">
+                            <AlertCircle className="h-3 w-3" /> Memo / Tag (Required)
+                          </div>
                           <div className="flex items-center gap-2">
-                            <code className="font-mono text-sm flex-1 text-amber-300">{activeNet.memo}</code>
+                            <code className="font-mono text-sm flex-1 text-amber-300 select-all">{activeNet.memo}</code>
                             <button
                               onClick={() => copyMemo(activeNet.memo!)}
-                              className="w-7 h-7 rounded-md bg-amber-500/20 flex items-center justify-center hover:bg-amber-500/30"
+                              className="w-7 h-7 rounded-md bg-amber-500/20 flex items-center justify-center hover:bg-amber-500/30 shrink-0"
                             >
                               <Copy className="h-3.5 w-3.5 text-amber-400" />
                             </button>
@@ -1666,116 +1737,209 @@ function WithdrawDialog({
     onError: (e: any) => toast.error(e?.message || "Withdrawal failed"),
   });
 
+  const wBrand = activeNet ? netBrand(activeNet.chain) : null;
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <ArrowUpFromLine className="h-5 w-5 text-rose-400" /> Withdraw funds
+      <DialogContent className="max-w-[520px] p-0 overflow-hidden gap-0">
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 border-b border-border/50">
+          <DialogTitle className="flex items-center gap-2 text-base font-semibold">
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-rose-500/15 ring-1 ring-rose-500/30">
+              <ArrowUpFromLine className="h-4 w-4 text-rose-400" />
+            </div>
+            Withdraw Funds
           </DialogTitle>
-          <DialogDescription>
-            Withdrawals are reviewed by an admin before they leave the exchange.
+          <DialogDescription className="text-xs text-muted-foreground mt-1 ml-10">
+            All withdrawals are reviewed before leaving the exchange.
           </DialogDescription>
-        </DialogHeader>
+        </div>
 
-        <div className="space-y-4">
-          <Tabs value={mode} onValueChange={(v) => setMode(v as any)}>
-            <TabsList className="grid grid-cols-2 w-full">
-              <TabsTrigger value="CRYPTO" data-testid="tab-withdraw-crypto">Crypto</TabsTrigger>
-              <TabsTrigger value="FIAT" data-testid="tab-withdraw-fiat">INR (Fiat)</TabsTrigger>
+        <div className="px-6 py-5 space-y-5 max-h-[76vh] overflow-y-auto">
+          {/* Mode tabs */}
+          <Tabs value={mode} onValueChange={(v) => { setMode(v as any); setAddress(""); setMemo(""); setAmount(""); }}>
+            <TabsList className="grid grid-cols-2 w-full h-9">
+              <TabsTrigger value="CRYPTO" className="text-xs font-medium" data-testid="tab-withdraw-crypto">Crypto</TabsTrigger>
+              <TabsTrigger value="FIAT" className="text-xs font-medium" data-testid="tab-withdraw-fiat">INR (Fiat)</TabsTrigger>
             </TabsList>
           </Tabs>
 
           {mode === "CRYPTO" ? (
             <>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Coin</label>
-                  <Select value={currency} onValueChange={setCurrency}>
-                    <SelectTrigger className="h-10" data-testid="select-withdraw-coin"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {cryptoCurrencies.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+              {/* Coin selector */}
+              <div>
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">Select Coin</label>
+                <Select value={currency} onValueChange={(v) => { setCurrency(v); setNetwork(""); }}>
+                  <SelectTrigger className="h-11" data-testid="select-withdraw-coin"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {cryptoCurrencies.map(c => (
+                      <SelectItem key={c} value={c}>
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 rounded-full bg-rose-500/20 flex items-center justify-center text-[10px] font-bold text-rose-400">{c[0]}</div>
+                          {c}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Network cards */}
+              {detailsQ.isLoading ? (
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider block">Select Network</label>
+                  {[0,1,2].map(i => <div key={i} className="h-16 rounded-xl border border-border bg-muted/20 animate-pulse" />)}
                 </div>
+              ) : detailsQ.isError ? (
+                <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-400 flex items-center gap-2" data-testid="withdraw-network-error">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span className="flex-1">Failed to load networks for {currency}.</span>
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => detailsQ.refetch()} data-testid="button-withdraw-network-retry">Retry</Button>
+                </div>
+              ) : networks.length > 0 ? (
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Network</label>
-                  <Select value={network} onValueChange={setNetwork} disabled={networks.length === 0 || detailsQ.isError}>
-                    <SelectTrigger className="h-10" data-testid="select-withdraw-network">
-                      <SelectValue placeholder={detailsQ.isLoading ? "Loading…" : detailsQ.isError ? "Unavailable" : "Select"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {networks.map(n => <SelectItem key={n.chain} value={n.chain}>{n.chain} (fee {n.fee})</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">Select Network</label>
+                  <div className="space-y-2">
+                    {networks.map(net => {
+                      const b = netBrand(net.chain);
+                      const isActive = net.chain.toUpperCase() === (activeNet?.chain ?? "").toUpperCase();
+                      return (
+                        <button
+                          key={net.chain}
+                          onClick={() => setNetwork(net.chain)}
+                          className={`w-full text-left rounded-xl border p-3.5 transition-all duration-150 ${
+                            isActive ? "ring-2 ring-offset-0" : "border-border/50 bg-muted/10 hover:bg-muted/30 hover:border-border"
+                          }`}
+                          style={isActive ? { borderColor: b.border, backgroundColor: b.bg, boxShadow: `0 0 0 2px ${b.color}40` } : {}}
+                          data-testid={`net-card-withdraw-${net.chain}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0"
+                              style={{ backgroundColor: b.bg, border: `1.5px solid ${b.color}60`, color: b.color }}
+                            >
+                              {net.chain.slice(0, 3).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-sm font-semibold">{b.label}</span>
+                                <span
+                                  className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
+                                  style={{ backgroundColor: b.bg, border: `1px solid ${b.border}`, color: b.color }}
+                                >{b.badge}</span>
+                              </div>
+                              <div className="flex items-center gap-3 mt-0.5 text-[11px] text-muted-foreground">
+                                <span>{b.time}</span>
+                                <span>·</span>
+                                <span>Fee: {net.fee} {currency}</span>
+                                <span>·</span>
+                                <span>Min: {net.minWithdraw} {currency}</span>
+                              </div>
+                            </div>
+                            {isActive && <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: b.color }} />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : currency ? (
+                <div className="rounded-xl border border-border bg-muted/10 p-6 text-center text-sm text-muted-foreground">
+                  No withdraw networks available for {currency}.
+                </div>
+              ) : null}
+
+              {/* Destination address */}
+              <div>
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">Destination Address</label>
+                <div className="relative">
+                  <Input
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder={activeNet ? `${wBrand?.badge ?? activeNet.chain} address` : "Select a network first"}
+                    className="font-mono text-sm h-11 pr-10"
+                    data-testid="input-withdraw-address"
+                  />
+                  <ScanLine className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
                 </div>
               </div>
-              {detailsQ.isError && (
-                <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-400 flex items-center gap-2" data-testid="withdraw-network-error">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  <span>Failed to load networks for {currency}.</span>
-                  <Button size="sm" variant="outline" className="ml-auto h-7" onClick={() => detailsQ.refetch()} data-testid="button-withdraw-network-retry">Retry</Button>
-                </div>
-              )}
+
+              {/* Memo */}
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs text-muted-foreground">Destination address</label>
-                </div>
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">
+                  Memo / Tag <span className="normal-case font-normal text-muted-foreground/70">(optional — required by some exchanges)</span>
+                </label>
                 <Input
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder={`${network} address`}
-                  className="font-mono text-sm"
-                  data-testid="input-withdraw-address"
+                  value={memo}
+                  onChange={(e) => setMemo(e.target.value)}
+                  placeholder="If required by destination"
+                  className="font-mono text-sm h-11"
+                  data-testid="input-withdraw-memo"
                 />
               </div>
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Memo / Tag (optional)</label>
-                <Input value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="If required by destination" className="font-mono text-sm" data-testid="input-withdraw-memo" />
-              </div>
+
+              {/* Security warning */}
+              {address.trim() && activeNet && (
+                <div className="rounded-xl border border-amber-500/25 bg-amber-500/8 p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-amber-400">
+                    <Shield className="h-3.5 w-3.5 shrink-0" />
+                    Verify before submitting
+                  </div>
+                  <ul className="space-y-1 text-xs text-amber-300/80 ml-5 list-disc">
+                    <li>Double-check the address — crypto transfers are <strong className="text-amber-200">irreversible</strong>.</li>
+                    <li>Send only via <strong className="text-amber-200">{wBrand?.label ?? activeNet.chain}</strong> network.</li>
+                    {activeNet.minWithdraw > 0 && <li>Minimum: <strong className="text-amber-200">{activeNet.minWithdraw} {currency}</strong></li>}
+                  </ul>
+                </div>
+              )}
             </>
           ) : (
             <>
               {banksQ.isError ? (
-                <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-400 flex items-center gap-2">
+                <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-400 flex items-center gap-2">
                   <AlertCircle className="h-4 w-4" /> Could not load bank accounts.
                   <Button size="sm" variant="outline" className="ml-auto h-7" onClick={() => banksQ.refetch()}>Retry</Button>
                 </div>
               ) : verifiedBanks.length > 0 ? (
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Bank account</label>
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">Bank Account</label>
                   <Select value={bankId} onValueChange={setBankId}>
-                    <SelectTrigger className="h-10" data-testid="select-withdraw-bank"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-11" data-testid="select-withdraw-bank"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {verifiedBanks.map(b => (
                         <SelectItem key={b.id} value={String(b.id)}>
-                          {b.bankName} · ••{b.accountNumber.slice(-4)} ({b.holderName})
+                          <div className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-muted-foreground" />
+                            {b.bankName} · ••{b.accountNumber.slice(-4)} ({b.holderName})
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
               ) : (
-                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-400">
-                  No verified bank account yet. Add one to withdraw INR.
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-400 space-y-1">
+                  <div className="font-semibold flex items-center gap-1.5"><AlertCircle className="h-4 w-4" /> No verified bank account</div>
+                  <div className="text-xs text-amber-400/80">Add and verify a bank account to withdraw INR funds.</div>
                 </div>
               )}
-              <Button variant="outline" size="sm" onClick={() => setShowAddBank(true)} className="w-full h-9" data-testid="button-add-bank">
-                <Plus className="h-3.5 w-3.5 mr-1" /> Add bank account
+              <Button variant="outline" size="sm" onClick={() => setShowAddBank(true)} className="w-full h-10 text-xs font-medium" data-testid="button-add-bank">
+                <Plus className="h-3.5 w-3.5 mr-1.5" /> Add Bank Account
               </Button>
             </>
           )}
 
+          {/* Amount input */}
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-xs text-muted-foreground">Amount</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount</label>
               <button
                 type="button"
                 onClick={() => setAmount(String(available))}
-                className="text-xs text-primary hover:underline"
+                className="text-xs text-primary hover:underline font-medium"
                 data-testid="button-withdraw-max"
               >
-                Available: {fmtNum(available, currency === "INR" ? 2 : 6)} {currency}
+                Max: {fmtNum(available, currency === "INR" ? 2 : 6)} {currency}
               </button>
             </div>
             <div className="relative">
@@ -1785,47 +1949,47 @@ function WithdrawDialog({
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
-                className="font-mono text-base h-11 pr-16"
+                className="font-mono text-lg h-12 pr-16"
                 data-testid="input-withdraw-amount"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">{currency}</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">{currency}</span>
             </div>
           </div>
 
-          {/* Fee preview — note: crypto fee is an estimate from the network's
-              flat fee. The backend may add a percentage component at submission
-              time (max(flat + amount*pct, feeMin)) so the actual amount can
-              differ slightly. INR fee is exact. */}
-          <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm space-y-1.5">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">{mode === "CRYPTO" ? "Estimated network fee" : "Network fee"}</span>
+          {/* Fee preview */}
+          <div className="rounded-xl border border-border bg-muted/20 p-4 text-sm space-y-2">
+            <div className="flex justify-between text-muted-foreground">
+              <span>{mode === "CRYPTO" ? "Estimated network fee" : "Processing fee"}</span>
               <span className="font-mono">{fmtNum(fee, currency === "INR" ? 2 : 6)} {currency}</span>
             </div>
-            <div className="flex justify-between font-medium">
+            <div className="flex justify-between font-semibold border-t border-border/40 pt-2">
               <span>You will receive {mode === "CRYPTO" ? "≈" : ""}</span>
-              <span className="font-mono">{fmtNum(youReceive, currency === "INR" ? 2 : 6)} {currency}</span>
+              <span className="font-mono text-base">{fmtNum(youReceive, currency === "INR" ? 2 : 6)} {currency}</span>
             </div>
             {mode === "CRYPTO" && (
-              <div className="text-[11px] text-muted-foreground pt-1">Final fee is calculated at submission and may vary slightly.</div>
+              <div className="text-[11px] text-muted-foreground">Actual fee may vary slightly at submission time.</div>
             )}
           </div>
 
           {validation && (
-            <div className="text-xs text-rose-400 flex items-center gap-1.5"><AlertCircle className="h-3.5 w-3.5" /> {validation}</div>
+            <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2.5 text-xs text-rose-400 flex items-center gap-2">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {validation}
+            </div>
           )}
         </div>
 
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-border/50 flex items-center justify-between gap-3">
+          <Button variant="outline" size="sm" onClick={onClose} className="h-9">Cancel</Button>
           <Button
             onClick={() => submit.mutate()}
             disabled={!!validation || submit.isPending}
-            className="bg-rose-500 hover:bg-rose-500/90 text-white"
+            className="h-9 bg-rose-500 hover:bg-rose-500/90 text-white flex-1"
             data-testid="button-withdraw-submit"
           >
-            {submit.isPending ? "Submitting…" : "Withdraw"}
+            {submit.isPending ? "Submitting…" : `Withdraw ${currency}`}
           </Button>
-        </DialogFooter>
+        </div>
 
         {showAddBank && (
           <AddBankDialog
