@@ -19,7 +19,6 @@ import {
   Wallet as WalletIcon,
   ArrowRight,
   Gift,
-  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -119,12 +118,6 @@ export default function Login() {
     setLocation("/");
   };
 
-  const fillDemo = () => {
-    setIdentifier("demo@cryptox.in");
-    setPassword("Demo@123");
-    setServerError(null);
-    setFieldErrors({});
-  };
 
   return (
     <div className="min-h-screen w-full bg-background text-foreground">
@@ -187,26 +180,6 @@ export default function Login() {
                   India&apos;s premium crypto exchange.
                 </p>
               </div>
-
-              {/* Demo creds banner */}
-              <Alert className="mb-5 border-primary/30 bg-primary/5">
-                <Info className="h-4 w-4 text-primary" />
-                <AlertDescription className="flex items-center justify-between gap-3">
-                  <span className="text-sm">
-                    <span className="font-medium">Demo:</span>{" "}
-                    <code className="text-xs">demo@cryptox.in</code> /{" "}
-                    <code className="text-xs">Demo@123</code>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={fillDemo}
-                    className="shrink-0 text-xs font-semibold text-primary hover:underline"
-                    data-testid="btn-fill-demo"
-                  >
-                    Fill
-                  </button>
-                </AlertDescription>
-              </Alert>
 
               {/* Server error */}
               {serverError && (
