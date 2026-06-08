@@ -585,7 +585,7 @@ r.post("/user/support/chat/:id", bicryptoAuth, (req, res) => res.json({
 r.get("/settings", (_req, res) => {
   res.json({
     settings: [
-      { key: "siteName", value: "BiCrypto" },
+      { key: "siteName", value: "Zebvix" },
       { key: "siteDescription", value: "Crypto Exchange" },
       { key: "logo", value: "/flutter/icons/Icon-192.png" },
       { key: "defaultCurrency", value: "USDT" },
