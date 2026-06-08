@@ -477,15 +477,23 @@ r.post("/futures/order", bicryptoAuth, async (req: any, res: Response): Promise<
       isBot: orderRow.isBot === 1,
     });
   } catch (e: any) {
-    // Couldn't reach Go — refund and reject.
-    await db.transaction(async (tx) => {
-      await releaseMargin(tx, u.id, pair.quoteCoinId, marginToLock);
-      await tx.update(futuresOrdersTable).set({
-        status: "REJECTED", updatedAt: new Date(),
-      }).where(eq(futuresOrdersTable.id, orderRow.id));
-    });
-    logger.error({ err: String(e) }, "futures matching engine unreachable");
-    res.status(503).json({ message: "Matching engine unavailable" }); return;
+    // Go service unavailable — for limit orders keep the order OPEN (resting
+    // in the book so it can fill when a counterpart arrives). For market orders
+    // we cannot rest them, so refund the margin and reject.
+    if (type === "market") {
+      await db.transaction(async (tx) => {
+        await releaseMargin(tx, u.id, pair.quoteCoinId, marginToLock);
+        await tx.update(futuresOrdersTable).set({
+          status: "REJECTED", updatedAt: new Date(),
+        }).where(eq(futuresOrdersTable.id, orderRow.id));
+      });
+      logger.error({ err: String(e) }, "futures matching engine unreachable — market order rejected");
+      res.status(503).json({ message: "Matching engine unavailable for market orders. Use limit orders." }); return;
+    }
+    // Limit order: leave it OPEN and return success. It will match when the
+    // engine comes online or a counterpart is placed.
+    logger.warn({ err: String(e) }, "futures matching engine unreachable — limit order resting as OPEN");
+    match = { trades: [], status: "OPEN" };
   }
 
   // Apply fills atomically.
@@ -924,12 +932,9 @@ r.delete("/futures/position", bicryptoAuth, async (req: any, res: Response): Pro
       side: closeSide, type: "market", price: 0, qty, isBot: false,
     });
   } catch (e: any) {
-    await db.transaction(async (tx) => {
-      if (actualLocked > 0) await releaseMargin(tx, u.id, pair.quoteCoinId, actualLocked);
-      await tx.update(futuresOrdersTable).set({ status: "REJECTED", updatedAt: new Date() })
-        .where(eq(futuresOrdersTable.id, orderRow.id));
-    });
-    res.status(503).json({ message: "Matching engine unavailable" }); return;
+    // Go service unavailable — keep close order OPEN so it fills when engine returns.
+    logger.warn({ err: String(e) }, "futures matching engine unreachable — close order resting as OPEN");
+    match = { trades: [], status: "OPEN" };
   }
 
   if (Array.isArray(match?.trades) && match.trades.length > 0) {

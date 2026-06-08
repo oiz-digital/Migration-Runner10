@@ -1,0 +1,151 @@
+📖 Overview
+NINZASMS provides a simple, RESTful API to send SMS and WhatsApp messages programmatically. Our API is designed to be easy to integrate with any programming language that supports HTTP requests.
+
+ Base URL:
+https://ninzasms.in.net/auth/send_sms
+ Note: All API requests must be made over HTTPS. HTTP requests will be rejected.
+🔐 Authentication
+All API requests require an API key for authentication. You can find your API key in your API Keys page.
+
+HEADER Authorization: YOUR_API_KEY
+Your Credentials
+API Key	NINZASMSsitedd7e00ea... Copy
+Sender ID	15716 Copy
+📨 Send SMS (OTP)
+Send OTP messages to Indian mobile numbers via SMS route.
+
+POST https://ninzasms.in.net/auth/send_sms
+Request Parameters
+Parameter	Type	Required	Description
+sender_id	string	Required	Your Sender ID (User ID)
+numbers	string	Required	10-digit mobile number (e.g., 9876543210)
+rout	string	Required	Use "sms" for SMS route
+variables_values	string	Required	OTP code (4-6 digits)
+Example Request (cURL)
+curl -X POST https://ninzasms.in.net/auth/send_sms \
+  -H "Authorization: NINZASMSsitedd7e00ea..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sender_id": "15716",
+    "numbers": "9876543210",
+    "rout": "sms",
+    "variables_values": "123456"
+  }'
+Example Response
+{
+    "status": "success",
+    "message": "OTP sent successfully",
+    "message_id": "NINZA123456789"
+}
+💬 Send WhatsApp (OTP)
+Send OTP messages via WhatsApp route. Customer will receive OTP on WhatsApp.
+
+POST https://ninzasms.in.net/auth/send_sms
+Request Parameters
+Parameter	Type	Required	Description
+sender_id	string	Required	Your Sender ID (User ID)
+numbers	string	Required	10-digit mobile number (will auto-add 91)
+rout	string	Required	Use "waninza" for WhatsApp route
+variables_values	string	Required	OTP code (4-6 digits)
+curl -X POST https://ninzasms.in.net/auth/send_sms \
+  -H "Authorization: NINZASMSsitedd7e00ea..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sender_id": "15716",
+    "numbers": "9876543210",
+    "rout": "waninza",
+    "variables_values": "123456"
+  }'
+📢 Send WhatsApp Promotional Message
+Send promotional/custom messages via WhatsApp route.
+
+POST https://ninzasms.in.net/auth/send_sms
+Request Parameters
+Parameter	Type	Required	Description
+sender_id	string	Required	Your Sender ID (User ID)
+numbers	string	Required	10-digit mobile number
+rout	string	Required	Use "waninza" for WhatsApp route
+message	string	Required	Your promotional message (max 500 chars)
+💰 Check Balance
+Check your available SMS balance.
+
+curl -X GET https://ninzasms.in.net/auth/balance \
+  -H "Authorization: NINZASMSsitedd7e00ea..."
+{
+    "balance": 122.80,
+    "currency": "INR",
+    "status": "active"
+}
+📊 Response Codes
+Code	Description
+200	✅ Success - Request processed successfully
+400	❌ Bad Request - Invalid parameters
+401	❌ Unauthorized - Invalid API key
+402	❌ Payment Required - Insufficient balance
+404	❌ Not Found - Invalid endpoint
+429	❌ Too Many Requests - Rate limit exceeded
+500	❌ Internal Server Error - Try again later
+⚠️ Error Handling
+ Common Errors:
+Invalid API Key: Check your API key from API Keys page
+Insufficient Balance: Recharge your wallet
+Invalid Mobile Number: Use 10-digit Indian numbers only
+Invalid OTP: OTP must be 4-6 digits
+💻 Code Examples
+PHP (cURL)
+<?php
+$ch = curl_init();
+curl_setopt_array($ch, [
+    CURLOPT_URL => 'https://ninzasms.in.net/auth/send_sms',
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST => true,
+    CURLOPT_HTTPHEADER => [
+        'Authorization: NINZASMSsitedd7e00ea...',
+        'Content-Type: application/json'
+    ],
+    CURLOPT_POSTFIELDS => json_encode([
+        'sender_id' => '15716',
+        'numbers' => '9876543210',
+        'rout' => 'sms',
+        'variables_values' => '123456'
+    ])
+]);
+$response = curl_exec($ch);
+curl_close($ch);
+echo $response;
+?>
+Python
+import requests
+
+url = "https://ninzasms.in.net/auth/send_sms"
+headers = {
+    "Authorization": "NINZASMSsitedd7e00ea...",
+    "Content-Type": "application/json"
+}
+data = {
+    "sender_id": "15716",
+    "numbers": "9876543210",
+    "rout": "sms",
+    "variables_values": "123456"
+}
+response = requests.post(url, json=data, headers=headers)
+print(response.json())
+JavaScript / Node.js
+const axios = require('axios');
+
+const data = {
+    sender_id: "15716",
+    numbers: "9876543210",
+    rout: "sms",
+    variables_values: "123456"
+};
+
+axios.post('https://ninzasms.in.net/auth/send_sms', data, {
+    headers: {
+        'Authorization': 'NINZASMSsitedd7e00ea...',
+        'Content-Type': 'application/json'
+    }
+}).then(response => {
+    console.log(response.data);
+});
+ Pro Tip: Replace the API key with your actual key from API Keys page.
