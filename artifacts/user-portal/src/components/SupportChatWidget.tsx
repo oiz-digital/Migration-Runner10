@@ -121,7 +121,53 @@ export default function SupportChatWidget() {
     }]);
   }, [user]);
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <>
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 text-black shadow-2xl shadow-amber-500/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-200 group"
+          aria-label="Open AI support chat"
+        >
+          <Bot className="h-6 w-6 group-hover:rotate-12 transition-transform duration-200" />
+        </button>
+        {open && (
+          <div className="fixed bottom-6 right-6 z-50 w-80 rounded-2xl border border-white/10 bg-[#0d0f16] shadow-2xl shadow-black/60 overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/8 bg-gradient-to-r from-amber-500/15 to-transparent">
+              <div className="flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-black shadow-lg">
+                  <Bot className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="font-semibold text-sm text-white leading-none mb-0.5">Zara · AI Support</div>
+                  <div className="text-[10px] text-emerald-400 flex items-center gap-1 leading-none">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" /> Online
+                  </div>
+                </div>
+              </div>
+              <button onClick={() => setOpen(false)} className="h-7 w-7 rounded-md hover:bg-white/8 flex items-center justify-center text-zinc-500 hover:text-zinc-300 transition-colors">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="px-5 py-6 text-center">
+              <div className="h-12 w-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-3">
+                <Bot className="h-6 w-6 text-amber-400" />
+              </div>
+              <p className="text-sm text-zinc-300 font-medium mb-1">Sign in to chat with Zara</p>
+              <p className="text-xs text-zinc-500 mb-4">Get instant AI support for KYC, deposits, withdrawals, and more.</p>
+              <Link
+                href="/login"
+                onClick={() => setOpen(false)}
+                className="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-orange-500 text-black text-sm font-semibold px-4 py-2 rounded-xl hover:from-amber-300 hover:to-orange-400 transition-all"
+              >
+                Sign in to continue
+              </Link>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
 
   async function send(text: string) {
     const msg = text.trim();
@@ -141,9 +187,14 @@ export default function SupportChatWidget() {
         setUnreadCount((n) => n + 1);
       }
     } catch (e: any) {
-      const errText = e instanceof ApiError
-        ? (e.data?.reply || e.message || "Something went wrong.")
-        : "Network error. Please try again.";
+      let errText = "Network error. Please try again.";
+      if (e instanceof ApiError) {
+        if (e.status === 401 || e.status === 403) {
+          errText = "Your session has expired. Please sign in again to continue chatting.";
+        } else {
+          errText = e.data?.reply || e.data?.error || e.message || "Something went wrong.";
+        }
+      }
       setMessages((curr) => [...curr, { role: "assistant", content: errText, ts: Date.now(), id: uid(), error: true }]);
     } finally {
       setSending(false);

@@ -211,7 +211,7 @@ export default function Kyc() {
 
       <SectionCard
         title="Account Details"
-        description="Aapki current account information aur verification status."
+        description="Your current account information and verification status."
         icon={UserIcon}
       >
         <div className="flex flex-col sm:flex-row gap-5">
