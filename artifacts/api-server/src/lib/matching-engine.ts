@@ -1,5 +1,5 @@
 import { eq, sql, and, or, desc } from "drizzle-orm";
-import { db, ordersTable, tradesTable, walletsTable, pairsTable, usersTable } from "@workspace/db";
+import { db, ordersTable, tradesTable, walletsTable, pairsTable, usersTable, walletLedgerTable } from "@workspace/db";
 import { logger } from "./logger";
 import { getRedis, rZadd, rZrem, rSet, rDel, rLpush, rPublish, rGet } from "./redis";
 import { getSpotFeeRates } from "../routes/fees";
@@ -165,6 +165,10 @@ export async function tryMatch(takerOrderId: number, opts?: { takerVipTier?: num
         const takerIsBot = (taker.isBot ?? 0) === 1;
         const makerIsBot = (maker.isBot ?? 0) === 1;
 
+        // Capture pre-update wallet balances for ledger entries
+        let takerBaseBalBefore = 0, takerQuoteBalBefore = 0;
+        let makerBaseBalBefore = 0, makerQuoteBalBefore = 0;
+
         if (taker.side === "buy") {
           // Taker BUY: pays quote, receives base. Locked quote on taker reduces by notional.
           // Maker SELL: locked base reduces by fillQty, receives quote (notional - makerFee).
@@ -181,12 +185,14 @@ export async function tryMatch(takerOrderId: number, opts?: { takerVipTier?: num
             const takerSpend = notional + takerFee; // what we actually take from locked
             const takerRefund = takerQuoteLocked - takerSpend; // ≥0 by construction (limitPrice ≥ tradePrice)
             const tQuote = await ensureWallet(tx, taker.userId, pair.quoteCoinId);
+            takerQuoteBalBefore = parseFloat(tQuote.balance ?? "0");
             await tx.update(walletsTable).set({
               locked: sql`${walletsTable.locked} - ${takerQuoteLocked}`,
               balance: takerRefund > 0 ? sql`${walletsTable.balance} + ${takerRefund}` : walletsTable.balance,
               updatedAt: new Date(),
             }).where(eq(walletsTable.id, tQuote.id));
             const tBase = await ensureWallet(tx, taker.userId, pair.baseCoinId);
+            takerBaseBalBefore = parseFloat(tBase.balance ?? "0");
             await tx.update(walletsTable).set({
               balance: sql`${walletsTable.balance} + ${fillQty}`,
               updatedAt: new Date(),
@@ -195,11 +201,13 @@ export async function tryMatch(takerOrderId: number, opts?: { takerVipTier?: num
           if (!makerIsBot) {
             // Maker sell: release locked base, credit quote
             const mBase = await ensureWallet(tx, maker.userId, pair.baseCoinId);
+            makerBaseBalBefore = parseFloat(mBase.balance ?? "0");
             await tx.update(walletsTable).set({
               locked: sql`${walletsTable.locked} - ${fillQty}`,
               updatedAt: new Date(),
             }).where(eq(walletsTable.id, mBase.id));
             const mQuote = await ensureWallet(tx, maker.userId, pair.quoteCoinId);
+            makerQuoteBalBefore = parseFloat(mQuote.balance ?? "0");
             await tx.update(walletsTable).set({
               balance: sql`${walletsTable.balance} + ${notional - makerFee - makerTds}`,
               updatedAt: new Date(),
@@ -209,11 +217,13 @@ export async function tryMatch(takerOrderId: number, opts?: { takerVipTier?: num
           // Taker SELL: locked base = remaining (qty units). Spend fillQty base, get notional - takerFee quote.
           if (!takerIsBot) {
             const tBase = await ensureWallet(tx, taker.userId, pair.baseCoinId);
+            takerBaseBalBefore = parseFloat(tBase.balance ?? "0");
             await tx.update(walletsTable).set({
               locked: sql`${walletsTable.locked} - ${fillQty}`,
               updatedAt: new Date(),
             }).where(eq(walletsTable.id, tBase.id));
             const tQuote = await ensureWallet(tx, taker.userId, pair.quoteCoinId);
+            takerQuoteBalBefore = parseFloat(tQuote.balance ?? "0");
             await tx.update(walletsTable).set({
               balance: sql`${walletsTable.balance} + ${notional - takerFee - takerTds}`,
               updatedAt: new Date(),
@@ -225,12 +235,14 @@ export async function tryMatch(takerOrderId: number, opts?: { takerVipTier?: num
             // Negative refund means we need to take fee from balance because we pre-locked exact notional only.
             // Strategy: reduce locked by makerLockSlice (release), then debit fee from balance.
             const mQuote = await ensureWallet(tx, maker.userId, pair.quoteCoinId);
+            makerQuoteBalBefore = parseFloat(mQuote.balance ?? "0");
             await tx.update(walletsTable).set({
               locked: sql`${walletsTable.locked} - ${makerLockSlice}`,
               balance: sql`${walletsTable.balance} - ${makerFee}`,
               updatedAt: new Date(),
             }).where(eq(walletsTable.id, mQuote.id));
             const mBase = await ensureWallet(tx, maker.userId, pair.baseCoinId);
+            makerBaseBalBefore = parseFloat(mBase.balance ?? "0");
             await tx.update(walletsTable).set({
               balance: sql`${walletsTable.balance} + ${fillQty}`,
               updatedAt: new Date(),
@@ -252,6 +264,81 @@ export async function tryMatch(takerOrderId: number, opts?: { takerVipTier?: num
           side: maker.side, price: String(tradePrice), qty: String(fillQty),
           fee: String(makerFee), tds: String(makerTds), isTaker: 0,
         });
+
+        // Write wallet ledger entries for both sides (real users only, never bots).
+        // These power the /ledger page so users can see all trade activity.
+        const tradeRefId = String(trade?.id ?? "");
+        const tradeNote = `${pair.symbol} @ ${tradePrice}`;
+        const ledgerRows: any[] = [];
+        if (!takerIsBot) {
+          if (taker.side === "buy") {
+            // Taker received base coin
+            ledgerRows.push({
+              userId: taker.userId, coinId: pair.baseCoinId, walletType: "spot",
+              type: "trade_buy", amount: String(fillQty),
+              balanceBefore: String(takerBaseBalBefore),
+              balanceAfter: String(takerBaseBalBefore + fillQty),
+              refType: "trade", refId: tradeRefId,
+              note: `Buy ${tradeNote}`,
+            });
+            // Taker paid fee in quote
+            if (takerFee > 0) ledgerRows.push({
+              userId: taker.userId, coinId: pair.quoteCoinId, walletType: "spot",
+              type: "trade_fee", amount: String(-takerFee),
+              balanceBefore: String(takerQuoteBalBefore),
+              balanceAfter: String(takerQuoteBalBefore - takerFee),
+              refType: "trade", refId: tradeRefId,
+              note: `Fee ${tradeNote}`,
+            });
+          } else {
+            // Taker sold base coin, received quote
+            const takerCredit = notional - takerFee - takerTds;
+            ledgerRows.push({
+              userId: taker.userId, coinId: pair.quoteCoinId, walletType: "spot",
+              type: "trade_sell", amount: String(takerCredit),
+              balanceBefore: String(takerQuoteBalBefore),
+              balanceAfter: String(takerQuoteBalBefore + takerCredit),
+              refType: "trade", refId: tradeRefId,
+              note: `Sell ${tradeNote}`,
+            });
+          }
+        }
+        if (!makerIsBot) {
+          if (maker.side === "sell") {
+            // Maker sold base coin, received quote
+            const makerCredit = notional - makerFee - makerTds;
+            ledgerRows.push({
+              userId: maker.userId, coinId: pair.quoteCoinId, walletType: "spot",
+              type: "trade_sell", amount: String(makerCredit),
+              balanceBefore: String(makerQuoteBalBefore),
+              balanceAfter: String(makerQuoteBalBefore + makerCredit),
+              refType: "trade", refId: tradeRefId,
+              note: `Sell ${tradeNote}`,
+            });
+          } else {
+            // Maker bought base coin
+            ledgerRows.push({
+              userId: maker.userId, coinId: pair.baseCoinId, walletType: "spot",
+              type: "trade_buy", amount: String(fillQty),
+              balanceBefore: String(makerBaseBalBefore),
+              balanceAfter: String(makerBaseBalBefore + fillQty),
+              refType: "trade", refId: tradeRefId,
+              note: `Buy ${tradeNote}`,
+            });
+            // Maker paid fee in quote
+            if (makerFee > 0) ledgerRows.push({
+              userId: maker.userId, coinId: pair.quoteCoinId, walletType: "spot",
+              type: "trade_fee", amount: String(-makerFee),
+              balanceBefore: String(makerQuoteBalBefore),
+              balanceAfter: String(makerQuoteBalBefore - makerFee),
+              refType: "trade", refId: tradeRefId,
+              note: `Fee ${tradeNote}`,
+            });
+          }
+        }
+        if (ledgerRows.length > 0) {
+          await tx.insert(walletLedgerTable).values(ledgerRows);
+        }
 
         // Update orders. avgPrice is the volume-weighted average across
         // all fills, so a buy that sweeps multiple lower-priced sells
