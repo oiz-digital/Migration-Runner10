@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Sparkles, TrendingUp, TrendingDown, AlertTriangle, Brain, DollarSign, Activity } from "lucide-react";
+import { Sparkles, TrendingUp, TrendingDown, AlertTriangle, Brain, Activity } from "lucide-react";
 import { PageHeader } from "@/components/premium/PageHeader";
 import { SectionCard } from "@/components/premium/SectionCard";
 import { PremiumStatCard } from "@/components/premium/PremiumStatCard";
@@ -29,6 +29,14 @@ function dpFor(n: number) {
   if (n >= 1000) return 2;
   if (n >= 1) return 4;
   return 8;
+}
+function currencySymbol(pair: string): string {
+  const quote = pair.split("/")[1] || "";
+  if (quote === "INR") return "₹";
+  if (quote === "USDT" || quote === "USDC" || quote === "USD") return "$";
+  if (quote === "BTC") return "₿";
+  if (quote === "ETH") return "Ξ";
+  return quote ? `${quote} ` : "$";
 }
 
 export default function PredictionsPage() {
@@ -69,6 +77,8 @@ export default function PredictionsPage() {
       pct30: ((p30 - base) / base) * 100,
     };
   }, [t, sc]);
+
+  const sym = currencySymbol(pair);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
@@ -135,8 +145,8 @@ export default function PredictionsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
             <PremiumStatCard
               title="Current Price"
-              value={`$${fmt(projection.base, dpFor(projection.base))}`}
-              icon={DollarSign}
+              value={`${sym}${fmt(projection.base, dpFor(projection.base))}`}
+              icon={Activity}
               hint={`24h ${t.priceChangePercent >= 0 ? "+" : ""}${t.priceChangePercent.toFixed(2)}%`}
               accent={t.priceChangePercent >= 0}
             />
@@ -154,9 +164,9 @@ export default function PredictionsPage() {
               <Brain className="h-5 w-5 text-amber-400" /> Projected Prices ({sc.label})
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <ProjectionCard horizon="24 Hours" price={projection.p24} pct={projection.pct24} />
-              <ProjectionCard horizon="7 Days" price={projection.p7} pct={projection.pct7} />
-              <ProjectionCard horizon="30 Days" price={projection.p30} pct={projection.pct30} />
+              <ProjectionCard horizon="24 Hours" price={projection.p24} pct={projection.pct24} sym={sym} />
+              <ProjectionCard horizon="7 Days" price={projection.p7} pct={projection.pct7} sym={sym} />
+              <ProjectionCard horizon="30 Days" price={projection.p30} pct={projection.pct30} sym={sym} />
             </div>
             <div className="mt-4 text-[11px] text-muted-foreground leading-relaxed border-t border-border pt-3">
               <strong className="text-foreground">Method:</strong> Linear extrapolation of observed 24h price change, adjusted by scenario multiplier and damped over longer horizons. Real markets are non-linear — actual outcomes will differ significantly. Yeh sirf "what-if" exploration hai.
@@ -168,12 +178,12 @@ export default function PredictionsPage() {
   );
 }
 
-function ProjectionCard({ horizon, price, pct }: { horizon: string; price: number; pct: number }) {
+function ProjectionCard({ horizon, price, pct, sym }: { horizon: string; price: number; pct: number; sym: string }) {
   const positive = pct >= 0;
   return (
     <div className="rounded-lg border border-border bg-muted/20 p-4">
       <div className="text-xs text-muted-foreground uppercase tracking-wider">{horizon}</div>
-      <div className="text-xl font-bold font-mono mt-1">${fmt(price, dpFor(price))}</div>
+      <div className="text-xl font-bold font-mono mt-1">{sym}{fmt(price, dpFor(price))}</div>
       <div className={`text-xs font-semibold mt-1 inline-flex items-center gap-1 ${positive ? "text-emerald-400" : "text-rose-400"}`}>
         {positive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
         {positive ? "+" : ""}{pct.toFixed(2)}%

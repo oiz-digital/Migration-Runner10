@@ -1,6 +1,6 @@
 /**
  * SMS sending service — reads active provider from otp_providers table.
- * Supports: MSG91, Twilio, Fast2SMS, 2Factor, TextLocal (all via HTTP).
+ * Supports: MSG91, Twilio, Fast2SMS, 2Factor, TextLocal, NinzaSMS, NinzaSMS-WhatsApp (all via HTTP).
  */
 import { db, otpProvidersTable } from "@workspace/db";
 import { and, eq } from "drizzle-orm";
@@ -130,20 +130,93 @@ async function sendViaTextLocal(provider: typeof otpProvidersTable.$inferSelect,
   }
 }
 
+/**
+ * NinzaSMS — Indian SMS OTP provider (https://ninzasms.in.net)
+ * apiKey   → Authorization header value (NINZASMSsitedd7e00ea...)
+ * senderId → Sender ID / User ID (e.g. 15716)
+ * rout     → "sms" for SMS route
+ */
+async function sendViaNinzaSms(provider: typeof otpProvidersTable.$inferSelect, phone: string, code: string): Promise<SmsResult> {
+  if (!provider.apiKey) return { ok: false, provider: "ninzasms", error: "NinzaSMS API key not configured" };
+  const cleanPhone = phone.replace(/\D/g, "").replace(/^91/, "").slice(-10);
+  try {
+    const body = {
+      sender_id: provider.senderId || "15716",
+      numbers: cleanPhone,
+      rout: "sms",
+      variables_values: code,
+    };
+    const r = await fetch("https://ninzasms.in.net/auth/send_sms", {
+      method: "POST",
+      headers: {
+        "Authorization": provider.apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(10000),
+    });
+    const json: any = await r.json();
+    if (json.status !== "success") {
+      return { ok: false, provider: "ninzasms", error: json.message || `NinzaSMS error (HTTP ${r.status})` };
+    }
+    logger.info({ to: cleanPhone, messageId: json.message_id, provider: "ninzasms" }, "SMS OTP sent via NinzaSMS");
+    return { ok: true, provider: "ninzasms", messageId: json.message_id };
+  } catch (e: any) {
+    return { ok: false, provider: "ninzasms", error: e.message };
+  }
+}
+
+/**
+ * NinzaSMS WhatsApp — sends OTP via WhatsApp (rout: "waninza")
+ * apiKey   → same Authorization key as SMS
+ * senderId → same Sender ID
+ */
+async function sendViaNinzaWhatsApp(provider: typeof otpProvidersTable.$inferSelect, phone: string, code: string): Promise<SmsResult> {
+  if (!provider.apiKey) return { ok: false, provider: "ninzasms_whatsapp", error: "NinzaSMS API key not configured" };
+  const cleanPhone = phone.replace(/\D/g, "").replace(/^91/, "").slice(-10);
+  try {
+    const body = {
+      sender_id: provider.senderId || "15716",
+      numbers: cleanPhone,
+      rout: "waninza",
+      variables_values: code,
+    };
+    const r = await fetch("https://ninzasms.in.net/auth/send_sms", {
+      method: "POST",
+      headers: {
+        "Authorization": provider.apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(10000),
+    });
+    const json: any = await r.json();
+    if (json.status !== "success") {
+      return { ok: false, provider: "ninzasms_whatsapp", error: json.message || `NinzaSMS WhatsApp error (HTTP ${r.status})` };
+    }
+    logger.info({ to: cleanPhone, messageId: json.message_id, provider: "ninzasms_whatsapp" }, "WhatsApp OTP sent via NinzaSMS");
+    return { ok: true, provider: "ninzasms_whatsapp", messageId: json.message_id };
+  } catch (e: any) {
+    return { ok: false, provider: "ninzasms_whatsapp", error: e.message };
+  }
+}
+
 /** Main SMS send function — reads active provider from DB. */
 export async function sendSms(phone: string, code: string): Promise<SmsResult> {
   const provider = await getActiveProvider();
   if (!provider) {
     logger.warn({ to: phone }, "No active SMS provider — OTP not sent via SMS");
-    return { ok: false, provider: "none", error: "No active SMS provider. Configure one in Admin → API Integrations → SMS." };
+    return { ok: false, provider: "none", error: "No active SMS provider. Configure one in Admin → OTP Providers → SMS." };
   }
   switch (provider.provider) {
-    case "msg91":     return sendViaMsg91(provider, phone, code);
-    case "twilio":    return sendViaTwilio(provider, phone, code);
-    case "fast2sms":  return sendViaFast2Sms(provider, phone, code);
-    case "2factor":   return sendVia2Factor(provider, phone, code);
-    case "textlocal": return sendViaTextLocal(provider, phone, code);
-    default:          return { ok: false, provider: provider.provider, error: `Provider "${provider.provider}" not implemented` };
+    case "msg91":              return sendViaMsg91(provider, phone, code);
+    case "twilio":             return sendViaTwilio(provider, phone, code);
+    case "fast2sms":           return sendViaFast2Sms(provider, phone, code);
+    case "2factor":            return sendVia2Factor(provider, phone, code);
+    case "textlocal":          return sendViaTextLocal(provider, phone, code);
+    case "ninzasms":           return sendViaNinzaSms(provider, phone, code);
+    case "ninzasms_whatsapp":  return sendViaNinzaWhatsApp(provider, phone, code);
+    default:                   return { ok: false, provider: provider.provider, error: `Provider "${provider.provider}" not implemented` };
   }
 }
 

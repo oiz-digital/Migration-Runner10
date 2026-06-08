@@ -495,10 +495,10 @@ function GatewayDialog({ open, onOpenChange, initial, qc, toast }: any) {
 // EMAIL TAB
 // ═══════════════════════════════════════════════════════════════════════════
 const EMAIL_PROVIDERS = [
-  { value: "smtp", label: "SMTP (Universal)", icon: "📧", desc: "Gmail, Outlook, custom SMTP server" },
+  { value: "smtp", label: "Hostinger SMTP", icon: "🌐", desc: "smtp.hostinger.com · Port 587 (TLS)" },
+  { value: "smtp", label: "SMTP (Universal)", icon: "📧", desc: "Gmail, Outlook, any SMTP server" },
   { value: "sendgrid", label: "SendGrid", icon: "📨", desc: "Twilio SendGrid API" },
   { value: "mailgun", label: "Mailgun", icon: "🔫", desc: "Mailgun HTTP API + domain" },
-  { value: "aws_ses", label: "AWS SES", icon: "☁️", desc: "Amazon Simple Email Service" },
   { value: "postmark", label: "Postmark", icon: "📮", desc: "Postmark transactional email" },
 ];
 
@@ -643,23 +643,27 @@ function EmailConfigDialog({ open, onOpenChange, initial, qc, toast }: any) {
 
           {isSmtp && (
             <Section icon={Server} title="SMTP Settings">
+              <div className="md:col-span-2 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-[11px] text-amber-300 space-y-0.5">
+                <div className="font-semibold">Hostinger Mail:</div>
+                <div>Host: <span className="font-mono">smtp.hostinger.com</span> &nbsp;·&nbsp; Port: <span className="font-mono">587</span> (TLS) or <span className="font-mono">465</span> (SSL) &nbsp;·&nbsp; Username: your full email address</div>
+              </div>
               <FormField label="SMTP Host">
-                <Input value={v.smtpHost || ""} onChange={(e) => set("smtpHost", e.target.value)} placeholder="smtp.gmail.com" className="font-mono text-xs" />
+                <Input value={v.smtpHost || ""} onChange={(e) => set("smtpHost", e.target.value)} placeholder="smtp.hostinger.com" className="font-mono text-xs" />
               </FormField>
               <FormField label="Port">
                 <Input type="number" value={v.smtpPort || 587} onChange={(e) => set("smtpPort", Number(e.target.value))} />
               </FormField>
               <FormField label="Username / Email">
-                <Input value={v.username || ""} onChange={(e) => set("username", e.target.value)} placeholder="your@gmail.com" />
+                <Input value={v.username || ""} onChange={(e) => set("username", e.target.value)} placeholder="noreply@yourdomain.com" />
               </FormField>
               <FormField label={isEdit ? "Password (blank = keep)" : "Password"}>
                 <div className="flex gap-2">
-                  <Input type={showPass ? "text" : "password"} value={v.password || ""} onChange={(e) => set("password", e.target.value)} placeholder={isEdit ? "••••••••" : "App password"} className="font-mono text-xs flex-1" />
+                  <Input type={showPass ? "text" : "password"} value={v.password || ""} onChange={(e) => set("password", e.target.value)} placeholder={isEdit ? "••••••••" : "Hostinger email password"} className="font-mono text-xs flex-1" />
                   <Button type="button" size="icon" variant="outline" onClick={() => setShowPass(s => !s)}>{showPass ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}</Button>
                 </div>
               </FormField>
               <div className="flex items-center justify-between rounded-lg border border-border/60 bg-background/40 px-3 py-2.5 md:col-span-2">
-                <div className="flex items-center gap-2 text-sm"><Lock className="w-4 h-4 text-muted-foreground" />TLS/SSL (Port 465)</div>
+                <div className="flex items-center gap-2 text-sm"><Lock className="w-4 h-4 text-muted-foreground" />SSL (Port 465) — disable for TLS port 587</div>
                 <Switch checked={!!v.smtpSecure} onCheckedChange={(c) => set("smtpSecure", c)} />
               </div>
             </Section>

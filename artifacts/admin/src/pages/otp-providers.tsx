@@ -100,8 +100,25 @@ function ProviderForm({
               </SelectContent>
             </Select>
           </Field>
-          <Field label="Provider" hint="e.g. msg91, twilio, sendgrid">
-            <Input value={v.provider || ""} onChange={(e) => setV({ ...v, provider: e.target.value })} placeholder="msg91" />
+          <Field label="Provider" hint="Select a provider or type a custom one">
+            <Select
+              value={v.provider || ""}
+              onValueChange={(p) => setV({ ...v, provider: p })}
+            >
+              <SelectTrigger><SelectValue placeholder="Select provider" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ninzasms">🇮🇳 NinzaSMS (SMS — Indian)</SelectItem>
+                <SelectItem value="ninzasms_whatsapp">🟢 NinzaSMS WhatsApp</SelectItem>
+                <SelectItem value="msg91">MSG91</SelectItem>
+                <SelectItem value="fast2sms">Fast2SMS</SelectItem>
+                <SelectItem value="2factor">2Factor</SelectItem>
+                <SelectItem value="twilio">Twilio</SelectItem>
+                <SelectItem value="textlocal">TextLocal</SelectItem>
+                <SelectItem value="sendgrid">SendGrid (email)</SelectItem>
+                <SelectItem value="mailgun">Mailgun (email)</SelectItem>
+                <SelectItem value="smtp">SMTP / Hostinger (email)</SelectItem>
+              </SelectContent>
+            </Select>
           </Field>
         </div>
       </FormSection>
@@ -131,12 +148,36 @@ function ProviderForm({
         </Field>
       </FormSection>
 
+      {(v.provider === "ninzasms" || v.provider === "ninzasms_whatsapp") && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-[11px] text-amber-300 space-y-1">
+          <div className="font-semibold">NinzaSMS Setup:</div>
+          <div>• <strong>API Key</strong> — paste your full Authorization key (e.g. <span className="font-mono">NINZASMSsite...</span>)</div>
+          <div>• <strong>Sender ID</strong> — your numeric User ID from NinzaSMS dashboard (e.g. <span className="font-mono">15716</span>)</div>
+          <div>• <strong>Route</strong> — SMS uses <span className="font-mono">sms</span>, WhatsApp uses <span className="font-mono">waninza</span> (auto-set)</div>
+          <div>• API Secret field is not required for NinzaSMS</div>
+        </div>
+      )}
       <FormSection title="Identity & Template" icon={Hash}>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Sender ID" hint={v.channel === "email" ? "From email/name" : "DLT/short code"}>
-            <Input value={v.senderId || ""} onChange={(e) => setV({ ...v, senderId: e.target.value })} placeholder={v.channel === "email" ? "no-reply@cryptox.in" : "ZEBVIX"} />
+          <Field
+            label="Sender ID"
+            hint={
+              v.provider === "ninzasms" || v.provider === "ninzasms_whatsapp"
+                ? "Numeric User ID from NinzaSMS (e.g. 15716)"
+                : v.channel === "email" ? "From email/name" : "DLT/short code"
+            }
+          >
+            <Input
+              value={v.senderId || ""}
+              onChange={(e) => setV({ ...v, senderId: e.target.value })}
+              placeholder={
+                v.provider === "ninzasms" || v.provider === "ninzasms_whatsapp"
+                  ? "15716"
+                  : v.channel === "email" ? "no-reply@cryptox.in" : "ZEBVIX"
+              }
+            />
           </Field>
-          <Field label="Template ID" hint="Provider template ID/name">
+          <Field label="Template ID" hint="Provider template ID/name (optional for NinzaSMS)">
             <Input value={v.template || ""} onChange={(e) => setV({ ...v, template: e.target.value })} placeholder="OTP_LOGIN" />
           </Field>
         </div>

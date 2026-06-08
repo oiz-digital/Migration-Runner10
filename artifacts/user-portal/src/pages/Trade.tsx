@@ -69,8 +69,9 @@ function fmtPrice(n: number, quote: string): string {
   if (!isFinite(n) || n === 0) return "—";
   const inr = quote === "INR";
   const digits = inr ? 2 : n < 1 ? 6 : n < 100 ? 4 : 2;
-  const prefix = inr ? "₹" : "";
-  return prefix + n.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  const prefix = inr ? "₹" : (quote === "USDT" || quote === "USDC" || quote === "USD") ? "$" : "";
+  const suffix = (!inr && quote !== "USDT" && quote !== "USDC" && quote !== "USD" && quote) ? ` ${quote}` : "";
+  return prefix + n.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits }) + suffix;
 }
 function fmtCompact(n: number, prefix = "") {
   if (!isFinite(n) || n === 0) return prefix + "0";
