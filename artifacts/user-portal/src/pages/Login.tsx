@@ -274,7 +274,7 @@ export default function Login() {
                       Password
                     </Label>
                     <Link
-                      href="/help?topic=forgot-password"
+                      href="/forgot-password"
                       className="text-xs font-medium text-primary hover:underline"
                       data-testid="link-forgot-password"
                     >

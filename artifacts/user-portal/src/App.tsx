@@ -20,6 +20,7 @@ import Invoice from "@/pages/Invoice";
 import Portfolio from "@/pages/Portfolio";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
+import ForgotPassword from "@/pages/ForgotPassword";
 import Profile from "@/pages/Profile";
 import Kyc from "@/pages/Kyc";
 import Banks from "@/pages/Banks";
@@ -195,6 +196,7 @@ function App() {
 
                 <Route path="/login" component={Login} />
                 <Route path="/signup" component={Signup} />
+                <Route path="/forgot-password" component={ForgotPassword} />
                 
                 <Route component={NotFound} />
               </Switch>

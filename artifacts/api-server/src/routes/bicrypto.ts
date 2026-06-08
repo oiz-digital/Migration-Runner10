@@ -23,7 +23,7 @@ import { getCache, getInrRate } from "../lib/price-service";
 import { getHistory as getPriceHistory } from "../lib/price-history";
 import { rGet, rSet } from "../lib/redis";
 import { randomBytes, createHash } from "node:crypto";
-import { consumeVerifiedOtp } from "./otp";
+import { consumeVerifiedOtp, dispatchOtp } from "./otp";
 import { placeSpotOrder, cancelSpotOrderById } from "./orders";
 import { getSpotFeeRates, loadVipTiers, type VipTier } from "./fees";
 
@@ -419,39 +419,64 @@ r.post("/auth/reset", async (req, res): Promise<void> => {
   if (!email) { res.status(400).json({ message: "email required" }); return; }
   const lower = String(email).toLowerCase();
   const [u] = await db.select().from(usersTable).where(eq(usersTable.email, lower)).limit(1);
-  // ALWAYS respond OK to prevent enumeration; only actually issue OTP if user exists.
-  if (u) {
-    // Re-use OTP rate-limit logic by making a synthetic request to the same DB.
-    const code = String(100000 + Math.floor(Math.random() * 900000));
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-    try {
-      await db.insert(otpCodesTable).values({
-        userId: u.id, channel: "email", purpose: "reset",
-        recipient: lower, code: createHash("sha256").update(code).digest("hex"),
-        expiresAt,
-      });
-      req.log.info({ recipient: lower, purpose: "reset" }, "password reset OTP issued");
-    } catch (e: any) {
-      req.log.error({ err: e?.message, recipient: lower }, "failed to insert reset OTP");
-    }
+  // Always respond with a safe payload to prevent account enumeration.
+  if (!u) {
+    res.json({ ok: true, message: "If that account exists, a reset code has been sent." });
+    return;
   }
-  res.json({ message: "If that account exists, a reset code has been sent." });
+  const result = await dispatchOtp({ channel: "email", purpose: "reset", recipient: lower, log: req.log });
+  if (!result.ok) {
+    res.status(result.status).json({ message: result.error }); return;
+  }
+  req.log.info({ recipient: lower, otpId: result.otpId }, "password reset OTP dispatched");
+  const payload: Record<string, unknown> = {
+    ok: true,
+    otpId: result.otpId,
+    expiresInSec: result.expiresInSec,
+    message: "Reset code sent to your email",
+  };
+  if (result.devCode) payload.devCode = result.devCode;
+  res.json(payload);
 });
 
 r.post("/auth/reset/confirm", async (req, res): Promise<void> => {
-  const { email, otpId, newPassword } = req.body ?? {};
-  if (!email || !otpId || !newPassword || String(newPassword).length < 6) {
-    res.status(400).json({ message: "email, otpId and newPassword (6+ chars) required" }); return;
+  const { email, otpId, code, newPassword } = req.body ?? {};
+  if (!email || !otpId || !code || !newPassword || String(newPassword).length < 8) {
+    res.status(400).json({ message: "email, otpId, code and newPassword (8+ chars) required" }); return;
   }
   const lower = String(email).toLowerCase();
   const [u] = await db.select().from(usersTable).where(eq(usersTable.email, lower)).limit(1);
   if (!u) { res.status(400).json({ message: "Invalid reset request" }); return; }
-  const consumed = await consumeVerifiedOtp({ otpId: Number(otpId), purpose: "reset", userId: u.id, recipient: lower });
-  if (!consumed.ok) { res.status(400).json({ message: consumed.error }); return; }
-  await db.update(usersTable).set({ passwordHash: await hashPassword(String(newPassword)), updatedAt: new Date() }).where(eq(usersTable.id, u.id));
-  // Invalidate every existing session for this user — refresh tokens are now stale.
+
+  // Inline OTP verification (same logic as /otp/verify but purpose-locked to "reset")
+  const { createHash: ch } = await import("node:crypto");
+  const codeHash = ch("sha256").update(String(code).trim()).digest("hex");
+  const [otp] = await db.select().from(otpCodesTable)
+    .where(eq(otpCodesTable.id, Number(otpId)))
+    .limit(1);
+  if (!otp) { res.status(404).json({ message: "Reset code not found or already used" }); return; }
+  if (otp.purpose !== "reset") { res.status(400).json({ message: "Invalid reset code" }); return; }
+  if (otp.userId !== u.id) { res.status(400).json({ message: "Invalid reset request" }); return; }
+  if (new Date(otp.expiresAt).getTime() <= Date.now()) {
+    res.status(410).json({ message: "Reset code expired — request a new one" }); return;
+  }
+  const attempts = (otp.attempts ?? 0) + 1;
+  if (attempts > 5) { res.status(429).json({ message: "Too many attempts — request a new code" }); return; }
+  if (otp.code !== codeHash) {
+    await db.update(otpCodesTable).set({ attempts }).where(eq(otpCodesTable.id, otp.id));
+    res.status(400).json({ message: `Wrong code — ${5 - attempts} attempt${5 - attempts === 1 ? "" : "s"} left` }); return;
+  }
+  // Burn OTP + update password atomically
+  await db.update(otpCodesTable)
+    .set({ verifiedAt: new Date(), expiresAt: new Date() })
+    .where(eq(otpCodesTable.id, otp.id));
+  await db.update(usersTable)
+    .set({ passwordHash: await hashPassword(String(newPassword)), updatedAt: new Date() })
+    .where(eq(usersTable.id, u.id));
+  // Invalidate every existing session — old tokens are now stale
   try { await db.delete(sessionsTable).where(eq(sessionsTable.userId, u.id)); } catch {}
-  res.json({ message: "Password reset successful" });
+  req.log.info({ userId: u.id }, "password reset confirmed");
+  res.json({ ok: true, message: "Password reset successful" });
 });
 
 r.post("/auth/change-password", bicryptoAuth, async (req: any, res): Promise<void> => {
