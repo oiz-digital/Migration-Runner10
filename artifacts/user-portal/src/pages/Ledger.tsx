@@ -73,7 +73,7 @@ const TYPE_META: Record<string, { label: string; icon: React.ReactNode; tone: st
 };
 
 const FILTER_TYPES = [
-  { value: "", label: "All types" },
+  { value: "all", label: "All types" },
   { value: "ai_earning", label: "AI Trade Earnings" },
   { value: "deposit_inr", label: "INR Deposits" },
   { value: "deposit_crypto", label: "Crypto Deposits" },
@@ -220,7 +220,7 @@ export default function LedgerPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2 mb-4">
-        <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); setPage(0); }}>
+        <Select value={typeFilter || "all"} onValueChange={(v) => { setTypeFilter(v === "all" ? "" : v); setPage(0); }}>
           <SelectTrigger className="w-44 h-8 text-xs">
             <SelectValue placeholder="All types" />
           </SelectTrigger>
