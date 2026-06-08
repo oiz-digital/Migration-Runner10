@@ -58,9 +58,11 @@ import adminWalletManagerRouter from "./admin-wallet-manager";
 import adminSystemRouter from "./admin-system";
 import adminPriceAlertsRouter from "./admin-price-alerts";
 import razorpayRouter from "./razorpay";
+import apiAliasesRouter from "./api-aliases";
 
 const router: IRouter = Router();
 
+router.use(apiAliasesRouter);
 router.use(healthRouter);
 // Bicrypto v5 contract adapter — mounted FIRST so /auth/register (PoW),
 // /auth/login/flutter, /auth/refresh, /settings, /exchange/* and the futures

@@ -1,0 +1,3 @@
+- [API aliases](api-aliases.md) — added `/api/finance/wallets`, `/api/finance/ledger`, `/api/futures/positions`, `/api/copy-trading/strategies`, `/api/smartapi/status` route aliases.
+- [Live mode setup](live-mode-setup.md) — demo data cleaned, 8 AI plans seeded, 23 exchange settings set, market-making bots active.
+- [P2P codegen](p2p-codegen.md) — P2P hooks missing from generated client; fix = run `pnpm --filter @workspace/api-spec run codegen` then `pnpm run typecheck:libs`.
