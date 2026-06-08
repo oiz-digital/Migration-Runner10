@@ -1,53 +1,125 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Link } from "wouter";
-import { Bot, Send, Loader2, X, Sparkles, MessageSquare, ExternalLink } from "lucide-react";
+import {
+  Bot, Send, Loader2, X, Sparkles, MessageSquare,
+  ExternalLink, ChevronDown, RotateCcw, Copy, Check,
+  Minimize2, Maximize2, Zap,
+} from "lucide-react";
 import { post, ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
+import { cn } from "@/lib/utils";
 
-type Msg = { role: "user" | "assistant"; content: string };
+type Msg = {
+  role: "user" | "assistant";
+  content: string;
+  ts: number;
+  id: string;
+  error?: boolean;
+};
 
-const QUICK = [
-  "Deposit pending",
-  "How to do KYC?",
-  "Withdraw issue",
-  "Add bank",
-  "Trading fees?",
+const QUICK_REPLIES = [
+  "How do I complete KYC?",
+  "My deposit is pending",
+  "Withdrawal not received",
+  "How to add bank account?",
+  "What are trading fees?",
+  "How referrals work?",
 ];
 
-/**
- * Floating support chat bubble visible across the user portal once logged in.
- * Stateless against the backend — just calls /support/ai-chat with rolling
- * history. For persistent tickets, the user can jump to /support → Tickets.
- */
+let _msgCounter = 0;
+function uid() { return `m${++_msgCounter}_${Date.now()}`; }
+
+function formatTime(ts: number) {
+  return new Date(ts).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+}
+
+function renderContent(text: string) {
+  const lines = text.split("\n");
+  return lines.map((line, i) => {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("• ") || trimmed.startsWith("- ")) {
+      return (
+        <div key={i} className="flex gap-1.5 mt-0.5">
+          <span className="text-amber-400 mt-0.5 flex-shrink-0">•</span>
+          <span>{trimmed.slice(2)}</span>
+        </div>
+      );
+    }
+    if (/^\d+\.\s/.test(trimmed)) {
+      const [num, ...rest] = trimmed.split(". ");
+      return (
+        <div key={i} className="flex gap-1.5 mt-0.5">
+          <span className="text-amber-400 flex-shrink-0 font-semibold">{num}.</span>
+          <span>{rest.join(". ")}</span>
+        </div>
+      );
+    }
+    if (trimmed === "") return <div key={i} className="h-1.5" />;
+    return <div key={i}>{line}</div>;
+  });
+}
+
 export default function SupportChatWidget() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Initialize greeting once user is known
   useEffect(() => {
     if (!user || messages.length > 0) return;
+    const firstName = user.fullName?.split(" ")[0] || "there";
     setMessages([{
       role: "assistant",
-      content: `Hi ${user.fullName?.split(" ")[0] || "there"}! I'm Zara. Ask me anything — KYC, deposits, withdrawals, bank, trading, referrals…`,
+      content: `Hi ${firstName}! I'm Zara, your Zebvix AI assistant.\n\nI can help with KYC, deposits, withdrawals, bank accounts, trading fees, referrals, and more. What can I help you with today?`,
+      ts: Date.now(),
+      id: uid(),
     }]);
-  }, [user, messages.length]);
+  }, [user]);
+
+  useEffect(() => {
+    if (!open) return;
+    setHasUnread(false);
+    setUnreadCount(0);
+    setTimeout(() => {
+      scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+      inputRef.current?.focus();
+    }, 80);
+  }, [open]);
 
   useEffect(() => {
     if (open) {
-      setHasUnread(false);
-      requestAnimationFrame(() => {
+      setTimeout(() => {
         scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-      });
+      }, 50);
     }
-  }, [open, messages, sending]);
+  }, [messages, sending, open]);
+
+  const copyMsg = useCallback((id: string, content: string) => {
+    navigator.clipboard.writeText(content).then(() => {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  }, []);
+
+  const clearChat = useCallback(() => {
+    if (!user) return;
+    const firstName = user.fullName?.split(" ")[0] || "there";
+    setMessages([{
+      role: "assistant",
+      content: `Hi ${firstName}! Chat cleared. How can I help you?`,
+      ts: Date.now(),
+      id: uid(),
+    }]);
+  }, [user]);
 
   if (!user) return null;
 
@@ -56,34 +128,47 @@ export default function SupportChatWidget() {
     if (!msg || sending) return;
     setSending(true);
     setInput("");
-    const next: Msg[] = [...messages, { role: "user", content: msg }];
+    const userMsg: Msg = { role: "user", content: msg, ts: Date.now(), id: uid() };
+    const next = [...messages, userMsg];
     setMessages(next);
     try {
-      const history = next.slice(-10).map((m) => ({ role: m.role, content: m.content }));
-      const r = await post<{ reply: string }>("/support/ai-chat", { message: msg, history });
-      setMessages((curr) => [...curr, { role: "assistant", content: r.reply }]);
-      if (!open) setHasUnread(true);
+      const history = next.slice(-12).map((m) => ({ role: m.role, content: m.content }));
+      const r = await post<{ reply: string; configured?: boolean }>("/support/ai-chat", { message: msg, history });
+      const reply: Msg = { role: "assistant", content: r.reply, ts: Date.now(), id: uid() };
+      setMessages((curr) => [...curr, reply]);
+      if (!open) {
+        setHasUnread(true);
+        setUnreadCount((n) => n + 1);
+      }
     } catch (e: any) {
-      const errMsg = e instanceof ApiError ? (e.data?.reply || e.message) : "Network error. Please try again.";
-      setMessages((curr) => [...curr, { role: "assistant", content: errMsg }]);
+      const errText = e instanceof ApiError
+        ? (e.data?.reply || e.message || "Something went wrong.")
+        : "Network error. Please try again.";
+      setMessages((curr) => [...curr, { role: "assistant", content: errText, ts: Date.now(), id: uid(), error: true }]);
     } finally {
       setSending(false);
+      setTimeout(() => inputRef.current?.focus(), 50);
     }
   }
 
+  const panelW = expanded ? "w-[520px]" : "w-[380px]";
+  const panelH = expanded ? "h-[680px]" : "h-[540px]";
+
   return (
     <>
-      {/* Floating button */}
+      {/* Floating bubble */}
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-5 right-5 z-50 h-14 w-14 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-black shadow-2xl shadow-amber-500/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
+          className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 text-black shadow-2xl shadow-amber-500/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-200 group"
+          aria-label="Open AI support chat"
           data-testid="floating-chat-button"
-          aria-label="Open support chat"
         >
-          <Bot className="h-6 w-6" />
-          {hasUnread && (
-            <span className="absolute top-1 right-1 h-3 w-3 rounded-full bg-rose-500 border-2 border-zinc-950 animate-pulse" />
+          <Bot className="h-6 w-6 group-hover:rotate-12 transition-transform duration-200" />
+          {hasUnread && unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-rose-500 border-2 border-white text-white text-[10px] font-bold flex items-center justify-center animate-bounce">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
           )}
         </button>
       )}
@@ -91,54 +176,90 @@ export default function SupportChatWidget() {
       {/* Panel */}
       {open && (
         <div
-          className="fixed bottom-5 right-5 z-50 w-[360px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-2.5rem)] rounded-2xl border border-amber-500/30 bg-zinc-950 shadow-2xl shadow-amber-500/10 flex flex-col overflow-hidden"
+          className={cn(
+            "fixed bottom-6 right-6 z-50 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)] rounded-2xl border border-white/10 bg-[#0d0f16] shadow-2xl shadow-black/60 flex flex-col overflow-hidden transition-all duration-200",
+            panelW, panelH,
+          )}
           data-testid="floating-chat-panel"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-gradient-to-r from-amber-500/10 to-transparent">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/8 bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent flex-shrink-0">
+            <div className="flex items-center gap-2.5">
               <div className="relative">
-                <div className="h-9 w-9 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-black">
+                <div className="h-9 w-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-black shadow-lg shadow-amber-500/30">
                   <Bot className="h-5 w-5" />
                 </div>
-                <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-zinc-950" />
+                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-[#0d0f16]" />
               </div>
               <div>
-                <div className="font-semibold text-sm">Zara · AI Support</div>
-                <div className="text-[10px] text-emerald-400 flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Online
+                <div className="font-semibold text-sm text-white leading-none mb-0.5">Zara · AI Support</div>
+                <div className="text-[10px] text-emerald-400 flex items-center gap-1 leading-none">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Online · typically replies instantly
                 </div>
               </div>
             </div>
-            <button
-              onClick={() => setOpen(false)}
-              className="h-8 w-8 rounded-md hover:bg-zinc-800 flex items-center justify-center text-muted-foreground"
-              data-testid="floating-chat-close"
-              aria-label="Close chat"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              <div className="hidden sm:flex items-center gap-1 mr-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+                <Zap className="h-2.5 w-2.5 text-amber-400" />
+                <span className="text-[9px] font-semibold text-amber-400 uppercase tracking-wide">AI</span>
+              </div>
+              <button
+                onClick={clearChat}
+                className="h-7 w-7 rounded-md hover:bg-white/8 flex items-center justify-center text-zinc-500 hover:text-zinc-300 transition-colors"
+                title="Clear chat"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={() => setExpanded((v) => !v)}
+                className="h-7 w-7 rounded-md hover:bg-white/8 hidden sm:flex items-center justify-center text-zinc-500 hover:text-zinc-300 transition-colors"
+                title={expanded ? "Collapse" : "Expand"}
+              >
+                {expanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+              </button>
+              <button
+                onClick={() => setOpen(false)}
+                className="h-7 w-7 rounded-md hover:bg-white/8 flex items-center justify-center text-zinc-500 hover:text-zinc-300 transition-colors"
+                aria-label="Close chat"
+                data-testid="floating-chat-close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
           {/* Messages */}
-          <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-2.5">
-            {messages.map((m, i) => (
-              <Bubble key={i} role={m.role} content={m.content} />
+          <div
+            ref={scrollRef}
+            className="flex-1 overflow-y-auto px-3 py-3 space-y-3 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10"
+            data-testid="floating-chat-scroll"
+          >
+            {messages.map((m) => (
+              <MessageBubble
+                key={m.id}
+                msg={m}
+                copied={copiedId === m.id}
+                onCopy={() => copyMsg(m.id, m.content)}
+              />
             ))}
-            {sending && <Bubble role="assistant" content="" typing />}
+            {sending && <TypingIndicator />}
+
+            {/* Scroll anchor */}
+            <div className="h-1" />
           </div>
 
-          {/* Suggestions row (only if conversation is fresh) */}
-          {messages.length <= 1 && (
-            <div className="px-3 py-2 border-t border-zinc-800/60">
+          {/* Quick replies */}
+          {messages.length <= 1 && !sending && (
+            <div className="px-3 pb-2 flex-shrink-0">
+              <div className="text-[9px] uppercase tracking-widest text-zinc-600 mb-1.5 font-semibold">Quick questions</div>
               <div className="flex flex-wrap gap-1.5">
-                {QUICK.map((q) => (
+                {QUICK_REPLIES.map((q) => (
                   <button
                     key={q}
                     onClick={() => send(q)}
-                    disabled={sending}
-                    className="text-[11px] px-2.5 py-1 rounded-full border border-zinc-800 hover:border-amber-500/40 hover:bg-amber-500/5 text-zinc-300 transition-colors"
-                    data-testid={`floating-suggest-${q.slice(0, 10)}`}
+                    className="text-[11px] px-2.5 py-1 rounded-full border border-zinc-800 hover:border-amber-500/50 hover:bg-amber-500/8 hover:text-amber-300 text-zinc-400 transition-all duration-150"
+                    data-testid={`floating-quick-${q.slice(0, 8)}`}
                   >
                     {q}
                   </button>
@@ -148,60 +269,111 @@ export default function SupportChatWidget() {
           )}
 
           {/* Input */}
-          <form
-            onSubmit={(e) => { e.preventDefault(); send(input); }}
-            className="flex items-end gap-2 px-3 py-2.5 border-t border-zinc-800 bg-zinc-950/50"
-          >
-            <Textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); }
-              }}
-              placeholder="Type a message…"
-              rows={1}
-              className="min-h-[36px] max-h-24 resize-none bg-zinc-900 border-zinc-800 text-sm"
-              disabled={sending}
-              data-testid="floating-chat-input"
-            />
-            <Button
-              type="submit"
-              disabled={sending || !input.trim()}
-              className="bg-gradient-to-r from-amber-500 to-orange-500 text-black hover:from-amber-400 hover:to-orange-400 h-9 px-3"
-              data-testid="floating-chat-send"
+          <div className="flex-shrink-0 border-t border-white/8 bg-[#0a0c12]/80 px-3 py-2.5">
+            <form
+              onSubmit={(e) => { e.preventDefault(); send(input); }}
+              className="flex items-end gap-2"
             >
-              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            </Button>
-          </form>
-
-          {/* Footer link */}
-          <Link href="/support" className="px-3 py-2 border-t border-zinc-800 text-[11px] text-muted-foreground hover:text-amber-400 flex items-center justify-between transition-colors" onClick={() => setOpen(false)} data-testid="floating-chat-fullpage">
-            <span className="flex items-center gap-1.5"><MessageSquare className="h-3 w-3" /> Open full Support page or create a ticket</span>
-            <ExternalLink className="h-3 w-3" />
-          </Link>
+              <Textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); }
+                }}
+                placeholder="Ask anything…"
+                rows={1}
+                className="min-h-[36px] max-h-28 resize-none bg-zinc-900/80 border-zinc-800 text-sm text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-amber-500/30 focus-visible:border-amber-500/40 rounded-xl"
+                disabled={sending}
+                data-testid="floating-chat-input"
+              />
+              <Button
+                type="submit"
+                disabled={sending || !input.trim()}
+                className="bg-gradient-to-r from-amber-400 to-orange-500 text-black hover:from-amber-300 hover:to-orange-400 h-9 w-9 p-0 rounded-xl flex-shrink-0 shadow-lg shadow-amber-500/20 disabled:opacity-40 disabled:shadow-none"
+                data-testid="floating-chat-send"
+              >
+                {sending
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <Send className="h-4 w-4" />}
+              </Button>
+            </form>
+            <div className="flex items-center justify-between mt-1.5">
+              <span className="text-[9px] text-zinc-700">Enter to send · Shift+Enter for new line</span>
+              <Link
+                href="/support"
+                className="text-[9px] text-zinc-600 hover:text-amber-400 flex items-center gap-1 transition-colors"
+                onClick={() => setOpen(false)}
+                data-testid="floating-chat-fullpage"
+              >
+                <MessageSquare className="h-2.5 w-2.5" /> Open tickets
+                <ExternalLink className="h-2.5 w-2.5" />
+              </Link>
+            </div>
+          </div>
         </div>
       )}
     </>
   );
 }
 
-function Bubble({ role, content, typing }: { role: "user" | "assistant"; content: string; typing?: boolean }) {
-  const isAi = role === "assistant";
+function MessageBubble({ msg, copied, onCopy }: { msg: Msg; copied: boolean; onCopy: () => void }) {
+  const isAi = msg.role === "assistant";
   return (
-    <div className={`flex ${isAi ? "justify-start" : "justify-end"}`} data-testid={`floating-bubble-${role}`}>
+    <div className={cn("group flex gap-2", isAi ? "justify-start" : "justify-end")} data-testid={`floating-bubble-${msg.role}`}>
       {isAi && (
-        <div className="h-6 w-6 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-black flex-shrink-0 mr-1.5">
-          <Bot className="h-3 w-3" />
+        <div className="h-7 w-7 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-black flex-shrink-0 mt-0.5 shadow-md shadow-amber-500/20">
+          <Bot className="h-3.5 w-3.5" />
         </div>
       )}
-      <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-[13px] leading-relaxed whitespace-pre-wrap ${isAi ? "bg-zinc-900 border border-zinc-800 text-zinc-100 rounded-tl-sm" : "bg-gradient-to-br from-amber-500 to-orange-500 text-black font-medium rounded-tr-sm"}`}>
-        {typing ? (
-          <span className="inline-flex gap-1 py-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-bounce" />
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: "150ms" }} />
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: "300ms" }} />
-          </span>
-        ) : content}
+      <div className={cn("max-w-[82%] flex flex-col", isAi ? "items-start" : "items-end")}>
+        <div
+          className={cn(
+            "px-3.5 py-2.5 rounded-2xl text-[13px] leading-relaxed",
+            isAi
+              ? cn(
+                  "bg-zinc-900 border rounded-tl-sm text-zinc-100",
+                  msg.error ? "border-rose-500/30 bg-rose-950/20" : "border-zinc-800",
+                )
+              : "bg-gradient-to-br from-amber-400 to-orange-500 text-black font-medium rounded-tr-sm shadow-md shadow-amber-500/10",
+          )}
+        >
+          {isAi ? renderContent(msg.content) : msg.content}
+        </div>
+        <div className={cn("flex items-center gap-2 mt-1 px-0.5", isAi ? "flex-row" : "flex-row-reverse")}>
+          <span className="text-[9px] text-zinc-700">{formatTime(msg.ts)}</span>
+          {isAi && (
+            <button
+              onClick={onCopy}
+              className="opacity-0 group-hover:opacity-100 transition-opacity text-zinc-600 hover:text-zinc-400"
+              title="Copy"
+            >
+              {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+            </button>
+          )}
+        </div>
+      </div>
+      {!isAi && (
+        <div className="h-7 w-7 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center flex-shrink-0 mt-0.5 text-[10px] font-bold text-zinc-400">
+          U
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TypingIndicator() {
+  return (
+    <div className="flex gap-2 items-end" data-testid="floating-typing">
+      <div className="h-7 w-7 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-black flex-shrink-0 shadow-md shadow-amber-500/20">
+        <Bot className="h-3.5 w-3.5" />
+      </div>
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl rounded-tl-sm px-4 py-3">
+        <div className="flex gap-1.5 items-center">
+          <span className="h-2 w-2 rounded-full bg-amber-400/60 animate-bounce" style={{ animationDelay: "0ms" }} />
+          <span className="h-2 w-2 rounded-full bg-amber-400/60 animate-bounce" style={{ animationDelay: "160ms" }} />
+          <span className="h-2 w-2 rounded-full bg-amber-400/60 animate-bounce" style={{ animationDelay: "320ms" }} />
+        </div>
       </div>
     </div>
   );

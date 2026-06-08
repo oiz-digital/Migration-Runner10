@@ -39,7 +39,7 @@ type SecurityResp = {
 
 const LANGUAGES = [
   { code: "en", label: "English" },
-  { code: "hi", label: "हिंदी (Hindi)" },
+  { code: "hi", label: "Hindi" },
   { code: "es", label: "Español" },
   { code: "fr", label: "Français" },
   { code: "ar", label: "العربية" },

@@ -39,7 +39,7 @@ const ASSETS = [
   { icon: ImageIcon, title: "Logos & wordmarks", body: "SVG + PNG, light and dark variants, with safe-area guidance.", note: "ZIP · 2.4 MB" },
   { icon: ImageIcon, title: "Founder & team photos", body: "High-resolution headshots and candid team images.", note: "ZIP · 18 MB" },
   { icon: FileText, title: "One-pager (English)", body: "What we do, by the numbers, leadership, contacts.", note: "PDF · 480 KB" },
-  { icon: FileText, title: "One-pager (हिन्दी)", body: "Vernacular fact-sheet for Hindi-language outlets.", note: "PDF · 510 KB" },
+  { icon: FileText, title: "One-pager (Hindi)", body: "Vernacular fact-sheet for Hindi-language outlets.", note: "PDF · 510 KB" },
   { icon: Building2, title: "Office photography", body: "Bengaluru HQ and Mumbai office interiors.", note: "ZIP · 32 MB" },
   { icon: Sparkles, title: "Product screenshots", body: "Web exchange, mobile apps, futures, and Earn.", note: "ZIP · 12 MB" },
 ];

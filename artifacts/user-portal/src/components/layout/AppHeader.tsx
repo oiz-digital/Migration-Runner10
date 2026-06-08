@@ -90,12 +90,12 @@ type Language = {
 
 const LANGUAGES: Language[] = [
   { code: "en", label: "English", native: "English", flag: "🇬🇧" },
-  { code: "hi", label: "Hindi", native: "हिन्दी", flag: "🇮🇳" },
-  { code: "bn", label: "Bengali", native: "বাংলা", flag: "🇮🇳" },
-  { code: "ta", label: "Tamil", native: "தமிழ்", flag: "🇮🇳" },
-  { code: "te", label: "Telugu", native: "తెలుగు", flag: "🇮🇳" },
-  { code: "mr", label: "Marathi", native: "मराठी", flag: "🇮🇳" },
-  { code: "gu", label: "Gujarati", native: "ગુજરાતી", flag: "🇮🇳" },
+  { code: "hi", label: "Hindi", native: "Hindi", flag: "🇮🇳" },
+  { code: "bn", label: "Bengali", native: "Bengali", flag: "🇮🇳" },
+  { code: "ta", label: "Tamil", native: "Tamil", flag: "🇮🇳" },
+  { code: "te", label: "Telugu", native: "Telugu", flag: "🇮🇳" },
+  { code: "mr", label: "Marathi", native: "Marathi", flag: "🇮🇳" },
+  { code: "gu", label: "Gujarati", native: "Gujarati", flag: "🇮🇳" },
   { code: "es", label: "Spanish", native: "Español", flag: "🇪🇸" },
   { code: "zh", label: "Chinese", native: "中文", flag: "🇨🇳" },
   { code: "ar", label: "Arabic", native: "العربية", flag: "🇸🇦" },

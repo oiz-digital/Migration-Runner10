@@ -377,24 +377,42 @@ function LiveChat() {
   );
 }
 
+function renderMsgContent(text: string) {
+  return text.split("\n").map((line, i) => {
+    const t = line.trim();
+    if (t.startsWith("• ") || t.startsWith("- ")) {
+      return <div key={i} className="flex gap-1.5 mt-0.5"><span className="text-amber-400 mt-0.5 flex-shrink-0">•</span><span>{t.slice(2)}</span></div>;
+    }
+    if (/^\d+\.\s/.test(t)) {
+      const dot = t.indexOf(". ");
+      return <div key={i} className="flex gap-1.5 mt-0.5"><span className="text-amber-400 flex-shrink-0 font-semibold">{t.slice(0, dot)}.</span><span>{t.slice(dot + 2)}</span></div>;
+    }
+    if (t === "") return <div key={i} className="h-1.5" />;
+    return <div key={i}>{line}</div>;
+  });
+}
+
 function Bubble({ role, content, typing }: { role: "user" | "assistant"; content: string; typing?: boolean }) {
   const isAi = role === "assistant";
   return (
-    <div className={`flex ${isAi ? "justify-start" : "justify-end"}`} data-testid={`bubble-${role}`}>
+    <div className={`flex gap-2 ${isAi ? "justify-start" : "justify-end"}`} data-testid={`bubble-${role}`}>
       {isAi && (
-        <div className="h-7 w-7 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-black flex-shrink-0 mr-2">
+        <div className="h-7 w-7 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-black flex-shrink-0 mt-0.5 shadow-md shadow-amber-500/20">
           <Bot className="h-3.5 w-3.5" />
         </div>
       )}
-      <div className={`max-w-[80%] px-3.5 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${isAi ? "bg-zinc-900 border border-zinc-800 text-zinc-100 rounded-tl-sm" : "bg-gradient-to-br from-amber-500 to-orange-500 text-black font-medium rounded-tr-sm"}`}>
+      <div className={`max-w-[78%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${isAi ? "bg-zinc-900 border border-zinc-800 text-zinc-100 rounded-tl-sm" : "bg-gradient-to-br from-amber-400 to-orange-500 text-black font-medium rounded-tr-sm shadow-md shadow-amber-500/10"}`}>
         {typing ? (
-          <span className="inline-flex gap-1 py-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: "0ms" }} />
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: "150ms" }} />
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+          <span className="inline-flex gap-1.5 py-0.5 items-center">
+            <span className="h-2 w-2 rounded-full bg-amber-400/70 animate-bounce" style={{ animationDelay: "0ms" }} />
+            <span className="h-2 w-2 rounded-full bg-amber-400/70 animate-bounce" style={{ animationDelay: "160ms" }} />
+            <span className="h-2 w-2 rounded-full bg-amber-400/70 animate-bounce" style={{ animationDelay: "320ms" }} />
           </span>
-        ) : content}
+        ) : isAi ? renderMsgContent(content) : content}
       </div>
+      {!isAi && (
+        <div className="h-7 w-7 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center flex-shrink-0 mt-0.5 text-[10px] font-bold text-zinc-400">U</div>
+      )}
     </div>
   );
 }
