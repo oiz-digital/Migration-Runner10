@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { get, post } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -14,6 +14,96 @@ import {
   BarChart3, TrendingUp, TrendingDown, Search, Building2,
   Globe, RefreshCw, Info, Flag, Link2, ChevronRight,
 } from "lucide-react";
+
+// ─── OHLC types & helpers ─────────────────────────────────────────────────────
+type OHLC = { t: number; o: number; h: number; l: number; c: number; v: number };
+type TF = "M5" | "M15" | "H1" | "H4" | "D1";
+
+const TF_MS: Record<TF, number> = { M5: 300_000, M15: 900_000, H1: 3_600_000, H4: 14_400_000, D1: 86_400_000 };
+
+function genOHLC(base: number, count: number, tfMs: number): OHLC[] {
+  const bars: OHLC[] = [];
+  let price = base;
+  const now = Date.now();
+  for (let i = count; i >= 0; i--) {
+    const t = now - i * tfMs;
+    const vol = base * 0.0015;
+    const o = price;
+    const m1 = (Math.random() - 0.49) * vol;
+    const m2 = (Math.random() - 0.49) * vol;
+    const m3 = (Math.random() - 0.49) * vol;
+    const c = o + m1 + m2;
+    const h = Math.max(o, c) + Math.abs(m3) * 0.4;
+    const l = Math.min(o, c) - Math.abs(m3) * 0.4;
+    bars.push({ t, o: +o.toFixed(2), h: +h.toFixed(2), l: +l.toFixed(2), c: +c.toFixed(2), v: Math.floor(Math.random() * 800000 + 100000) });
+    price = c;
+  }
+  return bars;
+}
+
+function fmtTime(ts: number, tf: TF) {
+  const d = new Date(ts);
+  if (tf === "D1") return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return d.getHours().toString().padStart(2, "0") + ":" + d.getMinutes().toString().padStart(2, "0");
+}
+
+// ─── Candlestick SVG chart ─────────────────────────────────────────────────────
+function CandlestickChart({ bars, symbol, tf, pp }: { bars: OHLC[]; symbol: string; tf: TF; pp: number }) {
+  const W = 900, H = 320, PAD_L = 66, PAD_R = 62, PAD_T = 14, PAD_B = 24;
+  const vis = bars.slice(-100);
+  const maxH = Math.max(...vis.map(b => b.h));
+  const minL = Math.min(...vis.map(b => b.l));
+  const range = maxH - minL || 0.01;
+  const toY = (v: number) => PAD_T + ((maxH - v) / range) * (H - PAD_T - PAD_B);
+  const bW = Math.max(2, (W - PAD_L - PAD_R) / vis.length - 1.2);
+  const bX = (i: number) => PAD_L + i * ((W - PAD_L - PAD_R) / vis.length) + bW / 4;
+  const maxVol = Math.max(...vis.map(b => b.v));
+  const VOL_H = 48;
+  const levels = Array.from({ length: 7 }, (_, i) => minL + (range * i) / 6);
+  return (
+    <svg width="100%" viewBox={`0 0 ${W} ${H + VOL_H}`} preserveAspectRatio="none" className="w-full">
+      {levels.map((lv, i) => (
+        <g key={i}>
+          <line x1={PAD_L} x2={W - PAD_R} y1={toY(lv)} y2={toY(lv)} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+          <text x={W - PAD_R + 3} y={toY(lv) + 4} fill="rgba(255,255,255,0.3)" fontSize="9" textAnchor="start">{lv.toFixed(pp)}</text>
+        </g>
+      ))}
+      {vis.map((b, i) => {
+        const up = b.c >= b.o;
+        const col = up ? "#22c55e" : "#ef4444";
+        const x = bX(i);
+        const cO = toY(b.o), cC = toY(b.c), cH = toY(b.h), cL = toY(b.l);
+        const top = Math.min(cO, cC), bodyH = Math.max(Math.abs(cO - cC), 1);
+        return (
+          <g key={i}>
+            <line x1={x + bW / 2} x2={x + bW / 2} y1={cH} y2={cL} stroke={col} strokeWidth="1" />
+            <rect x={x} y={top} width={bW} height={bodyH} fill={col} rx="0.5" />
+          </g>
+        );
+      })}
+      {vis.length > 0 && (() => {
+        const last = vis[vis.length - 1];
+        const y = toY(last.c);
+        const up = last.c >= last.o;
+        return (
+          <g>
+            <line x1={PAD_L} x2={W - PAD_R} y1={y} y2={y} stroke={up ? "#22c55e" : "#ef4444"} strokeWidth="1" strokeDasharray="4 3" opacity="0.6" />
+            <rect x={W - PAD_R + 1} y={y - 8} width={54} height={16} fill={up ? "#22c55e" : "#ef4444"} rx="2" />
+            <text x={W - PAD_R + 28} y={y + 4} fill="white" fontSize="9" textAnchor="middle" fontWeight="bold">{last.c.toFixed(pp)}</text>
+          </g>
+        );
+      })()}
+      {vis.map((b, i) => {
+        const up = b.c >= b.o;
+        const vH = (b.v / maxVol) * VOL_H * 0.88;
+        return <rect key={i} x={bX(i)} y={H + VOL_H - vH} width={bW} height={vH} fill={up ? "rgba(34,197,94,0.3)" : "rgba(239,68,68,0.3)"} rx="0.5" />;
+      })}
+      {vis.filter((_, i) => i % Math.floor(vis.length / 6) === 0).map((b, i) => (
+        <text key={i} x={bX(i * Math.floor(vis.length / 6))} y={H + VOL_H - 2} fill="rgba(255,255,255,0.28)" fontSize="8">{fmtTime(b.t, tf)}</text>
+      ))}
+    </svg>
+  );
+}
 
 type Instrument = {
   id: number; symbol: string; name: string; assetClass: string;
@@ -73,6 +163,7 @@ export default function Stocks() {
   const [limitPrice, setLimitPrice] = useState("");
   const [leverage, setLeverage] = useState(1);
   const [activeTab, setActiveTab] = useState("chart");
+  const [tf, setTf] = useState<TF>("H1");
 
   const { data: instrData, isLoading, refetch } = useQuery({
     queryKey: ["instruments", "stock"],
@@ -128,6 +219,12 @@ export default function Stocks() {
   const quote = quoteData?.quote ?? null;
   const ltp = quote?.ltp ?? (selected ? Number(selected.currentPrice) : 0);
   const changePct = quote?.changePct ?? (selected ? Number(selected.change24h) : 0);
+
+  const bars = useMemo(() => {
+    if (!selected) return [];
+    const base = Number(selected.currentPrice) || 100;
+    return genOHLC(base, 120, TF_MS[tf]);
+  }, [selected?.symbol, tf]);
 
   useEffect(() => {
     if (!selectedSymbol && instruments.length > 0) setSelectedSymbol(instruments[0].symbol);
@@ -283,20 +380,33 @@ export default function Stocks() {
             </TabsList>
 
             <TabsContent value="chart" className="flex-1 overflow-auto m-0">
-              <div className="h-72 bg-[#0b0e17] border-b border-white/10 flex items-center justify-center relative">
-                <div className="text-center z-10">
-                  <BarChart3 className="w-10 h-10 text-blue-400/30 mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">Stock Chart</p>
-                  <p className="text-xs text-muted-foreground/60">Connect Angel One / Zerodha for live OHLC data</p>
+              {selected ? (
+                <div className="bg-[#0b0e17] border-b border-white/10">
+                  <div className="flex items-center justify-between px-3 pt-2 pb-1">
+                    <div className="flex gap-1">
+                      {(["M5", "M15", "H1", "H4", "D1"] as TF[]).map((t) => (
+                        <button
+                          key={t}
+                          onClick={() => setTf(t)}
+                          className={cn("px-2 py-0.5 rounded text-[10px] font-semibold transition-colors",
+                            tf === t ? "bg-blue-500 text-white" : "text-white/40 hover:text-white/70")}
+                        >{t}</button>
+                      ))}
+                    </div>
+                    <span className="text-[10px] text-white/30">Simulated OHLC · {selected.exchange}</span>
+                  </div>
+                  <div className="px-2 pb-1">
+                    <CandlestickChart bars={bars} symbol={selected.symbol} tf={tf} pp={selected.pricePrecision} />
+                  </div>
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 h-40 flex items-end gap-0.5 px-4 pb-2 opacity-15">
-                  {Array.from({ length: 80 }).map((_, i) => {
-                    const h = 30 + Math.random() * 60;
-                    const isUp = Math.random() > 0.4;
-                    return <div key={i} style={{ height: `${h}%` }} className={cn("flex-1 rounded-sm", isUp ? "bg-emerald-500" : "bg-red-500")} />;
-                  })}
+              ) : (
+                <div className="h-72 bg-[#0b0e17] border-b border-white/10 flex items-center justify-center">
+                  <div className="text-center">
+                    <BarChart3 className="w-10 h-10 text-blue-400/20 mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">Select an instrument to view chart</p>
+                  </div>
                 </div>
-              </div>
+              )}
               {selected && (
                 <div className="p-4 grid grid-cols-2 gap-3 text-xs">
                   <div className="col-span-2 text-sm font-semibold text-white/80 mb-1">Instrument Details</div>
