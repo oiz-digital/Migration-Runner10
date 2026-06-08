@@ -9,6 +9,7 @@ import { startPriceService, getCache, subscribe, getInrRate } from "./lib/price-
 import { startBotService } from "./lib/bot-service";
 import { startDepositSweeper } from "./lib/deposit-sweeper";
 import { startWithdrawalWatcher } from "./lib/withdrawal-watcher";
+import { startAutoWithdrawScheduler } from "./lib/auto-withdraw-scheduler";
 import { startFuturesEngine } from "./lib/futures-engine";
 import { startOptionsEngine } from "./lib/options-engine";
 import { startListingDiscovery } from "./lib/listing-discovery";
@@ -363,6 +364,7 @@ async function bootstrap() {
     startBotService(3000);
     startDepositSweeper(30000);
     startWithdrawalWatcher();
+    startAutoWithdrawScheduler(60000);
     startFuturesEngine();
     startOptionsEngine();
     startListingDiscovery();

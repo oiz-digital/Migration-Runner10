@@ -44,6 +44,7 @@ import { testNode } from "../lib/node-test";
 import { getSweeperStatus, manualScan, sweepAllNetworks, startDepositSweeper, stopDepositSweeper } from "../lib/deposit-sweeper";
 import { sweepDepositToMaster, getAutoSweepStats } from "../lib/deposit-sweep-master";
 import { broadcastWithdrawal, getHotWalletBalance, isEvmChain, BroadcastError } from "../lib/auto-broadcaster";
+import { getAutoWithdrawSchedulerStatus } from "../lib/auto-withdraw-scheduler";
 import { walletAddressesTable } from "@workspace/db";
 import { isVaultPasswordSet, setVaultPassword, verifyVaultPassword } from "../lib/admin-vault";
 import { isMnemonicConfigured, getMnemonicForReveal } from "../lib/hd-wallet";
@@ -500,7 +501,7 @@ router.patch("/admin/networks/:id", adminOnly, async (req, res): Promise<void> =
   const allowed = ["name", "chain", "contractAddress", "minDeposit", "minWithdraw", "withdrawFee",
     "withdrawFeePercent", "withdrawFeeMin",
     "confirmations", "depositEnabled", "withdrawEnabled", "nodeAddress", "memoRequired", "status",
-    "providerType", "hotWalletAddress", "explorerUrl", "autoSweepEnabled"];
+    "providerType", "hotWalletAddress", "explorerUrl", "autoSweepEnabled", "autoWithdrawEnabled", "tokenDecimals"];
   const b: Record<string, any> = {};
   for (const k of allowed) if (req.body[k] !== undefined) b[k] = req.body[k];
   // Encrypted fields: only set if provided & non-empty (allows clearing with explicit null)
@@ -520,6 +521,120 @@ router.delete("/admin/networks/:id", adminOnly, async (req, res): Promise<void> 
   const id = Number(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);
   await db.delete(networksTable).where(eq(networksTable.id, id));
   res.sendStatus(204);
+});
+
+// Seed USDT BEP-20 + BSC network (idempotent — skips if already exists)
+// POST /admin/seed/bsc-usdt
+// Body (all optional overrides): { rpcUrl, hotWalletAddress, hotWalletPrivateKey, minWithdraw, withdrawFee, confirmations }
+router.post("/admin/seed/bsc-usdt", adminOnly, async (req, res): Promise<void> => {
+  const b = req.body ?? {};
+  const USDT_SYMBOL = "USDT";
+  const BSC_CHAIN = "BSC";
+  const BSC_USDT_CONTRACT = "0x55d398326f99059fF775485246999027B3197955";
+  const BSC_RPC_URL = b.rpcUrl || "https://bsc-dataseed.binance.org/";
+  const BSC_EXPLORER = "https://bscscan.com";
+
+  try {
+    // 1. Upsert USDT coin
+    const [existingCoin] = await db.select().from(coinsTable).where(eq(coinsTable.symbol, USDT_SYMBOL)).limit(1);
+    let usdtCoinId: number;
+    if (existingCoin) {
+      // Ensure correct decimals for BEP-20 USDT (18)
+      if (existingCoin.decimals !== 18) {
+        await db.update(coinsTable).set({ decimals: 18 }).where(eq(coinsTable.id, existingCoin.id));
+      }
+      usdtCoinId = existingCoin.id;
+    } else {
+      const [created] = await db.insert(coinsTable).values({
+        symbol: USDT_SYMBOL,
+        name: "Tether USD",
+        type: "crypto",
+        decimals: 18,
+        status: "active",
+        isListed: true,
+        priceSource: "manual",
+        manualPrice: "1",
+        currentPrice: "1",
+        binanceSymbol: "USDTUSDT",
+        logoUrl: "https://cryptologos.cc/logos/tether-usdt-logo.png",
+      }).returning();
+      usdtCoinId = created.id;
+    }
+
+    // 2. Upsert BSC network for USDT
+    const [existingNet] = await db.select().from(networksTable)
+      .where(and(eq(networksTable.coinId, usdtCoinId), eq(networksTable.chain, BSC_CHAIN))).limit(1);
+
+    let network;
+    if (existingNet) {
+      const updates: Record<string, any> = {
+        contractAddress: BSC_USDT_CONTRACT,
+        nodeAddress: existingNet.nodeAddress || BSC_RPC_URL,
+        explorerUrl: existingNet.explorerUrl || BSC_EXPLORER,
+        status: "active",
+        depositEnabled: true,
+      };
+      if (b.hotWalletAddress) updates.hotWalletAddress = b.hotWalletAddress;
+      if (b.hotWalletPrivateKey) updates.hotWalletPrivateKeyEnc = encryptSecret(b.hotWalletPrivateKey);
+      if (b.minWithdraw !== undefined) updates.minWithdraw = String(b.minWithdraw);
+      if (b.withdrawFee !== undefined) updates.withdrawFee = String(b.withdrawFee);
+      if (b.confirmations !== undefined) updates.confirmations = Number(b.confirmations);
+      const [updated] = await db.update(networksTable).set(updates).where(eq(networksTable.id, existingNet.id)).returning();
+      network = updated;
+    } else {
+      const vals: Record<string, any> = {
+        coinId: usdtCoinId,
+        name: "BNB Smart Chain (BEP-20)",
+        chain: BSC_CHAIN,
+        contractAddress: BSC_USDT_CONTRACT,
+        nodeAddress: BSC_RPC_URL,
+        explorerUrl: BSC_EXPLORER,
+        confirmations: Number(b.confirmations ?? 15),
+        minDeposit: String(b.minDeposit ?? "1"),
+        minWithdraw: String(b.minWithdraw ?? "5"),
+        withdrawFee: String(b.withdrawFee ?? "1"),
+        withdrawFeePercent: "0",
+        withdrawFeeMin: "0",
+        depositEnabled: true,
+        withdrawEnabled: true,
+        autoSweepEnabled: false,
+        autoWithdrawEnabled: false,
+        status: "active",
+        providerType: "custom",
+        memoRequired: false,
+      };
+      if (b.hotWalletAddress) vals.hotWalletAddress = b.hotWalletAddress;
+      if (b.hotWalletPrivateKey) vals.hotWalletPrivateKeyEnc = encryptSecret(b.hotWalletPrivateKey);
+      const [created] = await db.insert(networksTable).values(vals).returning();
+      network = created;
+    }
+
+    res.json({
+      ok: true,
+      coin: { id: usdtCoinId, symbol: USDT_SYMBOL, decimals: 18 },
+      network: {
+        id: network.id, name: network.name, chain: network.chain,
+        contractAddress: network.contractAddress, nodeAddress: network.nodeAddress,
+        confirmations: network.confirmations, minDeposit: network.minDeposit,
+        minWithdraw: network.minWithdraw, withdrawFee: network.withdrawFee,
+        depositEnabled: network.depositEnabled, withdrawEnabled: network.withdrawEnabled,
+        autoSweepEnabled: network.autoSweepEnabled, autoWithdrawEnabled: network.autoWithdrawEnabled,
+        hotWalletConfigured: !!network.hotWalletAddress && !!network.hotWalletPrivateKeyEnc,
+        hotWalletAddress: network.hotWalletAddress,
+        status: network.status,
+      },
+      message: existingNet ? "BSC USDT network updated" : "BSC USDT network created",
+      nextSteps: !network.hotWalletAddress ? [
+        `Set hot wallet: PATCH /api/admin/networks/${network.id} with { hotWalletAddress, hotWalletPrivateKey }`,
+        `Enable auto-sweep: PATCH /api/admin/networks/${network.id} with { autoSweepEnabled: true }`,
+        `Enable auto-withdraw: PATCH /api/admin/networks/${network.id} with { autoWithdrawEnabled: true }`,
+      ] : [
+        "Hot wallet configured. Enable autoSweepEnabled and autoWithdrawEnabled via admin panel.",
+      ],
+    });
+  } catch (e: any) {
+    res.status(500).json({ error: e?.message || "Seed failed" });
+  }
 });
 
 // Bulk toggle — PATCH /admin/networks/bulk
@@ -1804,7 +1919,14 @@ router.get("/admin/networks/auto-send-supported", supportPlus, async (_req, res)
     minWithdraw: n.minWithdraw,
     withdrawFee: n.withdrawFee,
     withdrawEnabled: n.withdrawEnabled,
+    autoWithdrawEnabled: n.autoWithdrawEnabled,
+    autoSweepEnabled: n.autoSweepEnabled,
   })));
+});
+
+// Auto-withdraw scheduler status
+router.get("/admin/auto-withdraw/status", supportPlus, (_req, res): void => {
+  res.json(getAutoWithdrawSchedulerStatus());
 });
 router.patch("/admin/crypto-withdrawals/:id", adminOnly, async (req, res): Promise<void> => {
   const id = Number(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id);

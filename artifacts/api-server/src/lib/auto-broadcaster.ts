@@ -97,6 +97,8 @@ export async function broadcastWithdrawal(withdrawalId: number, reviewerId: numb
 
     const [coin] = await trx.select().from(coinsTable).where(eq(coinsTable.id, w.coinId)).limit(1);
     if (!coin) throw new BroadcastError(500, "Coin not found");
+    // tokenDecimals on network overrides coin default (e.g. BSC USDT=18, TRX USDT=6)
+    const tokenDecimals = network.tokenDecimals ?? coin.decimals ?? 18;
 
     const [wallet] = await trx.select().from(walletsTable)
       .where(and(eq(walletsTable.userId, w.userId), eq(walletsTable.coinId, w.coinId), eq(walletsTable.walletType, "spot")))
@@ -131,8 +133,7 @@ export async function broadcastWithdrawal(withdrawalId: number, reviewerId: numb
   try {
     if (network.contractAddress) {
       const erc20 = new ethers.Contract(network.contractAddress, ERC20_ABI, signer);
-      const dec = coin.decimals ?? 18;
-      const amountUnits = ethers.parseUnits(String(w.amount), dec);
+      const amountUnits = ethers.parseUnits(String(w.amount), tokenDecimals);
       tx = await erc20["transfer"]!(w.toAddress, amountUnits);
     } else {
       const amountWei = ethers.parseEther(String(w.amount));

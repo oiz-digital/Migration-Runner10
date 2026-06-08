@@ -138,10 +138,10 @@ export async function sweepNetwork(networkId: number): Promise<SweepResult> {
     return result;
   }
 
-  // Resolve coin (for decimals)
+  // Resolve coin (for decimals — network.tokenDecimals overrides coin default for chains like BSC USDT=18 vs TRX USDT=6)
   const [coin] = await db.select().from(coinsTable).where(eq(coinsTable.id, net.coinId)).limit(1);
   if (!coin) { result.errors.push("coin not found"); return result; }
-  const decimals = coin.decimals ?? 18;
+  const decimals = net.tokenDecimals ?? coin.decimals ?? 18;
 
   // Build RPC url with API key if provided
   let rpcUrl = net.nodeAddress;
