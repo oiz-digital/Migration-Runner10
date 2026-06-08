@@ -28,7 +28,7 @@ export default function Refer() {
   const share = async () => {
     if (!stats?.referralCode) return;
     try {
-      await Share.share({ message: `Join CryptoX Exchange and start trading! Use my referral code ${stats.referralCode} or sign up via ${link}` });
+      await Share.share({ message: `Join Zebvix Exchange and start trading! Use my referral code ${stats.referralCode} or sign up via ${link}` });
     } catch {}
   };
 

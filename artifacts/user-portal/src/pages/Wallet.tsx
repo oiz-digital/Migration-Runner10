@@ -1587,7 +1587,7 @@ function DepositDialog({
               <div className="rounded-xl border border-border bg-muted/10 p-4 text-sm space-y-3">
                 <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Bank Details</div>
                 {[
-                  { label: "Bank", value: "CryptoX Treasury" },
+                  { label: "Bank", value: "Zebvix Treasury" },
                   { label: "Account No.", value: "7878 9090 1212" },
                   { label: "IFSC", value: "CRYP0007878" },
                   { label: "Account Type", value: "Current" },

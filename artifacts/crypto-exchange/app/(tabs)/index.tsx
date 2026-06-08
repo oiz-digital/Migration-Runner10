@@ -688,7 +688,7 @@ export default function HomeScreen() {
 
       {/* Footer */}
       <View style={styles.footer}>
-        <Text style={[styles.footerBrand, { color: colors.primary }]}>CryptoX</Text>
+        <Text style={[styles.footerBrand, { color: colors.primary }]}>Zebvix</Text>
         <Text style={[styles.footerText, { color: colors.mutedForeground }]}>India's premier crypto exchange · 1% TDS compliant</Text>
         <View style={styles.socialRow}>
           {(["twitter", "globe", "send", "youtube"] as const).map(ic => (

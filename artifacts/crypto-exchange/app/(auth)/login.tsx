@@ -47,7 +47,7 @@ export default function LoginScreen() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
           <View style={s.header}>
-            <Text style={s.logo}>CryptoX</Text>
+            <Text style={s.logo}>Zebvix</Text>
             <Text style={s.tagline}>India's Premier Crypto Exchange</Text>
           </View>
 

@@ -48,7 +48,7 @@ async function sendViaTwilio(provider: typeof otpProvidersTable.$inferSelect, ph
   const sid = provider.apiKey;
   const from = provider.senderId || "+1234567890";
   try {
-    const formData = new URLSearchParams({ From: from, To: phone, Body: `Your CryptoX OTP is: ${code}. Valid for 10 minutes. Do not share.` });
+    const formData = new URLSearchParams({ From: from, To: phone, Body: `Your Zebvix OTP is: ${code}. Valid for 10 minutes. Do not share.` });
     const r = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
       method: "POST",
       headers: {
@@ -109,7 +109,7 @@ async function sendVia2Factor(provider: typeof otpProvidersTable.$inferSelect, p
 async function sendViaTextLocal(provider: typeof otpProvidersTable.$inferSelect, phone: string, code: string): Promise<SmsResult> {
   if (!provider.apiKey) return { ok: false, provider: "textlocal", error: "API key not configured" };
   try {
-    const msg = `Your CryptoX OTP is ${code}. Valid for 10 minutes. -${provider.senderId || "ZEBVIX"}`;
+    const msg = `Your Zebvix OTP is ${code}. Valid for 10 minutes. -${provider.senderId || "ZEBVIX"}`;
     const formData = new URLSearchParams({
       apikey: provider.apiKey,
       numbers: phone.replace(/\D/g, ""),

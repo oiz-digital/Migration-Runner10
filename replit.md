@@ -1,4 +1,4 @@
-# CryptoX — Full-Stack Crypto Exchange Platform
+# Zebvix — Full-Stack Crypto Exchange Platform
 
 A full-featured cryptocurrency exchange platform with user trading portal, admin dashboard, REST API, Go-based order matching engine, and Expo mobile app.
 

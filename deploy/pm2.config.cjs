@@ -1,5 +1,5 @@
 /**
- * CryptoX — PM2 Ecosystem Config
+ * Zebvix — PM2 Ecosystem Config
  * Usage:
  *   pm2 start deploy/pm2.config.cjs
  *   pm2 save

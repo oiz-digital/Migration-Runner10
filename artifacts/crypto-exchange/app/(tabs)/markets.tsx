@@ -235,7 +235,7 @@ export default function MarketsScreen() {
       {/* Top Header */}
       <View style={[styles.header, { paddingTop: topPad + 8, backgroundColor: colors.card }]}>
         <View>
-          <Text style={[styles.headerTitle, { color: colors.primary }]}>CryptoX</Text>
+          <Text style={[styles.headerTitle, { color: colors.primary }]}>Zebvix</Text>
           <Text style={[styles.headerSub, { color: colors.mutedForeground }]}>Markets</Text>
         </View>
         <View style={styles.headerRight}>

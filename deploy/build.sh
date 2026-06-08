@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
-# CryptoX — Production Build Script
+# Zebvix — Production Build Script
 # Run from the repo root:  bash deploy/build.sh
 # Or as app user:          sudo -u cryptox bash deploy/build.sh
 # ============================================================
@@ -17,7 +17,7 @@ export NODE_ENV=production
 export PATH=$PATH:/usr/local/go/bin
 
 log "═══════════════════════════════════════════"
-log "  CryptoX — Production Build"
+log "  Zebvix — Production Build"
 log "  Root : $APP_DIR"
 log "  Node : $(node --version)"
 log "  Go   : $(go version | awk '{print $3}')"

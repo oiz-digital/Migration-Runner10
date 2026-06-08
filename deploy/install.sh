@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
-# CryptoX — VPS Initial Setup Script
+# Zebvix — VPS Initial Setup Script
 # Tested on: Ubuntu 22.04 LTS / Debian 12
 # Run as root: sudo bash deploy/install.sh
 # ============================================================
@@ -22,7 +22,7 @@ GO_VERSION="1.22.4"
 PNPM_VERSION="9"
 
 log "═══════════════════════════════════════════"
-log "  CryptoX — VPS Setup"
+log "  Zebvix — VPS Setup"
 log "  App dir : $APP_DIR"
 log "  Node    : $NODE_VERSION"
 log "  Go      : $GO_VERSION"

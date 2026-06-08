@@ -41,7 +41,7 @@ async function sendViaSMTP(cfg: typeof emailConfigsTable.$inferSelect, payload: 
       greetingTimeout: 5000,
     });
     const info = await transporter.sendMail({
-      from: cfg.fromEmail ? `"${cfg.fromName || "CryptoX"}" <${cfg.fromEmail}>` : cfg.username,
+      from: cfg.fromEmail ? `"${cfg.fromName || "Zebvix"}" <${cfg.fromEmail}>` : cfg.username,
       to: payload.to,
       subject: payload.subject,
       html: payload.html,
@@ -63,7 +63,7 @@ async function sendViaSendGrid(cfg: typeof emailConfigsTable.$inferSelect, paylo
       headers: { "Authorization": `Bearer ${cfg.apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         personalizations: [{ to: [{ email: payload.to }], subject: payload.subject }],
-        from: { email: cfg.fromEmail || "no-reply@zebvix.com", name: cfg.fromName || "CryptoX" },
+        from: { email: cfg.fromEmail || "no-reply@zebvix.com", name: cfg.fromName || "Zebvix" },
         content: [
           { type: "text/plain", value: payload.text ?? payload.html.replace(/<[^>]+>/g, "") },
           { type: "text/html", value: payload.html },
@@ -87,7 +87,7 @@ async function sendViaMailgun(cfg: typeof emailConfigsTable.$inferSelect, payloa
   if (!cfg.apiKey || !cfg.domain) return { ok: false, provider: "mailgun", error: "API key and domain required" };
   try {
     const formData = new URLSearchParams({
-      from: cfg.fromEmail ? `${cfg.fromName || "CryptoX"} <${cfg.fromEmail}>` : `CryptoX <no-reply@${cfg.domain}>`,
+      from: cfg.fromEmail ? `${cfg.fromName || "Zebvix"} <${cfg.fromEmail}>` : `Zebvix <no-reply@${cfg.domain}>`,
       to: payload.to,
       subject: payload.subject,
       html: payload.html,
@@ -122,7 +122,7 @@ async function sendViaPostmark(cfg: typeof emailConfigsTable.$inferSelect, paylo
       method: "POST",
       headers: { "Accept": "application/json", "Content-Type": "application/json", "X-Postmark-Server-Token": cfg.apiKey },
       body: JSON.stringify({
-        From: cfg.fromEmail ? `${cfg.fromName || "CryptoX"} <${cfg.fromEmail}>` : "no-reply@zebvix.com",
+        From: cfg.fromEmail ? `${cfg.fromName || "Zebvix"} <${cfg.fromEmail}>` : "no-reply@zebvix.com",
         To: payload.to,
         Subject: payload.subject,
         HtmlBody: payload.html,
@@ -166,11 +166,11 @@ export async function sendOtpEmail(to: string, code: string, purpose: string): P
   const label = purposeLabel[purpose] || "Verification";
   return sendEmail({
     to,
-    subject: `Your CryptoX ${label} Code: ${code}`,
+    subject: `Your Zebvix ${label} Code: ${code}`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:32px;border-radius:12px;border:1px solid #30363d">
         <div style="text-align:center;margin-bottom:24px">
-          <div style="font-size:28px;font-weight:700;color:#f0b429;letter-spacing:-0.5px">CryptoX</div>
+          <div style="font-size:28px;font-weight:700;color:#f0b429;letter-spacing:-0.5px">Zebvix</div>
           <div style="color:#7d8590;font-size:13px;margin-top:4px">India's Professional Crypto Exchange</div>
         </div>
         <h2 style="font-size:18px;font-weight:600;color:#e6edf3;margin:0 0 8px">${label}</h2>
@@ -180,11 +180,11 @@ export async function sendOtpEmail(to: string, code: string, purpose: string): P
         </div>
         <p style="color:#7d8590;font-size:12px;margin:0">If you didn't request this, please ignore this email. Never share this code with anyone.</p>
         <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
-          © ${new Date().getFullYear()} CryptoX · Secure Indian Crypto Exchange
+          © ${new Date().getFullYear()} Zebvix · Secure Indian Crypto Exchange
         </div>
       </div>
     `,
-    text: `Your CryptoX ${label} Code: ${code}\n\nThis code expires in 10 minutes. Never share it with anyone.`,
+    text: `Your Zebvix ${label} Code: ${code}\n\nThis code expires in 10 minutes. Never share it with anyone.`,
   });
 }
 
@@ -195,11 +195,11 @@ export async function sendTradeConfirmEmail(to: string, opts: {
   const isSell = opts.side === "sell";
   return sendEmail({
     to,
-    subject: `Trade ${isSell ? "Sold" : "Bought"} ${opts.qty} ${opts.symbol.split("/")[0]} on CryptoX`,
+    subject: `Trade ${isSell ? "Sold" : "Bought"} ${opts.qty} ${opts.symbol.split("/")[0]} on Zebvix`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:32px;border-radius:12px;border:1px solid #30363d">
         <div style="text-align:center;margin-bottom:24px">
-          <div style="font-size:24px;font-weight:700;color:#f0b429">CryptoX</div>
+          <div style="font-size:24px;font-weight:700;color:#f0b429">Zebvix</div>
         </div>
         <h2 style="font-size:18px;font-weight:600;margin:0 0 16px">Trade Executed ✅</h2>
         <table style="width:100%;border-collapse:collapse;font-size:14px">
@@ -221,16 +221,16 @@ export async function sendTradeConfirmEmail(to: string, opts: {
 export async function sendDepositEmail(to: string, opts: { amount: string; currency: string; method: string }): Promise<SendResult> {
   return sendEmail({
     to,
-    subject: `₹${opts.amount} Credited to Your CryptoX Wallet`,
+    subject: `₹${opts.amount} Credited to Your Zebvix Wallet`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:32px;border-radius:12px;border:1px solid #30363d">
-        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">CryptoX</div></div>
+        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">Zebvix</div></div>
         <h2 style="font-size:18px;font-weight:600;margin:0 0 16px">Deposit Credited ✅</h2>
         <div style="background:#161b22;border:1px solid #3fb950;border-radius:8px;padding:20px;text-align:center">
           <div style="font-size:32px;font-weight:700;color:#3fb950">+${opts.currency} ${opts.amount}</div>
           <div style="color:#7d8590;font-size:13px;margin-top:4px">via ${opts.method}</div>
         </div>
-        <p style="color:#7d8590;font-size:14px;margin-top:20px">Your wallet has been credited. You can now start trading on CryptoX.</p>
+        <p style="color:#7d8590;font-size:14px;margin-top:20px">Your wallet has been credited. You can now start trading on Zebvix.</p>
       </div>
     `,
   });
@@ -241,15 +241,15 @@ export async function sendWelcomeEmail(to: string, opts: { name?: string }): Pro
   const name = opts.name || "Trader";
   return sendEmail({
     to,
-    subject: "Welcome to CryptoX — Your Account Is Ready",
+    subject: "Welcome to Zebvix — Your Account Is Ready",
     html: `
       <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:32px;border-radius:12px;border:1px solid #30363d">
         <div style="text-align:center;margin-bottom:28px">
-          <div style="font-size:28px;font-weight:700;color:#f0b429;letter-spacing:-0.5px">CryptoX</div>
+          <div style="font-size:28px;font-weight:700;color:#f0b429;letter-spacing:-0.5px">Zebvix</div>
           <div style="color:#7d8590;font-size:13px;margin-top:4px">India's Professional Crypto Exchange</div>
         </div>
         <h2 style="font-size:20px;font-weight:700;margin:0 0 8px">Welcome, ${name}! 🎉</h2>
-        <p style="color:#7d8590;font-size:14px;margin:0 0 24px;line-height:1.6">Your CryptoX account is ready. Here's what you can do right away:</p>
+        <p style="color:#7d8590;font-size:14px;margin:0 0 24px;line-height:1.6">Your Zebvix account is ready. Here's what you can do right away:</p>
         <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:24px">
           <tr><td style="padding:8px 0;color:#7d8590">🔐</td><td style="padding:8px 0">Enable 2FA in <strong>Settings → Security</strong></td></tr>
           <tr><td style="padding:8px 0;color:#7d8590">✅</td><td style="padding:8px 0">Complete KYC to unlock higher limits</td></tr>
@@ -260,11 +260,11 @@ export async function sendWelcomeEmail(to: string, opts: { name?: string }): Pro
           <a href="https://zebvix.com/user/markets" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:12px 32px;border-radius:8px;text-decoration:none">Start Trading</a>
         </div>
         <div style="border-top:1px solid #30363d;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
-          © ${new Date().getFullYear()} CryptoX · Secure Indian Crypto Exchange · <a href="https://zebvix.com/user/support-tickets" style="color:#484f58">Support</a>
+          © ${new Date().getFullYear()} Zebvix · Secure Indian Crypto Exchange · <a href="https://zebvix.com/user/support-tickets" style="color:#484f58">Support</a>
         </div>
       </div>
     `,
-    text: `Welcome to CryptoX, ${name}!\n\nYour account is ready. Enable 2FA, complete KYC, and start trading 200+ markets.\n\nhttps://zebvix.com`,
+    text: `Welcome to Zebvix, ${name}!\n\nYour account is ready. Enable 2FA, complete KYC, and start trading 200+ markets.\n\nhttps://zebvix.com`,
   });
 }
 
@@ -273,10 +273,10 @@ export async function sendKycApprovedEmail(to: string, opts: { name?: string; le
   const name = opts.name || "Trader";
   return sendEmail({
     to,
-    subject: `KYC Level ${opts.level} Approved — CryptoX`,
+    subject: `KYC Level ${opts.level} Approved — Zebvix`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:32px;border-radius:12px;border:1px solid #30363d">
-        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">CryptoX</div></div>
+        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">Zebvix</div></div>
         <div style="background:#161b22;border:1px solid #3fb950;border-radius:8px;padding:20px;text-align:center;margin-bottom:20px">
           <div style="font-size:40px">✅</div>
           <div style="font-size:18px;font-weight:700;color:#3fb950;margin-top:8px">KYC Level ${opts.level} Approved</div>
@@ -287,7 +287,7 @@ export async function sendKycApprovedEmail(to: string, opts: { name?: string; le
           <a href="https://zebvix.com/user/wallet" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">Go to Wallet</a>
         </div>
         <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
-          © ${new Date().getFullYear()} CryptoX
+          © ${new Date().getFullYear()} Zebvix
         </div>
       </div>
     `,
@@ -298,10 +298,10 @@ export async function sendKycRejectedEmail(to: string, opts: { name?: string; le
   const name = opts.name || "Trader";
   return sendEmail({
     to,
-    subject: `KYC Level ${opts.level} Requires Resubmission — CryptoX`,
+    subject: `KYC Level ${opts.level} Requires Resubmission — Zebvix`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:32px;border-radius:12px;border:1px solid #30363d">
-        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">CryptoX</div></div>
+        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">Zebvix</div></div>
         <div style="background:#161b22;border:1px solid #f85149;border-radius:8px;padding:20px;text-align:center;margin-bottom:20px">
           <div style="font-size:40px">⚠️</div>
           <div style="font-size:18px;font-weight:700;color:#f85149;margin-top:8px">KYC Level ${opts.level} — Action Required</div>
@@ -317,7 +317,7 @@ export async function sendKycRejectedEmail(to: string, opts: { name?: string; le
           <a href="https://zebvix.com/user/kyc" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">Resubmit KYC</a>
         </div>
         <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
-          © ${new Date().getFullYear()} CryptoX
+          © ${new Date().getFullYear()} Zebvix
         </div>
       </div>
     `,
@@ -330,10 +330,10 @@ export async function sendWithdrawalInitiatedEmail(to: string, opts: {
 }): Promise<SendResult> {
   return sendEmail({
     to,
-    subject: `Withdrawal of ${opts.currency} ${opts.amount} Initiated — CryptoX`,
+    subject: `Withdrawal of ${opts.currency} ${opts.amount} Initiated — Zebvix`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:32px;border-radius:12px;border:1px solid #30363d">
-        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">CryptoX</div></div>
+        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">Zebvix</div></div>
         <h2 style="font-size:18px;font-weight:600;margin:0 0 16px">Withdrawal Initiated 🔄</h2>
         <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:20px">
           <tr><td style="color:#7d8590;padding:6px 0">Asset</td><td style="text-align:right;font-weight:600">${opts.currency}</td></tr>
@@ -347,7 +347,7 @@ export async function sendWithdrawalInitiatedEmail(to: string, opts: {
         </div>
         <p style="color:#484f58;font-size:11px;margin-top:20px;text-align:center">If you did not initiate this withdrawal, contact support immediately.</p>
         <div style="border-top:1px solid #30363d;margin-top:16px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
-          © ${new Date().getFullYear()} CryptoX
+          © ${new Date().getFullYear()} Zebvix
         </div>
       </div>
     `,
@@ -359,10 +359,10 @@ export async function sendWithdrawalCompletedEmail(to: string, opts: {
 }): Promise<SendResult> {
   return sendEmail({
     to,
-    subject: `Withdrawal of ${opts.currency} ${opts.amount} Completed — CryptoX`,
+    subject: `Withdrawal of ${opts.currency} ${opts.amount} Completed — Zebvix`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:32px;border-radius:12px;border:1px solid #30363d">
-        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">CryptoX</div></div>
+        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">Zebvix</div></div>
         <h2 style="font-size:18px;font-weight:600;margin:0 0 16px">Withdrawal Completed ✅</h2>
         <div style="background:#161b22;border:1px solid #3fb950;border-radius:8px;padding:20px;text-align:center;margin-bottom:20px">
           <div style="font-size:28px;font-weight:700;color:#f85149">−${opts.currency} ${opts.amount}</div>
@@ -371,7 +371,7 @@ export async function sendWithdrawalCompletedEmail(to: string, opts: {
         ${opts.txHash ? `<p style="color:#7d8590;font-size:12px;word-break:break-all"><strong style="color:#e6edf3">Tx Hash:</strong> ${opts.txHash}</p>` : ""}
         <p style="color:#7d8590;font-size:14px;margin-top:12px">Your funds have been sent. Please allow time for network confirmation.</p>
         <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
-          © ${new Date().getFullYear()} CryptoX
+          © ${new Date().getFullYear()} Zebvix
         </div>
       </div>
     `,
@@ -385,10 +385,10 @@ export async function sendSecurityAlertEmail(to: string, opts: {
   const time = opts.time || new Date().toUTCString();
   return sendEmail({
     to,
-    subject: `Security Alert: ${opts.event} — CryptoX`,
+    subject: `Security Alert: ${opts.event} — Zebvix`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:32px;border-radius:12px;border:1px solid #30363d">
-        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">CryptoX</div></div>
+        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">Zebvix</div></div>
         <div style="background:#1c1112;border:1px solid #f85149;border-radius:8px;padding:16px;margin-bottom:20px">
           <div style="font-size:16px;font-weight:700;color:#f85149">🚨 Security Alert</div>
           <div style="font-size:14px;color:#e6edf3;margin-top:6px">${opts.event}</div>
@@ -409,7 +409,7 @@ export async function sendSecurityAlertEmail(to: string, opts: {
           <a href="https://zebvix.com/user/settings" style="display:inline-block;background:#f85149;color:#fff;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">Secure My Account</a>
         </div>
         <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
-          © ${new Date().getFullYear()} CryptoX
+          © ${new Date().getFullYear()} Zebvix
         </div>
       </div>
     `,
@@ -423,10 +423,10 @@ export async function sendNewLoginEmail(to: string, opts: {
   const time = opts.time || new Date().toUTCString();
   return sendEmail({
     to,
-    subject: "New Sign-In to Your CryptoX Account",
+    subject: "New Sign-In to Your Zebvix Account",
     html: `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:32px;border-radius:12px;border:1px solid #30363d">
-        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">CryptoX</div></div>
+        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">Zebvix</div></div>
         <h2 style="font-size:18px;font-weight:600;margin:0 0 16px">New Sign-In Detected 🔑</h2>
         <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:20px">
           <tr><td style="color:#7d8590;padding:6px 0">Time</td><td style="text-align:right">${time}</td></tr>
@@ -439,7 +439,7 @@ export async function sendNewLoginEmail(to: string, opts: {
           <a href="https://zebvix.com/user/settings" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">Review Sessions</a>
         </div>
         <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
-          © ${new Date().getFullYear()} CryptoX
+          © ${new Date().getFullYear()} Zebvix
         </div>
       </div>
     `,
@@ -451,15 +451,15 @@ export async function sendPasswordResetEmail(to: string, opts: { resetLink: stri
   const exp = opts.expiresMinutes ?? 30;
   return sendEmail({
     to,
-    subject: "Reset Your CryptoX Password",
+    subject: "Reset Your Zebvix Password",
     html: `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:32px;border-radius:12px;border:1px solid #30363d">
         <div style="text-align:center;margin-bottom:24px">
-          <div style="font-size:28px;font-weight:700;color:#f0b429">CryptoX</div>
+          <div style="font-size:28px;font-weight:700;color:#f0b429">Zebvix</div>
           <div style="color:#7d8590;font-size:13px;margin-top:4px">India's Professional Crypto Exchange</div>
         </div>
         <h2 style="font-size:18px;font-weight:600;margin:0 0 8px">Password Reset Request</h2>
-        <p style="color:#7d8590;font-size:14px;margin:0 0 24px">We received a request to reset your CryptoX password. Click the button below to set a new password. This link expires in <strong>${exp} minutes</strong>.</p>
+        <p style="color:#7d8590;font-size:14px;margin:0 0 24px">We received a request to reset your Zebvix password. Click the button below to set a new password. This link expires in <strong>${exp} minutes</strong>.</p>
         <div style="text-align:center;margin-bottom:24px">
           <a href="${opts.resetLink}" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:12px 32px;border-radius:8px;text-decoration:none">Reset Password</a>
         </div>
@@ -467,11 +467,11 @@ export async function sendPasswordResetEmail(to: string, opts: { resetLink: stri
         <p style="color:#7d8590;font-size:11px;word-break:break-all;margin:0 0 20px;font-family:monospace">${opts.resetLink}</p>
         <p style="color:#484f58;font-size:12px;margin:0">If you did not request a password reset, please ignore this email. Your password will not change.</p>
         <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
-          © ${new Date().getFullYear()} CryptoX
+          © ${new Date().getFullYear()} Zebvix
         </div>
       </div>
     `,
-    text: `Reset your CryptoX password by visiting: ${opts.resetLink}\n\nThis link expires in ${exp} minutes. If you didn't request this, ignore this email.`,
+    text: `Reset your Zebvix password by visiting: ${opts.resetLink}\n\nThis link expires in ${exp} minutes. If you didn't request this, ignore this email.`,
   });
 }
 
@@ -481,10 +481,10 @@ export async function sendAiEarningEmail(to: string, opts: {
 }): Promise<SendResult> {
   return sendEmail({
     to,
-    subject: `AI Trade Earning of $${opts.amountUsdt} USDT Credited — CryptoX`,
+    subject: `AI Trade Earning of $${opts.amountUsdt} USDT Credited — Zebvix`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:32px;border-radius:12px;border:1px solid #30363d">
-        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">CryptoX</div></div>
+        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">Zebvix</div></div>
         <div style="background:#130d1f;border:1px solid #7c3aed;border-radius:8px;padding:20px;text-align:center;margin-bottom:20px">
           <div style="font-size:13px;color:#a78bfa;margin-bottom:6px">🤖 AI Trading Earning</div>
           <div style="font-size:32px;font-weight:700;color:#a78bfa">+$${opts.amountUsdt} USDT</div>
@@ -495,7 +495,7 @@ export async function sendAiEarningEmail(to: string, opts: {
         </table>
         <p style="color:#7d8590;font-size:13px">Earnings have been credited to your spot wallet. View full history on your <a href="https://zebvix.com/user/ledger" style="color:#f0b429;text-decoration:none">Fund Ledger</a>.</p>
         <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
-          © ${new Date().getFullYear()} CryptoX
+          © ${new Date().getFullYear()} Zebvix
         </div>
       </div>
     `,
@@ -513,7 +513,7 @@ export async function sendP2PMatchedEmail(to: string, opts: {
     subject: `P2P Order Matched — ${isSell ? "Sell" : "Buy"} ${opts.amount} ${opts.currency}`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:32px;border-radius:12px;border:1px solid #30363d">
-        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">CryptoX P2P</div></div>
+        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">Zebvix P2P</div></div>
         <h2 style="font-size:18px;font-weight:600;margin:0 0 16px">Order Matched ✅</h2>
         <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:20px">
           <tr><td style="color:#7d8590;padding:6px 0">Order ID</td><td style="text-align:right;font-family:monospace">#${opts.orderId}</td></tr>
@@ -528,7 +528,7 @@ export async function sendP2PMatchedEmail(to: string, opts: {
           <a href="https://zebvix.com/user/p2p" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">View Order</a>
         </div>
         <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
-          © ${new Date().getFullYear()} CryptoX
+          © ${new Date().getFullYear()} Zebvix
         </div>
       </div>
     `,
@@ -541,10 +541,10 @@ export async function sendReferralBonusEmail(to: string, opts: {
 }): Promise<SendResult> {
   return sendEmail({
     to,
-    subject: `You Earned a Referral Bonus of $${opts.bonusUsdt} USDT — CryptoX`,
+    subject: `You Earned a Referral Bonus of $${opts.bonusUsdt} USDT — Zebvix`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:32px;border-radius:12px;border:1px solid #30363d">
-        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">CryptoX</div></div>
+        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">Zebvix</div></div>
         <div style="background:#161b22;border:1px solid #f0b429;border-radius:8px;padding:20px;text-align:center;margin-bottom:20px">
           <div style="font-size:13px;color:#f0b429;margin-bottom:6px">🎁 Referral Bonus</div>
           <div style="font-size:32px;font-weight:700;color:#f0b429">+$${opts.bonusUsdt} USDT</div>
@@ -555,7 +555,7 @@ export async function sendReferralBonusEmail(to: string, opts: {
           <a href="https://zebvix.com/user/referrals" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">View Referrals</a>
         </div>
         <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
-          © ${new Date().getFullYear()} CryptoX
+          © ${new Date().getFullYear()} Zebvix
         </div>
       </div>
     `,
@@ -572,11 +572,11 @@ export async function sendCryptoDepositConfirmedEmail(to: string, opts: {
     : null;
   return sendEmail({
     to,
-    subject: `${opts.currency} ${opts.amount} Deposit Confirmed on CryptoX`,
+    subject: `${opts.currency} ${opts.amount} Deposit Confirmed on Zebvix`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:32px;border-radius:12px;border:1px solid #30363d">
         <div style="text-align:center;margin-bottom:24px">
-          <div style="font-size:28px;font-weight:700;color:#f0b429">CryptoX</div>
+          <div style="font-size:28px;font-weight:700;color:#f0b429">Zebvix</div>
           <div style="color:#7d8590;font-size:13px;margin-top:4px">India's Professional Crypto Exchange</div>
         </div>
         <div style="background:#161b22;border:1px solid #3fb950;border-radius:8px;padding:20px;text-align:center;margin-bottom:20px">
@@ -595,7 +595,7 @@ export async function sendCryptoDepositConfirmedEmail(to: string, opts: {
           <a href="https://zebvix.com/user/wallet" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">Go to Wallet</a>
         </div>
         <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
-          © ${new Date().getFullYear()} CryptoX · Secure Indian Crypto Exchange
+          © ${new Date().getFullYear()} Zebvix · Secure Indian Crypto Exchange
         </div>
       </div>
     `,
@@ -609,10 +609,10 @@ export async function sendFuturesLiquidationEmail(to: string, opts: {
 }): Promise<SendResult> {
   return sendEmail({
     to,
-    subject: `⚠️ Futures Position Liquidated — ${opts.symbol} on CryptoX`,
+    subject: `⚠️ Futures Position Liquidated — ${opts.symbol} on Zebvix`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:32px;border-radius:12px;border:1px solid #30363d">
-        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">CryptoX Futures</div></div>
+        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">Zebvix Futures</div></div>
         <div style="background:#1c1112;border:1px solid #f85149;border-radius:8px;padding:20px;text-align:center;margin-bottom:20px">
           <div style="font-size:40px">⚠️</div>
           <div style="font-size:16px;font-weight:700;color:#f85149;margin-top:8px">Position Liquidated</div>
@@ -631,7 +631,7 @@ export async function sendFuturesLiquidationEmail(to: string, opts: {
           <a href="https://zebvix.com/user/futures" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">View Futures</a>
         </div>
         <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
-          © ${new Date().getFullYear()} CryptoX
+          © ${new Date().getFullYear()} Zebvix
         </div>
       </div>
     `,
@@ -648,7 +648,7 @@ export async function sendMarginCallEmail(to: string, opts: {
     subject: `🚨 Margin Call Warning — ${opts.symbol} Position at Risk`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:32px;border-radius:12px;border:1px solid #30363d">
-        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">CryptoX Futures</div></div>
+        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">Zebvix Futures</div></div>
         <div style="background:#1c1112;border:1px solid #f0b429;border-radius:8px;padding:16px;margin-bottom:20px">
           <div style="font-size:16px;font-weight:700;color:#f0b429">🚨 Margin Call — Immediate Action Required</div>
           <div style="color:#7d8590;font-size:13px;margin-top:4px">${opts.symbol} · ${opts.side.toUpperCase()}</div>
@@ -664,7 +664,7 @@ export async function sendMarginCallEmail(to: string, opts: {
           <a href="https://zebvix.com/user/futures" style="display:inline-block;background:#f85149;color:#fff;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">Add Margin Now</a>
         </div>
         <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
-          © ${new Date().getFullYear()} CryptoX
+          © ${new Date().getFullYear()} Zebvix
         </div>
       </div>
     `,
@@ -684,7 +684,7 @@ export async function sendPriceAlertEmail(to: string, opts: {
     subject: `${arrow} Price Alert: ${opts.symbol} has ${hit} ₹${opts.targetPrice}`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:32px;border-radius:12px;border:1px solid #30363d">
-        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">CryptoX</div></div>
+        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">Zebvix</div></div>
         <div style="background:#161b22;border:1px solid ${color};border-radius:8px;padding:20px;text-align:center;margin-bottom:20px">
           <div style="font-size:36px">${arrow}</div>
           <div style="font-size:20px;font-weight:700;color:${color};margin-top:8px">${opts.symbol} Alert Triggered</div>
@@ -699,7 +699,7 @@ export async function sendPriceAlertEmail(to: string, opts: {
         </div>
         <p style="color:#484f58;font-size:11px;margin-top:20px;text-align:center">This alert has been triggered and will not fire again for this target. Set a new alert in your price alerts.</p>
         <div style="border-top:1px solid #30363d;margin-top:16px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
-          © ${new Date().getFullYear()} CryptoX
+          © ${new Date().getFullYear()} Zebvix
         </div>
       </div>
     `,

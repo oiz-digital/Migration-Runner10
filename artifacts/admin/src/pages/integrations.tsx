@@ -637,7 +637,7 @@ function EmailConfigDialog({ open, onOpenChange, initial, qc, toast }: any) {
               <Input type="email" value={v.fromEmail || ""} onChange={(e) => set("fromEmail", e.target.value)} placeholder="no-reply@cryptox.in" />
             </FormField>
             <FormField label="From Name">
-              <Input value={v.fromName || ""} onChange={(e) => set("fromName", e.target.value)} placeholder="CryptoX" />
+              <Input value={v.fromName || ""} onChange={(e) => set("fromName", e.target.value)} placeholder="Zebvix" />
             </FormField>
           </Section>
 

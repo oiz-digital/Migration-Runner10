@@ -66,7 +66,7 @@ export default function AccountScreen() {
     ]);
   };
 
-  const displayName = user ? (user.firstName ? `${user.firstName}` : user.email.split("@")[0]) : "CryptoX User";
+  const displayName = user ? (user.firstName ? `${user.firstName}` : user.email.split("@")[0]) : "Zebvix User";
   const displayEmail = user?.email ?? "user@cryptox.com";
   const displayInitials = displayName.slice(0, 2).toUpperCase();
 
@@ -111,7 +111,7 @@ export default function AccountScreen() {
         { icon:"book",          label:"Trading Guide",      type:"nav" as const },
         { icon:"file-text",     label:"Terms of Service",   type:"nav" as const },
         { icon:"eye",           label:"Privacy Policy",     type:"nav" as const },
-        { icon:"info",          label:"About CryptoX",      type:"nav" as const, value:"v1.0.0" },
+        { icon:"info",          label:"About Zebvix",      type:"nav" as const, value:"v1.0.0" },
       ],
     },
   ] as const;
@@ -348,7 +348,7 @@ export default function AccountScreen() {
           <Text style={[styles.logoutText, { color: colors.destructive }]}>{isAuthenticated ? "Sign Out" : "Sign In"}</Text>
         </TouchableOpacity>
 
-        <Text style={[styles.versionText, { color: colors.mutedForeground }]}>CryptoX Mobile v1.0.0 · Build 2024</Text>
+        <Text style={[styles.versionText, { color: colors.mutedForeground }]}>Zebvix Mobile v1.0.0 · Build 2024</Text>
       </ScrollView>
 
       {/* 2FA Modal */}

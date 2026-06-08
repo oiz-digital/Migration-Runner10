@@ -457,8 +457,8 @@ router.get("/orders/:id/invoice", requireAuth, async (req, res): Promise<void> =
   const settingsRows = await db.select().from(settingsTable);
   const brandMap = new Map(settingsRows.map(r => [r.key, r.value]));
   const brand = {
-    legalName: brandMap.get("brand.legal_name") || "Zebvix CryptoX Exchange Pvt. Ltd.",
-    tradingName: brandMap.get("brand.trading_name") || "CryptoX Exchange",
+    legalName: brandMap.get("brand.legal_name") || "Zebvix Zebvix Exchange Pvt. Ltd.",
+    tradingName: brandMap.get("brand.trading_name") || "Zebvix Exchange",
     address: brandMap.get("brand.address") || "Mumbai, Maharashtra, India",
     gstin: brandMap.get("brand.gstin") || "—",
     pan: brandMap.get("brand.pan") || "—",

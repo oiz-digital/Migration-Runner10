@@ -486,7 +486,7 @@ router.get("/admin/source/db/download", async (req: Request, res: Response) => {
       Array.isArray(tablesR.rows) ? tablesR.rows : tablesR;
 
     const parts: string[] = [
-      `-- CryptoX live database schema dump`,
+      `-- Zebvix live database schema dump`,
       `-- Generated: ${new Date().toISOString()}`,
       `-- Tables:   ${tableRows.length}`,
       `-- Source:   public schema (CREATE TABLE + indexes only, no data)`,

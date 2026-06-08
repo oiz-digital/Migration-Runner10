@@ -2329,7 +2329,7 @@ router.post("/admin/custom-apis/:id/test", adminOnly, async (req, res): Promise<
   const [api] = await db.select().from(customApisTable).where(eq(customApisTable.id, id)).limit(1);
   if (!api) { res.status(404).json({ error: "Not found" }); return; }
   try {
-    const hdrs: Record<string, string> = { "Content-Type": "application/json", "X-Source": "CryptoX-Admin" };
+    const hdrs: Record<string, string> = { "Content-Type": "application/json", "X-Source": "Zebvix-Admin" };
     const parsed = JSON.parse(api.headers || "{}");
     Object.assign(hdrs, parsed);
     if (api.authType === "bearer" && api.authValue) hdrs["Authorization"] = `Bearer ${api.authValue}`;

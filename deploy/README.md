@@ -1,6 +1,6 @@
-# CryptoX — VPS Production Deployment Guide
+# Zebvix — VPS Production Deployment Guide
 
-Deploy the full CryptoX platform (API + User Portal + Admin + Go Engine) on your own Ubuntu 22.04 VPS.
+Deploy the full Zebvix platform (API + User Portal + Admin + Go Engine) on your own Ubuntu 22.04 VPS.
 
 ---
 
