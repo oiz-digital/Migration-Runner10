@@ -678,7 +678,26 @@ export default function Trade() {
           <Stat label={`24h Vol (${quote})`}>{fmtCompact(quoteVol, quote === "INR" ? "₹" : "$")}</Stat>
 
           {/* Layout switcher (right) */}
-          <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
+          <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+            {/* AI Trade button — top bar */}
+            <button
+              type="button"
+              disabled={!lastPx}
+              onClick={() => { setAiOpen(true); generateAiSuggestion(); }}
+              title="AI Trade Suggestion"
+              className={cn(
+                "hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold transition-all border flex-shrink-0",
+                "bg-gradient-to-r from-violet-600/20 via-purple-600/20 to-amber-500/20",
+                "border-violet-500/40 hover:border-violet-400/70 text-violet-300 hover:text-violet-200",
+                "hover:from-violet-600/30 hover:via-purple-600/30 hover:to-amber-500/30",
+                "disabled:opacity-40 disabled:cursor-not-allowed",
+              )}
+            >
+              <Brain className="h-3 w-3 text-amber-400" />
+              <span className="hidden md:inline">AI Trade</span>
+              <Sparkles className="h-2.5 w-2.5 text-violet-400" />
+            </button>
+
             <span className="text-[10px] uppercase text-muted-foreground tracking-wider hidden xl:inline">View</span>
             <div className="inline-flex items-center bg-muted/30 rounded-md p-0.5 border border-border">
               {([
