@@ -19,10 +19,11 @@
  *   - Withdrawals that fail broadcast revert to 'pending' so they retry on next tick.
  */
 
-import { db, networksTable, cryptoWithdrawalsTable } from "@workspace/db";
+import { db, networksTable, cryptoWithdrawalsTable, usersTable, coinsTable } from "@workspace/db";
 import { eq, and, inArray } from "drizzle-orm";
 import { broadcastWithdrawal, isEvmChain, BroadcastError } from "./auto-broadcaster";
 import { logger } from "./logger";
+import { sendWithdrawalInitiatedEmail } from "./email";
 
 const SYSTEM_USER_ID = 0;
 const DEFAULT_INTERVAL_MS = 60_000;
@@ -92,6 +93,25 @@ async function tick(): Promise<void> {
         const result = await broadcastWithdrawal(wd.id, SYSTEM_USER_ID);
         logger.info({ withdrawalId: wd.id, txHash: result.txHash, amount: wd.amount }, "auto-withdraw: broadcasted");
         sent++;
+        // Fire-and-forget withdrawal notification email
+        void (async () => {
+          try {
+            const [user] = await db.select({ email: usersTable.email })
+              .from(usersTable).where(eq(usersTable.id, wd.userId)).limit(1);
+            const net = networks.find((n) => n.id === wd.networkId);
+            const [coin] = await db.select({ symbol: coinsTable.symbol })
+              .from(coinsTable).where(eq(coinsTable.id, wd.coinId)).limit(1);
+            if (user?.email && coin) {
+              await sendWithdrawalInitiatedEmail(user.email, {
+                amount: wd.amount,
+                currency: coin.symbol,
+                address: wd.toAddress ?? undefined,
+                method: net?.name ?? net?.chain ?? "Crypto",
+                txId: result.txHash,
+              });
+            }
+          } catch { /* email failure must never block scheduler */ }
+        })();
       } catch (e) {
         failed++;
         if (e instanceof BroadcastError && e.code === 409) {

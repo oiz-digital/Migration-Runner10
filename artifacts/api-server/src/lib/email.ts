@@ -561,3 +561,148 @@ export async function sendReferralBonusEmail(to: string, opts: {
     `,
   });
 }
+
+/** ─── On-chain crypto deposit confirmed email ───────────────────────────── */
+export async function sendCryptoDepositConfirmedEmail(to: string, opts: {
+  amount: string; currency: string; network: string;
+  txHash?: string; confirmations?: number; explorerUrl?: string;
+}): Promise<SendResult> {
+  const explorerLink = opts.txHash && opts.explorerUrl
+    ? `${opts.explorerUrl}/tx/${opts.txHash}`
+    : null;
+  return sendEmail({
+    to,
+    subject: `${opts.currency} ${opts.amount} Deposit Confirmed on CryptoX`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:32px;border-radius:12px;border:1px solid #30363d">
+        <div style="text-align:center;margin-bottom:24px">
+          <div style="font-size:28px;font-weight:700;color:#f0b429">CryptoX</div>
+          <div style="color:#7d8590;font-size:13px;margin-top:4px">India's Professional Crypto Exchange</div>
+        </div>
+        <div style="background:#161b22;border:1px solid #3fb950;border-radius:8px;padding:20px;text-align:center;margin-bottom:20px">
+          <div style="font-size:13px;color:#3fb950;margin-bottom:6px">✅ Deposit Confirmed</div>
+          <div style="font-size:32px;font-weight:700;color:#3fb950">+${opts.currency} ${opts.amount}</div>
+          <div style="color:#7d8590;font-size:13px;margin-top:6px">via ${opts.network}</div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px">
+          <tr><td style="color:#7d8590;padding:5px 0">Network</td><td style="text-align:right">${opts.network}</td></tr>
+          ${opts.confirmations ? `<tr><td style="color:#7d8590;padding:5px 0">Confirmations</td><td style="text-align:right;color:#3fb950">${opts.confirmations} ✓</td></tr>` : ""}
+          ${opts.txHash ? `<tr><td style="color:#7d8590;padding:5px 0">Tx Hash</td><td style="text-align:right;font-family:monospace;font-size:10px;word-break:break-all">${opts.txHash.slice(0,10)}...${opts.txHash.slice(-8)}</td></tr>` : ""}
+        </table>
+        <p style="color:#7d8590;font-size:13px;margin:0 0 16px">Your balance has been credited to your spot wallet. You can now trade or withdraw your funds.</p>
+        ${explorerLink ? `<p style="text-align:center;margin:0 0 20px"><a href="${explorerLink}" style="color:#f0b429;font-size:12px;text-decoration:none">View transaction on explorer ↗</a></p>` : ""}
+        <div style="text-align:center">
+          <a href="https://cryptox.in/user/wallet" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">Go to Wallet</a>
+        </div>
+        <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
+          © ${new Date().getFullYear()} CryptoX · Secure Indian Crypto Exchange
+        </div>
+      </div>
+    `,
+    text: `${opts.currency} ${opts.amount} deposit confirmed on ${opts.network}. Your balance has been credited.${opts.txHash ? ` Tx: ${opts.txHash}` : ""}`,
+  });
+}
+
+/** ─── Futures position liquidated email ────────────────────────────────── */
+export async function sendFuturesLiquidationEmail(to: string, opts: {
+  symbol: string; side: string; qty: string; liqPrice: string; lossAmount: string;
+}): Promise<SendResult> {
+  return sendEmail({
+    to,
+    subject: `⚠️ Futures Position Liquidated — ${opts.symbol} on CryptoX`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:32px;border-radius:12px;border:1px solid #30363d">
+        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">CryptoX Futures</div></div>
+        <div style="background:#1c1112;border:1px solid #f85149;border-radius:8px;padding:20px;text-align:center;margin-bottom:20px">
+          <div style="font-size:40px">⚠️</div>
+          <div style="font-size:16px;font-weight:700;color:#f85149;margin-top:8px">Position Liquidated</div>
+          <div style="color:#7d8590;font-size:13px;margin-top:4px">${opts.symbol} · ${opts.side.toUpperCase()}</div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:20px">
+          <tr><td style="color:#7d8590;padding:6px 0">Symbol</td><td style="text-align:right;font-weight:600">${opts.symbol}</td></tr>
+          <tr><td style="color:#7d8590;padding:6px 0">Side</td><td style="text-align:right;font-weight:700;text-transform:uppercase;color:${opts.side==="long"?"#3fb950":"#f85149"}">${opts.side}</td></tr>
+          <tr><td style="color:#7d8590;padding:6px 0">Quantity</td><td style="text-align:right;font-family:monospace">${opts.qty}</td></tr>
+          <tr><td style="color:#7d8590;padding:6px 0">Liquidation Price</td><td style="text-align:right;font-family:monospace;color:#f85149">₹${opts.liqPrice}</td></tr>
+          <tr><td style="color:#7d8590;padding:6px 0">Margin Lost</td><td style="text-align:right;font-family:monospace;color:#f85149;font-weight:700">−₹${opts.lossAmount}</td></tr>
+        </table>
+        <p style="color:#7d8590;font-size:13px;margin:0 0 16px">Your position has been automatically closed at the liquidation price because your margin fell below the maintenance requirement.</p>
+        <p style="color:#484f58;font-size:12px;margin:0 0 20px">Tip: Use lower leverage or set a stop-loss to avoid future liquidations.</p>
+        <div style="text-align:center">
+          <a href="https://cryptox.in/user/futures" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">View Futures</a>
+        </div>
+        <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
+          © ${new Date().getFullYear()} CryptoX
+        </div>
+      </div>
+    `,
+    text: `Your ${opts.symbol} ${opts.side} futures position was liquidated at ₹${opts.liqPrice}. Margin lost: ₹${opts.lossAmount}.`,
+  });
+}
+
+/** ─── Margin call warning email ─────────────────────────────────────────── */
+export async function sendMarginCallEmail(to: string, opts: {
+  symbol: string; side: string; currentMargin: string; marginRatio: string; liqPrice: string;
+}): Promise<SendResult> {
+  return sendEmail({
+    to,
+    subject: `🚨 Margin Call Warning — ${opts.symbol} Position at Risk`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:32px;border-radius:12px;border:1px solid #30363d">
+        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">CryptoX Futures</div></div>
+        <div style="background:#1c1112;border:1px solid #f0b429;border-radius:8px;padding:16px;margin-bottom:20px">
+          <div style="font-size:16px;font-weight:700;color:#f0b429">🚨 Margin Call — Immediate Action Required</div>
+          <div style="color:#7d8590;font-size:13px;margin-top:4px">${opts.symbol} · ${opts.side.toUpperCase()}</div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:20px">
+          <tr><td style="color:#7d8590;padding:6px 0">Current Margin</td><td style="text-align:right;font-family:monospace;color:#f0b429;font-weight:700">₹${opts.currentMargin}</td></tr>
+          <tr><td style="color:#7d8590;padding:6px 0">Margin Ratio</td><td style="text-align:right;font-family:monospace;color:#f85149">${opts.marginRatio}%</td></tr>
+          <tr><td style="color:#7d8590;padding:6px 0">Liquidation Price</td><td style="text-align:right;font-family:monospace;color:#f85149;font-weight:700">₹${opts.liqPrice}</td></tr>
+        </table>
+        <p style="color:#e6edf3;font-size:14px;font-weight:600;margin:0 0 8px">Your position is close to liquidation.</p>
+        <p style="color:#7d8590;font-size:13px;margin:0 0 20px">Add margin to your position or reduce your exposure immediately to avoid forced liquidation.</p>
+        <div style="text-align:center">
+          <a href="https://cryptox.in/user/futures" style="display:inline-block;background:#f85149;color:#fff;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">Add Margin Now</a>
+        </div>
+        <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
+          © ${new Date().getFullYear()} CryptoX
+        </div>
+      </div>
+    `,
+    text: `Margin call on ${opts.symbol} ${opts.side} position. Margin ratio: ${opts.marginRatio}%. Liquidation price: ₹${opts.liqPrice}. Add margin immediately.`,
+  });
+}
+
+/** ─── Price alert triggered email ───────────────────────────────────────── */
+export async function sendPriceAlertEmail(to: string, opts: {
+  symbol: string; alertType: "above" | "below"; targetPrice: string; currentPrice: string;
+}): Promise<SendResult> {
+  const hit = opts.alertType === "above" ? "risen above" : "fallen below";
+  const arrow = opts.alertType === "above" ? "📈" : "📉";
+  const color = opts.alertType === "above" ? "#3fb950" : "#f85149";
+  return sendEmail({
+    to,
+    subject: `${arrow} Price Alert: ${opts.symbol} has ${hit} ₹${opts.targetPrice}`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#0d1117;color:#e6edf3;padding:32px;border-radius:12px;border:1px solid #30363d">
+        <div style="text-align:center;margin-bottom:24px"><div style="font-size:24px;font-weight:700;color:#f0b429">CryptoX</div></div>
+        <div style="background:#161b22;border:1px solid ${color};border-radius:8px;padding:20px;text-align:center;margin-bottom:20px">
+          <div style="font-size:36px">${arrow}</div>
+          <div style="font-size:20px;font-weight:700;color:${color};margin-top:8px">${opts.symbol} Alert Triggered</div>
+          <div style="color:#7d8590;font-size:13px;margin-top:6px">Price has ${hit} your target</div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:20px">
+          <tr><td style="color:#7d8590;padding:6px 0">Your Target</td><td style="text-align:right;font-family:monospace;font-weight:700">₹${opts.targetPrice}</td></tr>
+          <tr><td style="color:#7d8590;padding:6px 0">Current Price</td><td style="text-align:right;font-family:monospace;color:${color};font-weight:700">₹${opts.currentPrice}</td></tr>
+        </table>
+        <div style="text-align:center">
+          <a href="https://cryptox.in/user/markets" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">Trade Now</a>
+        </div>
+        <p style="color:#484f58;font-size:11px;margin-top:20px;text-align:center">This alert has been triggered and will not fire again for this target. Set a new alert in your price alerts.</p>
+        <div style="border-top:1px solid #30363d;margin-top:16px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
+          © ${new Date().getFullYear()} CryptoX
+        </div>
+      </div>
+    `,
+    text: `${opts.symbol} price alert: price has ${hit} ₹${opts.targetPrice}. Current price: ₹${opts.currentPrice}. Trade now at cryptox.in`,
+  });
+}

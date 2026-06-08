@@ -5,11 +5,13 @@ import {
   walletAddressesTable,
   cryptoDepositsTable,
   walletsTable,
+  usersTable,
 } from "@workspace/db";
 import { and, eq, sql } from "drizzle-orm";
 import { decryptSecret } from "./crypto-vault";
 import { runAutoSweep } from "./deposit-sweep-master";
 import { logger } from "./logger";
+import { sendCryptoDepositConfirmedEmail } from "./email";
 
 const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 const MAX_BLOCK_RANGE = 2000;
@@ -317,6 +319,27 @@ async function updatePendingConfirmations(networkId: number, head: number, requi
           }).where(eq(cryptoDepositsTable.id, dep.id));
         });
         credited++;
+        // Fire-and-forget deposit confirmation email (must not block sweeper)
+        void (async () => {
+          try {
+            const [user] = await db.select({ email: usersTable.email })
+              .from(usersTable).where(eq(usersTable.id, dep.userId)).limit(1);
+            const [coin] = await db.select({ symbol: coinsTable.symbol })
+              .from(coinsTable).where(eq(coinsTable.id, dep.coinId)).limit(1);
+            const [net] = await db.select({ name: networksTable.name, explorerUrl: networksTable.explorerUrl })
+              .from(networksTable).where(eq(networksTable.id, dep.networkId)).limit(1);
+            if (user?.email && coin && net) {
+              await sendCryptoDepositConfirmedEmail(user.email, {
+                amount: dep.amount,
+                currency: coin.symbol,
+                network: net.name ?? "Blockchain",
+                txHash: dep.txHash ?? undefined,
+                confirmations: dep.requiredConfirmations ?? undefined,
+                explorerUrl: net.explorerUrl ?? undefined,
+              });
+            }
+          } catch { /* email failure must never block sweeper */ }
+        })();
       } catch (e: any) {
         logger.error({ err: e?.message, depId: dep.id }, "auto-credit failed");
       }

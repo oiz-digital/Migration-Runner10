@@ -115,11 +115,11 @@ export async function broadcastWithdrawal(withdrawalId: number, reviewerId: numb
       .returning();
     if (claimed.length === 0) throw new BroadcastError(409, "Withdrawal was claimed by another process");
 
-    return { withdrawal: w, network, coin, wallet };
+    return { withdrawal: w, network, coin, wallet, tokenDecimals };
   });
 
   // STEP 2: Broadcast (outside transaction so we don't hold locks)
-  const { withdrawal: w, network, coin } = claim;
+  const { withdrawal: w, network, coin, tokenDecimals } = claim;
   const apiKey = network.rpcApiKey ? decryptSecret(network.rpcApiKey) : null;
   const provider = buildProvider(network.nodeAddress!, apiKey);
   const pk = decryptSecret(network.hotWalletPrivateKeyEnc!);
