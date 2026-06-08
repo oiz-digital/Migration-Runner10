@@ -4,6 +4,8 @@ import { eq, and, desc, count } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 import { getInrRate } from "../lib/price-service";
 
+/* ── Public rate endpoint ── */
+
 const router: IRouter = Router();
 
 /* ── helpers ── */
@@ -59,6 +61,10 @@ function serializeSub(s: any, plan: any) {
 }
 
 /* ── routes ── */
+
+router.get("/rates", (_req, res): void => {
+  res.json({ inrRate: getInrRate() });
+});
 
 router.get("/ai-trading/plans", async (_req, res): Promise<void> => {
   const plans = await db.select().from(aiTradingPlansTable)

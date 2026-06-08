@@ -850,6 +850,13 @@ function SubscribeDialog({ plan, open, onClose, onSuccess }: {
   const [currency, setCurrency] = useState<"USDT" | "INR">("USDT");
   const risk = getRisk(plan.riskLevel);
 
+  const rateQ = useQuery<{ inrRate: number }>({
+    queryKey: ["inr-rate"],
+    queryFn: () => get<{ inrRate: number }>("/rates"),
+    staleTime: 60_000,
+    enabled: open,
+  });
+
   const subscribeMutation = useMutation({
     mutationFn: (data: object) => post("/ai-trading/subscribe", data),
     onSuccess: () => {
@@ -862,7 +869,7 @@ function SubscribeDialog({ plan, open, onClose, onSuccess }: {
   });
 
   const numAmt = parseFloat(amount) || 0;
-  const rate = 84;
+  const rate = rateQ.data?.inrRate ?? 84;
   const minAmt = currency === "USDT" ? plan.minInvestment : plan.minInvestment * rate;
   const maxAmt = currency === "USDT" ? plan.maxInvestment : plan.maxInvestment * rate;
   const amtInUsdt = currency === "USDT" ? numAmt : numAmt / rate;
@@ -987,7 +994,7 @@ function SubscribeDialog({ plan, open, onClose, onSuccess }: {
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button
             disabled={!isValid || subscribeMutation.isPending}
-            onClick={() => subscribeMutation.mutate({ planId: plan.id, amountUsdt: amtInUsdt, currency })}
+            onClick={() => subscribeMutation.mutate({ planId: plan.id, amount: currency === "INR" ? numAmt : amtInUsdt, currency })}
             style={isValid ? { background: risk.color, color: "#000" } : {}}
             className="font-bold gap-2"
           >
