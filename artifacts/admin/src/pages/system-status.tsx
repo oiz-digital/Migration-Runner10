@@ -1,29 +1,31 @@
-import { useQuery } from "@tanstack/react-query";
-import { get } from "@/lib/api";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { get, post } from "@/lib/api";
 import { PageHeader } from "@/components/premium/PageHeader";
 import { SectionCard } from "@/components/premium/SectionCard";
 import { PremiumStatCard } from "@/components/premium/PremiumStatCard";
 import { StatusPill } from "@/components/premium/StatusPill";
 import {
   Server, Database, Wifi, Clock, Cpu, RefreshCw, HardDrive, Activity,
-  CheckCircle2, XCircle, AlertCircle, Layers, Network, Zap, MemoryStick,
-  GitBranch, Timer, Shield,
+  CheckCircle2, XCircle, AlertCircle, Layers, Zap, MemoryStick,
+  GitBranch, Timer, Shield, Power, Terminal, BookOpen,
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  RadialBarChart, RadialBar, Cell,
+  RadialBarChart, RadialBar,
 } from "recharts";
 import { useMemo, useRef, useState, useEffect } from "react";
+import { toast } from "sonner";
 
 interface SystemStatus {
   timestamp: string;
   services: {
-    database:  { status: string; latencyMs?: number };
-    redis:     { status: string; latencyMs?: number; connectedClients?: number; usedMemoryHuman?: string };
+    database:  { status: string; latencyMs?: number; version?: string };
+    redis:     { status: string; latencyMs?: number; connectedClients?: number; usedMemoryHuman?: string; version?: string };
+    goService: { status: string; latencyMs?: number; books?: number; port?: string };
     process:   {
       status: string; uptimeSecs: number; uptimeHuman: string;
       memMb: number; pid: number; nodeVersion: string;
-      heapUsedMb?: number; heapTotalMb?: number; cpuUser?: number; cpuSystem?: number;
+      heapUsedMb?: number; heapTotalMb?: number;
     };
   };
 }
@@ -46,6 +48,8 @@ function fmtUptime(secs: number) {
 
 export default function SystemStatus() {
   const [memHistory, setMemHistory] = useState<{ t: string; mem: number; heap: number }[]>([]);
+  const [confirmRestart, setConfirmRestart] = useState(false);
+  const [restarting, setRestarting] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const statusQ = useQuery<SystemStatus>({
@@ -71,19 +75,38 @@ export default function SystemStatus() {
     return Math.round((s.process.heapUsedMb / s.process.heapTotalMb) * 100);
   }, [s?.process]);
 
-  const dbOk = s?.database?.status === "ok";
+  const dbOk    = s?.database?.status === "ok";
   const redisOk = s?.redis?.status === "ok";
-  const procOk = s?.process?.status === "ok";
-  const allOk = dbOk && redisOk && procOk;
+  const procOk  = s?.process?.status === "ok";
+  const goOk    = s?.goService?.status === "ok";
+  const allOk   = dbOk && redisOk && procOk;
+
+  async function handleRestart() {
+    setRestarting(true);
+    try {
+      await post("/admin/restart", {});
+      toast.success("Restart initiated — server will be back in ~5 seconds");
+      // Wait 6s then re-poll
+      setTimeout(() => {
+        statusQ.refetch();
+        setRestarting(false);
+        setConfirmRestart(false);
+      }, 6000);
+    } catch {
+      toast.error("Restart request failed");
+      setRestarting(false);
+      setConfirmRestart(false);
+    }
+  }
 
   return (
     <div className="space-y-6 max-w-[1400px]">
       <PageHeader
         eyebrow="Infrastructure"
         title="System Status"
-        description="Live health monitoring for all platform services — database, cache, and application process."
+        description="Live health monitoring — database, Redis cache, Go matching engine, and API process."
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {statusQ.data && (
               <span className="text-xs text-muted-foreground">
                 Updated {relTime(statusQ.data.timestamp)}
@@ -97,6 +120,33 @@ export default function SystemStatus() {
               <RefreshCw size={14} className={statusQ.isFetching ? "animate-spin" : ""} />
               Refresh
             </button>
+            {!confirmRestart ? (
+              <button
+                onClick={() => setConfirmRestart(true)}
+                className="flex items-center gap-2 text-sm text-rose-400 hover:text-rose-300 border border-rose-500/30 hover:border-rose-500/60 px-3 py-1.5 rounded-lg transition-colors"
+              >
+                <Power size={14} />
+                Restart API
+              </button>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-rose-400 font-medium">Confirm restart?</span>
+                <button
+                  onClick={handleRestart}
+                  disabled={restarting}
+                  className="flex items-center gap-1.5 text-sm bg-rose-500 hover:bg-rose-600 text-white px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
+                >
+                  {restarting ? <RefreshCw size={13} className="animate-spin" /> : <Power size={13} />}
+                  {restarting ? "Restarting…" : "Yes, Restart"}
+                </button>
+                <button
+                  onClick={() => setConfirmRestart(false)}
+                  className="text-sm text-muted-foreground hover:text-foreground border border-border px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
             <StatusPill variant={allOk ? "success" : "warning"} dot>
               {allOk ? "All systems operational" : "Attention required"}
             </StatusPill>
@@ -138,23 +188,24 @@ export default function SystemStatus() {
       </div>
 
       {/* ─── Service cards ─────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <ServiceCard
           icon={Database}
           label="PostgreSQL"
-          sub="Drizzle ORM · Primary DB"
+          sub={s?.database?.version ? `v${s.database.version} · Drizzle ORM` : "Drizzle ORM · Primary DB"}
           status={s?.database?.status ?? "unknown"}
           ok={dbOk}
           loading={statusQ.isLoading}
           metrics={[
             { label: "Latency", value: s?.database?.latencyMs != null ? `${s.database.latencyMs}ms` : "—" },
-            { label: "Driver", value: "pg (node-postgres)" },
+            { label: "Driver", value: "node-postgres (pg)" },
+            { label: "Version", value: s?.database?.version ? `PG ${s.database.version}` : "—" },
           ]}
         />
         <ServiceCard
           icon={Wifi}
           label="Redis"
-          sub="Pub/Sub · Rate Limiting · Leader Election"
+          sub={s?.redis?.version ? `v${s.redis.version} · Embedded in-process` : "Pub/Sub · Rate Limiting · Leader Election"}
           status={s?.redis?.status ?? "unknown"}
           ok={redisOk}
           loading={statusQ.isLoading}
@@ -162,6 +213,19 @@ export default function SystemStatus() {
             { label: "Latency", value: s?.redis?.latencyMs != null ? `${s.redis.latencyMs}ms` : "—" },
             { label: "Clients", value: s?.redis?.connectedClients != null ? String(s.redis.connectedClients) : "—" },
             { label: "Memory", value: s?.redis?.usedMemoryHuman ?? "—" },
+          ]}
+        />
+        <ServiceCard
+          icon={Terminal}
+          label="Go Matching Engine"
+          sub={`Futures order book · Port ${s?.goService?.port ?? "8090"}`}
+          status={s?.goService?.status ?? "unknown"}
+          ok={goOk}
+          loading={statusQ.isLoading}
+          metrics={[
+            { label: "Latency", value: s?.goService?.latencyMs != null ? `${s.goService.latencyMs}ms` : "—" },
+            { label: "Order Books", value: s?.goService?.books != null ? String(s.goService.books) : "—" },
+            { label: "Port", value: s?.goService?.port ?? "8090" },
           ]}
         />
         <ServiceCard
@@ -218,7 +282,7 @@ export default function SystemStatus() {
         </SectionCard>
       )}
 
-      {/* ─── Heap donut + info ─────────────────────────────────────────── */}
+      {/* ─── Heap donut + Runtime info ─────────────────────────────────── */}
       {s?.process?.heapUsedMb && s?.process?.heapTotalMb && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <SectionCard title="Heap Utilization" icon={HardDrive} description="V8 heap used vs total allocated">
@@ -231,7 +295,7 @@ export default function SystemStatus() {
                     startAngle={90} endAngle={-270}
                   >
                     <RadialBar dataKey="value" cornerRadius={6} background={{ fill: "hsl(var(--muted))" }} />
-                    <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="fill-foreground text-lg font-bold" fontSize={20} fontWeight={700} fill="hsl(var(--foreground))">
+                    <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" fontSize={20} fontWeight={700} fill="hsl(var(--foreground))">
                       {heapPct}%
                     </text>
                   </RadialBarChart>
@@ -252,7 +316,7 @@ export default function SystemStatus() {
                 { label: "Node.js version", value: s.process.nodeVersion, icon: <GitBranch className="w-4 h-4 text-emerald-400" /> },
                 { label: "Process ID", value: `PID ${s.process.pid}`, icon: <Cpu className="w-4 h-4 text-blue-400" /> },
                 { label: "Uptime", value: fmtUptime(s.process.uptimeSecs), icon: <Clock className="w-4 h-4 text-amber-400" /> },
-                { label: "Environment", value: "Production", icon: <Shield className="w-4 h-4 text-purple-400" /> },
+                { label: "Environment", value: process.env.NODE_ENV ?? "production", icon: <Shield className="w-4 h-4 text-purple-400" /> },
               ].map(item => (
                 <div key={item.label} className="flex items-center gap-2.5 p-3 rounded-lg border border-border bg-muted/20">
                   {item.icon}
@@ -267,36 +331,75 @@ export default function SystemStatus() {
         </div>
       )}
 
-      {/* ─── All good banner / error list ─────────────────────────────── */}
+      {/* ─── Diagnostics + Go service detail ───────────────────────────── */}
       {statusQ.data && (
-        <SectionCard
-          title="Diagnostics Summary"
-          icon={allOk ? CheckCircle2 : AlertCircle}
-          description={allOk ? "All checks passed" : "Some services need attention"}
-        >
-          <div className="space-y-2">
-            {[
-              { label: "Database connectivity", ok: dbOk, detail: dbOk ? "PostgreSQL responding normally" : "Database connection failed" },
-              { label: "Redis connectivity", ok: redisOk, detail: redisOk ? "Redis pub/sub operational" : "Redis connection failed" },
-              { label: "Process health", ok: procOk, detail: procOk ? `Process running (PID ${s?.process?.pid})` : "Process health check failed" },
-              { label: "Heap utilization", ok: heapPct < 80, detail: heapPct < 80 ? `${heapPct}% heap used — within normal range` : `${heapPct}% heap used — consider restarting` },
-            ].map(check => (
-              <div key={check.label} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card/50">
-                {check.ok
-                  ? <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  : <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
-                }
-                <div className="flex-1">
-                  <div className="text-sm font-medium">{check.label}</div>
-                  <div className="text-[11px] text-muted-foreground">{check.detail}</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <SectionCard
+            title="Diagnostics Summary"
+            icon={allOk ? CheckCircle2 : AlertCircle}
+            description={allOk ? "All checks passed" : "Some services need attention"}
+          >
+            <div className="space-y-2">
+              {[
+                { label: "PostgreSQL connectivity", ok: dbOk, detail: dbOk ? `PostgreSQL ${s?.database?.version ?? ""} responding normally` : "Database connection failed" },
+                { label: "Redis connectivity", ok: redisOk, detail: redisOk ? `Redis v${s?.redis?.version ?? "?"} pub/sub operational` : "Redis connection failed" },
+                { label: "Go matching engine", ok: goOk, detail: goOk ? `Engine online · ${s?.goService?.books ?? 0} order books active` : `Engine offline (port ${s?.goService?.port ?? "8090"})` },
+                { label: "API process health", ok: procOk, detail: procOk ? `PID ${s?.process?.pid} running · uptime ${fmtUptime(s?.process?.uptimeSecs ?? 0)}` : "Process health check failed" },
+                { label: "Heap utilization", ok: heapPct < 80, detail: heapPct < 80 ? `${heapPct}% heap used — within normal range` : `${heapPct}% heap used — consider restarting` },
+              ].map(check => (
+                <div key={check.label} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card/50">
+                  {check.ok
+                    ? <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    : <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                  }
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium">{check.label}</div>
+                    <div className="text-[11px] text-muted-foreground truncate">{check.detail}</div>
+                  </div>
+                  <StatusPill variant={check.ok ? "success" : "danger"} dot={false}>
+                    {check.ok ? "Pass" : "Fail"}
+                  </StatusPill>
                 </div>
-                <StatusPill variant={check.ok ? "success" : "danger"} dot={false}>
-                  {check.ok ? "Pass" : "Fail"}
-                </StatusPill>
+              ))}
+            </div>
+          </SectionCard>
+
+          <SectionCard
+            title="Go Matching Engine"
+            icon={Terminal}
+            description="Futures order book — high-performance Go service"
+          >
+            <div className="space-y-3">
+              <div className={`flex items-center gap-3 p-4 rounded-xl border ${goOk ? "border-emerald-500/30 bg-emerald-500/5" : "border-rose-500/30 bg-rose-500/5"}`}>
+                <div className={`w-3 h-3 rounded-full ${goOk ? "bg-emerald-400" : "bg-rose-400"} ${goOk ? "animate-pulse" : ""}`} />
+                <div>
+                  <div className="font-semibold text-sm">{goOk ? "Engine Online" : "Engine Offline"}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {goOk ? `${s?.goService?.books ?? 0} order books · ${s?.goService?.latencyMs}ms` : `Not reachable on port ${s?.goService?.port ?? "8090"}`}
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
-        </SectionCard>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                {[
+                  { label: "Status", value: s?.goService?.status ?? "unknown" },
+                  { label: "Latency", value: s?.goService?.latencyMs != null ? `${s.goService.latencyMs}ms` : "—" },
+                  { label: "Active Books", value: s?.goService?.books != null ? String(s.goService.books) : "—" },
+                  { label: "Port", value: s?.goService?.port ?? "8090" },
+                ].map(m => (
+                  <div key={m.label} className="flex justify-between p-2.5 rounded-lg border border-border bg-muted/20">
+                    <span className="text-muted-foreground text-xs">{m.label}</span>
+                    <span className="font-mono text-xs font-semibold">{m.value}</span>
+                  </div>
+                ))}
+              </div>
+              {!goOk && (
+                <div className="text-xs text-muted-foreground p-3 rounded-lg bg-muted/30 border border-border leading-relaxed">
+                  <strong>To start:</strong> Run the Go service workflow or compile with <code className="font-mono bg-muted px-1 rounded">go build</code> inside <code className="font-mono bg-muted px-1 rounded">artifacts/go-service/</code>. The service binds to <code className="font-mono bg-muted px-1 rounded">127.0.0.1:8090</code>.
+                </div>
+              )}
+            </div>
+          </SectionCard>
+        </div>
       )}
     </div>
   );
@@ -310,22 +413,22 @@ function ServiceCard({
   metrics: { label: string; value: string }[];
 }) {
   return (
-    <div className={`rounded-xl border bg-card/50 p-5 ${ok ? "border-emerald-500/30" : "border-rose-500/30"}`}>
+    <div className={`rounded-xl border bg-card/50 p-5 transition-colors ${ok ? "border-emerald-500/30" : "border-rose-500/30"}`}>
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${ok ? "bg-emerald-500/10 border border-emerald-500/20" : "bg-rose-500/10 border border-rose-500/20"}`}>
             <Icon className={`w-5 h-5 ${ok ? "text-emerald-400" : "text-rose-400"}`} />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="font-bold text-foreground">{label}</div>
-            <div className="text-[10px] text-muted-foreground">{sub}</div>
+            <div className="text-[10px] text-muted-foreground truncate max-w-[130px]">{sub}</div>
           </div>
         </div>
         {loading ? (
           <div className="w-16 h-6 bg-muted/40 rounded-full animate-pulse" />
         ) : (
           <StatusPill variant={ok ? "success" : "danger"} dot>
-            {ok ? "Healthy" : "Error"}
+            {ok ? "Online" : status === "offline" ? "Offline" : "Error"}
           </StatusPill>
         )}
       </div>

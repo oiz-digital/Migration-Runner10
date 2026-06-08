@@ -1,27 +1,30 @@
 /**
  * Admin system routes:
- *   GET /api/admin/system-status   — live service health
- *   GET /api/admin/trades          — filled order history
- *   GET /api/admin/deposits        — deposit transactions
- *   GET /api/admin/inr-transactions — INR deposit/withdrawal history
- *   PUT /api/admin/inr-transactions/:id — approve/reject INR tx
+ *   GET  /api/admin/system-status        — live service health (DB, Redis, Go, Process)
+ *   POST /api/admin/restart              — graceful API server restart
+ *   GET  /api/admin/trades               — filled order history
+ *   GET  /api/admin/deposits             — deposit transactions
+ *   GET  /api/admin/inr-transactions     — INR deposit/withdrawal history
+ *   PUT  /api/admin/inr-transactions/:id — approve/reject INR tx
  */
 import { Router, type IRouter } from "express";
 import { db, ordersTable, cryptoDepositsTable, usersTable, inrTransactionsTable, walletsTable, coinsTable } from "@workspace/db";
 import { eq, and, desc, sql, ilike, or } from "drizzle-orm";
 import { requireRole } from "../middlewares/auth";
 import { isRedisReady, getRedis } from "../lib/redis";
+import { logAdminAction } from "../lib/audit";
 
 const router: IRouter = Router();
 const adminAuth = requireRole("admin", "superadmin");
 
 /* ─── System Status ──────────────────────────────────────────────────────── */
-router.get("/admin/system-status", adminAuth, async (_req, res): Promise<void> => {
+router.get("/admin/system-status", adminAuth, async (req: any, res): Promise<void> => {
+  // ── Redis ───────────────────────────────────────────────────────────────
   let redisStatus = "disconnected";
   let redisLatencyMs: number | null = null;
   let redisConnectedClients: number | null = null;
   let redisUsedMemoryHuman: string | null = null;
-
+  let redisVersion: string | null = null;
   try {
     const r = getRedis();
     if (isRedisReady() && r) {
@@ -31,35 +34,71 @@ router.get("/admin/system-status", adminAuth, async (_req, res): Promise<void> =
       redisStatus = "ok";
       try {
         const info = await r.info("clients");
-        const clientsMatch = info.match(/connected_clients:(\d+)/);
-        if (clientsMatch) redisConnectedClients = parseInt(clientsMatch[1], 10);
+        const cm = info.match(/connected_clients:(\d+)/);
+        if (cm) redisConnectedClients = parseInt(cm[1], 10);
         const memInfo = await r.info("memory");
-        const memMatch = memInfo.match(/used_memory_human:(\S+)/);
-        if (memMatch) redisUsedMemoryHuman = memMatch[1];
+        const mm = memInfo.match(/used_memory_human:(\S+)/);
+        if (mm) redisUsedMemoryHuman = mm[1];
+        const serverInfo = await r.info("server");
+        const vm = serverInfo.match(/redis_version:(\S+)/);
+        if (vm) redisVersion = vm[1];
       } catch { /* non-critical */ }
     }
   } catch { redisStatus = "error"; }
 
+  // ── Database ─────────────────────────────────────────────────────────────
   let dbStatus = "ok";
   let dbLatencyMs: number | null = null;
+  let dbVersion: string | null = null;
   try {
     const t0 = Date.now();
-    await db.execute(sql`SELECT 1`);
+    const res2 = await db.execute(sql`SELECT version()`);
     dbLatencyMs = Date.now() - t0;
+    const verStr = (res2.rows?.[0] as any)?.version ?? "";
+    const vm = verStr.match(/PostgreSQL ([\d.]+)/);
+    if (vm) dbVersion = vm[1];
   } catch { dbStatus = "error"; }
 
+  // ── Go Service ───────────────────────────────────────────────────────────
+  let goStatus = "offline";
+  let goLatencyMs: number | null = null;
+  let goBooks: number | null = null;
+  try {
+    const goPort = process.env.GO_SERVICE_PORT ?? "8090";
+    const t0 = Date.now();
+    const r = await fetch(`http://127.0.0.1:${goPort}/healthz`, {
+      signal: AbortSignal.timeout(2000),
+    });
+    goLatencyMs = Date.now() - t0;
+    if (r.ok) {
+      const j = await r.json() as any;
+      goStatus = j.status === "ok" ? "ok" : "degraded";
+      goBooks = typeof j.books === "number" ? j.books : null;
+    } else {
+      goStatus = "error";
+    }
+  } catch { goStatus = "offline"; }
+
+  // ── Process ──────────────────────────────────────────────────────────────
   const uptime = process.uptime();
   const mem = process.memoryUsage();
 
   res.json({
     timestamp: new Date().toISOString(),
     services: {
-      database: { status: dbStatus, latencyMs: dbLatencyMs },
+      database: { status: dbStatus, latencyMs: dbLatencyMs, version: dbVersion },
       redis: {
         status: redisStatus,
         latencyMs: redisLatencyMs,
         connectedClients: redisConnectedClients,
         usedMemoryHuman: redisUsedMemoryHuman,
+        version: redisVersion,
+      },
+      goService: {
+        status: goStatus,
+        latencyMs: goLatencyMs,
+        books: goBooks,
+        port: process.env.GO_SERVICE_PORT ?? "8090",
       },
       process: {
         status:       "ok",
@@ -73,6 +112,15 @@ router.get("/admin/system-status", adminAuth, async (_req, res): Promise<void> =
       },
     },
   });
+});
+
+/* ─── Graceful Restart ───────────────────────────────────────────────────── */
+router.post("/admin/restart", adminAuth, async (req: any, res): Promise<void> => {
+  await logAdminAction(req.user?.id ?? 0, "system.restart", {}, "api-server process restart initiated by admin").catch(() => null);
+  req.log.info({ adminId: req.user?.id }, "admin: graceful restart requested");
+  res.json({ ok: true, message: "API server restarting… will be back in ~5s", pid: process.pid });
+  // Give the response time to flush, then exit cleanly — the workflow manager restarts the process.
+  setTimeout(() => process.exit(0), 800);
 });
 
 /* ─── Trade History ──────────────────────────────────────────────────────── */

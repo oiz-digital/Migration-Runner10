@@ -6,6 +6,7 @@ import { requireAuth } from "../middlewares/auth";
 import { rZadd, rZrem, rPublish, rLpush, rSet } from "../lib/redis";
 import { tryMatch, getDepth, getRecentTrades } from "../lib/matching-engine";
 import { getSpotFeeRates, loadFeeSettings } from "./fees";
+import { creditTradingFeeReferralChain } from "../lib/trading-fee-referral";
 
 // ─── Zod schemas ─────────────────────────────────────────────────────────
 // Stricter than the historical placeSpotOrder() guard — we validate types &
@@ -369,6 +370,16 @@ export async function placeSpotOrder(opts: {
       filledQty: Number(final.filledQty ?? 0), status: final.status, ts: Date.now(),
     }), 86400);
   }
+
+  // ── 5-level trading-fee referral commission (fire-and-forget) ────────────
+  if (matchRes.trades > 0) {
+    const feeAmt = parseFloat(final.fee ?? "0");
+    if (feeAmt > 0) {
+      creditTradingFeeReferralChain(userId, feeAmt, pair.quoteCoinId, "trading_fee")
+        .catch(() => null); // never block the order response
+    }
+  }
+
   return { order: final, matched: matchRes.trades };
 }
 
