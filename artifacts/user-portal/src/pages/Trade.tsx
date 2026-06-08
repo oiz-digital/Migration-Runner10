@@ -402,7 +402,11 @@ export default function Trade() {
     if (!w) return 0;
     if (w.available != null) return Number(w.available);
     if (w.free != null) return Number(w.free);
-    return Math.max(0, Number(w.balance ?? 0) - Number(w.inOrder ?? w.locked ?? 0));
+    // `balance` is the NET available amount — locked amounts are already deducted
+    // from `balance` when orders/AI-trading investments are placed. `inOrder` /
+    // `locked` is purely informational (shown in Wallet page) and must NOT be
+    // subtracted again here.
+    return Math.max(0, Number(w.balance ?? 0));
   };
   const baseBal = findWallet(base);
   const quoteBal = findWallet(quote);
