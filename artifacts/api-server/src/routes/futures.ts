@@ -426,6 +426,7 @@ r.post("/futures/order", bicryptoAuth, async (req: any, res: Response): Promise<
   }
   const pair = await resolvePair(currency, pairSym);
   if (!pair) { res.status(404).json({ message: "Pair not found" }); return; }
+  if ((u.kycLevel ?? 0) < 2) { res.status(403).json({ message: "KYC Level 2 required to trade futures" }); return; }
   if (!pair.futuresEnabled) { res.status(400).json({ message: "Futures not enabled for this pair" }); return; }
   if (pair.futuresStartAt && pair.futuresStartAt.getTime() > Date.now()) {
     res.status(400).json({ message: "Futures not yet started for this pair" }); return;

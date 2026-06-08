@@ -46,6 +46,9 @@ router.get("/copy/traders/:id", async (req, res): Promise<void> => {
 // ─── Trader (publish self) ──────────────────────────────────────────────────
 router.post("/copy/become-trader", requireAuth, async (req, res): Promise<void> => {
   const userId = req.user!.id;
+  if ((req.user!.kycLevel ?? 0) < 1) {
+    res.status(403).json({ error: "KYC Level 1 required to become a trader" }); return;
+  }
   const { displayName, bio, performanceFeeBps, tags } = req.body ?? {};
   if (typeof displayName !== "string" || displayName.trim().length < 3) {
     res.status(400).json({ error: "displayName >= 3 chars" }); return;
@@ -110,6 +113,9 @@ router.get("/copy/me/following", requireAuth, async (req, res): Promise<void> =>
 
 router.post("/copy/follow", requireAuth, async (req, res): Promise<void> => {
   const followerId = req.user!.id;
+  if ((req.user!.kycLevel ?? 0) < 1) {
+    res.status(403).json({ error: "KYC Level 1 required to follow traders" }); return;
+  }
   const { traderId, allocationUsd, copyRatio, maxRiskPerTradePct } = req.body ?? {};
   const tid = Number(traderId);
   if (!Number.isFinite(tid)) { res.status(400).json({ error: "traderId required" }); return; }

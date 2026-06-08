@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { get, post } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+import { KycGate } from "@/components/KycGate";
 import {
   Users, Trophy, TrendingUp, TrendingDown, Star, Plus, X, DollarSign,
   Award, Crown, Medal, Target, Activity, Sparkles,
@@ -36,7 +38,17 @@ type Relation = {
 type FollowingItem = { relation: Relation; trader: Trader | null };
 
 export default function CopyTrading() {
+  const { user } = useAuth();
   const [tab, setTab] = useState<"leaderboard" | "following" | "trader">("leaderboard");
+
+  if (user && (user.kycLevel ?? 0) < 1) {
+    return (
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-5">
+        <PageHeader eyebrow="Social" title="Copy Trading" description="Follow top-performing traders automatically." />
+        <KycGate requiredLevel={1} feature="Copy Trading" />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-5">

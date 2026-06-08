@@ -69,6 +69,7 @@ import {
 } from "@/components/ui/accordion";
 import { useTickers, encodeSymbol, type NormalizedTicker } from "@/lib/marketSocket";
 import { useAuth } from "@/lib/auth";
+import { KycProgressBanner } from "@/components/KycGate";
 import { get } from "@/lib/api";
 import { useMarketCatalog } from "@/lib/marketCatalog";
 import { buildUsdRates } from "@/lib/volumeUsd";
@@ -756,6 +757,12 @@ export default function Home() {
           ))}
         </div>
       </div>
+
+      {user && (user.kycLevel ?? 0) < 2 && (
+        <div className="container mx-auto px-4 pt-4">
+          <KycProgressBanner />
+        </div>
+      )}
 
       {/* ─── HERO ─────────────────────────────────────────────── */}
       <section className="relative w-full overflow-hidden">

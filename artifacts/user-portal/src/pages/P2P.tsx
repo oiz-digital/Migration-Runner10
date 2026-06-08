@@ -6,6 +6,7 @@ import {
   Check, X, Hourglass, CircleDot, IndianRupee, Building, Smartphone,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { KycGate } from "@/components/KycGate";
 import { get, ApiError } from "@/lib/api";
 import {
   useListP2pOffers,
@@ -152,6 +153,15 @@ export default function P2P() {
             }
           />
         </SectionCard>
+      </div>
+    );
+  }
+
+  if ((user.kycLevel ?? 0) < 1) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <PageHeader eyebrow="Peer-to-Peer" title="P2P Marketplace" description="Direct buyer-seller trades secured by escrow." />
+        <KycGate requiredLevel={1} feature="P2P Marketplace" />
       </div>
     );
   }

@@ -547,6 +547,7 @@ export default function Trade() {
   // ─── Handlers ────────────────────────────
   const handleOrder = () => {
     if (!user) { toast.error("Please log in to trade"); return; }
+    if ((user.kycLevel ?? 0) < 1) { toast.error("Complete KYC Level 1 to start trading", { description: "Go to Profile → KYC to verify your identity." }); return; }
     const amt = Number(amount);
     if (!(amt > 0)) { toast.error("Enter an amount"); return; }
     if (type !== "market" && !(Number(price) > 0)) { toast.error("Enter a price"); return; }

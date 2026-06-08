@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { get, post, del } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+import { KycGate } from "@/components/KycGate";
 import {
   Bot as BotIcon, Plus, Play, Pause, Trash2, TrendingUp, Activity, Grid3x3, Repeat,
   Clock, DollarSign, ArrowDown, ArrowUp,
@@ -39,6 +41,7 @@ const STATUS_VARIANT: Record<string, "success" | "warning" | "neutral" | "danger
 };
 
 export default function Bots() {
+  const { user } = useAuth();
   const qc = useQueryClient();
   const [selected, setSelected] = useState<number | null>(null);
 
@@ -53,6 +56,15 @@ export default function Bots() {
   const totalUnrealized = bots.reduce((s, b) => s + Number(b.unrealizedPnlUsd), 0);
   const totalInvested = bots.reduce((s, b) => s + Number(b.totalInvestedUsd), 0);
   const runningCount = bots.filter((b) => b.status === "running").length;
+
+  if (user && (user.kycLevel ?? 0) < 1) {
+    return (
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-5">
+        <PageHeader eyebrow="Automation" title="Trading Bots" description="Automated grid and DCA strategies." />
+        <KycGate requiredLevel={1} feature="Trading Bots" />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-5">

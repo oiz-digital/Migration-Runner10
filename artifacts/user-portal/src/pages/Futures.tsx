@@ -20,6 +20,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
+import { KycGate } from "@/components/KycGate";
 import { PriceChart } from "@/components/PriceChart";
 import {
   Star,
@@ -573,6 +574,14 @@ export default function Futures() {
       </TabsContent>
     </Tabs>
   );
+
+  if (user && (user.kycLevel ?? 0) < 2) {
+    return (
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-5">
+        <KycGate requiredLevel={2} feature="Futures Trading" mode="page" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col min-h-[calc(100vh-56px)] lg:h-[calc(100vh-56px)] bg-background">

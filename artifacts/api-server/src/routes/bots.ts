@@ -37,6 +37,9 @@ router.get("/bots/:id", requireAuth, async (req, res): Promise<void> => {
 
 router.post("/bots", requireAuth, async (req, res): Promise<void> => {
   const userId = req.user!.id;
+  if ((req.user!.kycLevel ?? 0) < 1) {
+    res.status(403).json({ error: "KYC Level 1 required to create trading bots" }); return;
+  }
   const { name, botType, symbol, baseSymbol, quoteSymbol, config } = req.body ?? {};
 
   if (typeof name !== "string" || !name.trim()) { res.status(400).json({ error: "name required" }); return; }

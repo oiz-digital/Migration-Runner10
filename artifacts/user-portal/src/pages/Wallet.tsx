@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { get, post } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { KycProgressBanner } from "@/components/KycGate";
 import { useTickers } from "@/lib/marketSocket";
 import { useMemo, useState, useEffect } from "react";
 import { useLocation } from "wouter";
@@ -226,6 +227,17 @@ export default function Wallet() {
   const [withdrawOpen, setWithdrawOpen] = useState<{ currency: string; type: WalletType } | null>(null);
   const [transferOpen, setTransferOpen] = useState<{ currency?: string } | null>(null);
 
+  const handleWithdraw = (currency: string, type: WalletType) => {
+    if ((user?.kycLevel ?? 0) < 2) {
+      toast.error("KYC Level 2 required to withdraw", {
+        description: "Complete Intermediate KYC (Aadhaar + documents) to enable withdrawals.",
+        action: { label: "Verify Now", onClick: () => setLocation("/kyc") },
+      });
+      return;
+    }
+    setWithdrawOpen({ currency, type });
+  };
+
   // ── Queries ──────────────────────────────────────────────────────
   // Server now returns per-item `usdValue` + aggregated totals + live inrRate,
   // so balances stay accurate even when no WS ticker is subscribed.
@@ -397,7 +409,7 @@ export default function Wallet() {
                 <span className="text-xs font-semibold">Deposit</span>
               </Button>
               <Button
-                onClick={() => setWithdrawOpen({ currency: "USDT", type: "SPOT" })}
+                onClick={() => handleWithdraw("USDT", "SPOT")}
                 variant="secondary"
                 className="h-12 flex-col gap-0.5"
                 data-testid="button-withdraw"
@@ -503,7 +515,7 @@ export default function Wallet() {
             usdOf={usdOf}
             mask={mask}
             onDeposit={(currency, type) => setDepositOpen({ currency, type: type === "ALL" ? "SPOT" : type })}
-            onWithdraw={(currency, type) => setWithdrawOpen({ currency, type: type === "ALL" ? "SPOT" : type })}
+            onWithdraw={(currency, type) => handleWithdraw(currency, type === "ALL" ? "SPOT" : type)}
             onTransfer={(currency) => setTransferOpen({ currency })}
             onTrade={(currency) => setLocation(`/trade/${currency}_USDT`)}
           />

@@ -47,6 +47,9 @@ function priceUsd(symbol: string): number {
 
 router.post("/convert/quote", requireAuth, async (req, res): Promise<void> => {
   const userId = req.user!.id;
+  if ((req.user!.kycLevel ?? 0) < 1) {
+    res.status(403).json({ error: "KYC Level 1 required to use Quick Convert" }); return;
+  }
   const parsed = QuoteBody.safeParse(req.body ?? {});
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.issues[0]?.message || "Invalid input" });

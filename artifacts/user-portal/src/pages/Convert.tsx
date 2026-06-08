@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/lib/auth";
+import { KycGate } from "@/components/KycGate";
 import { ArrowDownUp, RefreshCw, History, Zap, Clock, Sparkles, AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { get, post } from "@/lib/api";
@@ -51,6 +53,7 @@ function useCountdown(target: string | null): { msLeft: number; expired: boolean
 }
 
 export default function Convert() {
+  const { user } = useAuth();
   const qc = useQueryClient();
 
   // Coin universe (server-curated). Filter to active+listed and popular order.
@@ -175,6 +178,15 @@ export default function Convert() {
 
   const ttlPct = quote ? Math.max(0, Math.min(100, (msLeft / quote.ttlMs) * 100)) : 0;
   const secLeft = Math.ceil(msLeft / 1000);
+
+  if (user && (user.kycLevel ?? 0) < 1) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-6xl space-y-6">
+        <PageHeader eyebrow="Quick Convert" title="Convert" description="Instantly swap between cryptocurrencies." />
+        <KycGate requiredLevel={1} feature="Quick Convert" />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl space-y-6">
