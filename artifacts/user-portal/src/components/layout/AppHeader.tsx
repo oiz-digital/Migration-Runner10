@@ -104,7 +104,7 @@ const LANGUAGES: Language[] = [
 
 const LANG_STORAGE_KEY = "zebvix:lang";
 
-type NavBadgeTone = "hot" | "new";
+type NavBadgeTone = "hot" | "new" | "soon";
 
 type NavLink = {
   kind: "link";
@@ -176,7 +176,7 @@ const navItems: NavEntry[] = [
       { href: "/trade",   label: "Spot Trading",     desc: "Buy and sell crypto with deep liquidity",          icon: TrendingUp },
       { href: "/futures", label: "Futures",          desc: "Up to 100× leverage on perpetual contracts",       icon: Zap,           badge: "100×", badgeTone: "hot" },
       { href: "/options", label: "Options",          desc: "Hedge or speculate with crypto options",           icon: Sigma,         badge: "NEW",  badgeTone: "new" },
-      { href: "/p2p",     label: "P2P Trading",      desc: "Buy and sell crypto directly with other users",    icon: Users },
+      { href: "/p2p",     label: "P2P Trading",      desc: "Buy and sell crypto directly with other users",    icon: Users,         badge: "SOON", badgeTone: "soon" },
       { href: "/convert", label: "Instant Convert",  desc: "One-click swap between any two supported assets",  icon: ArrowLeftRight },
       { href: "/bots",    label: "AI Trade",         desc: "AI-powered trade suggestions and automated bots", icon: Brain,         badge: "AI",   badgeTone: "new" },
     ],
@@ -216,8 +216,8 @@ const navItems: NavEntry[] = [
     priority: 2,
     width: "w-[460px]",
     items: [
-      { href: "/forex",       label: "Forex",       desc: "Trade 8+ currency pairs with up to 50× leverage (EURINR, USDINR…)", icon: ForexIcon,  badge: "NEW", badgeTone: "new" },
-      { href: "/stocks",      label: "Stocks",       desc: "NSE India & US NASDAQ stocks — Reliance, TCS, AAPL, NVDA…",         icon: Building2,  badge: "NEW", badgeTone: "new" },
+      { href: "/forex",       label: "Forex",       desc: "Trade 8+ currency pairs with up to 50× leverage (EURINR, USDINR…)", icon: ForexIcon,  badge: "SOON", badgeTone: "soon" },
+      { href: "/stocks",      label: "Stocks",       desc: "NSE India & US NASDAQ stocks — Reliance, TCS, AAPL, NVDA…",         icon: Building2,  badge: "SOON", badgeTone: "soon" },
       { href: "/commodities", label: "Commodities",  desc: "Gold, Silver, Crude Oil, Natural Gas on MCX with leverage",          icon: Gem,        badge: "NEW", badgeTone: "new" },
       { href: "/smartapi",    label: "SmartAPI",     desc: "Connect Angel One — trade equities, F&O, MCX directly via SmartAPI", icon: Zap,        badge: "LIVE", badgeTone: "new" },
     ],
@@ -508,6 +508,8 @@ export function AppHeader() {
               const badgeClass =
                 item.badgeTone === "new"
                   ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20"
+                  : item.badgeTone === "soon"
+                  ? "bg-zinc-500/15 text-zinc-400 border-zinc-500/30 hover:bg-zinc-500/20"
                   : "bg-rose-500/15 text-rose-400 border-rose-500/30 hover:bg-rose-500/20";
               const triggerCls = `relative ${visibility} items-center gap-1.5 px-2 xl:px-3 h-9 rounded-md font-medium whitespace-nowrap transition-colors ${
                 active
@@ -550,6 +552,8 @@ export function AppHeader() {
                           const subBadgeClass =
                             sub.badgeTone === "hot"
                               ? "bg-rose-500/15 text-rose-400 border-rose-500/30"
+                              : sub.badgeTone === "soon"
+                              ? "bg-zinc-500/15 text-zinc-400 border-zinc-500/30"
                               : "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
                           return (
                             <DropdownMenuItem key={sub.href} asChild>

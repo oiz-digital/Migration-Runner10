@@ -1264,6 +1264,28 @@ export default function Forex() {
     });
   };
 
+  const COMING_SOON_FOREX: boolean = true;
+  if (COMING_SOON_FOREX) {
+    return (
+      <div className="min-h-[calc(100vh-56px)] flex flex-col items-center justify-center gap-6 px-4 text-center bg-background">
+        <div className="w-20 h-20 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+          <Clock className="w-9 h-9 text-amber-400" />
+        </div>
+        <div className="max-w-sm space-y-2">
+          <p className="text-xs font-bold uppercase tracking-widest text-amber-400">Coming Soon</p>
+          <h1 className="text-3xl font-bold tracking-tight">Forex Trading</h1>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Trade 8+ currency pairs with up to 50× leverage — EURINR, USDINR and more. Coming soon to Zebvix.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-800/60 border border-zinc-700/50">
+          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+          <span className="text-xs text-zinc-400 font-medium">Launching soon on Zebvix</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0b0e17] text-white flex flex-col overflow-hidden" style={{ height: "100vh" }}>
 
