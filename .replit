@@ -9,44 +9,6 @@ args = ["pnpm", "store", "prune"]
 env = { "CI" = "true" }
 
 [workflows]
-runButton = "Project"
-
-[[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "artifacts/admin: CryptoX Admin"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "artifacts/user-portal: CryptoX Exchange"
-
-[[workflows.workflow]]
-name = "artifacts/admin: CryptoX Admin"
-author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "webview"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "PORT=23744 BASE_PATH=/admin/ pnpm --filter @workspace/admin run dev"
-waitForPort = 23744
-
-[[workflows.workflow]]
-name = "artifacts/user-portal: CryptoX Exchange"
-author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "webview"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "PORT=23475 BASE_PATH=/user/ pnpm --filter @workspace/user-portal run dev"
-waitForPort = 23475
 
 [agent]
 stack = "PNPM_WORKSPACE"
