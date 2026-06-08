@@ -178,7 +178,7 @@ const navItems: NavEntry[] = [
       { href: "/options", label: "Options",          desc: "Hedge or speculate with crypto options",           icon: Sigma,         badge: "NEW",  badgeTone: "new" },
       { href: "/p2p",     label: "P2P Trading",      desc: "Buy and sell crypto directly with other users",    icon: Users,         badge: "SOON", badgeTone: "soon" },
       { href: "/convert", label: "Instant Convert",  desc: "One-click swap between any two supported assets",  icon: ArrowLeftRight },
-      { href: "/bots",    label: "AI Trade",         desc: "AI-powered trade suggestions and automated bots", icon: Brain,         badge: "AI",   badgeTone: "new" },
+      { href: "/ai-trading", label: "AI Trade",       desc: "AI-powered trade suggestions and automated bots", icon: Brain,         badge: "AI",   badgeTone: "new" },
     ],
     itemGates: {
       "/futures": (f) => f.showFutures,
@@ -248,7 +248,7 @@ const MORE_MENU: MoreSectionDef[] = [
       { href: "/dashboard",  label: "Dashboard",       desc: "Your personalised trading overview and portfolio stats", icon: LayoutDashboard, badge: "PRO" },
       { href: "/wallet",     label: "Wallet",          desc: "View balances, deposit and withdraw funds",              icon: WalletIcon },
       { href: "/ledger",     label: "Fund Ledger",     desc: "Complete history of every fund movement and AI earnings", icon: BookOpen },
-      { href: "/bots",       label: "AI Trade",        desc: "AI-powered trade suggestions and automated bots",        icon: Brain,          badge: "AI" },
+      { href: "/ai-trading", label: "AI Trade",        desc: "AI-powered trade suggestions and automated bots",        icon: Brain,          badge: "AI" },
       { href: "/bots",       label: "Trading Bots",    desc: "Automate your trading strategy with AI-powered bots",   icon: BotIcon,        badge: "NEW" },
       { href: "/copy-trading", label: "Copy Trading",  desc: "Mirror top traders and grow your portfolio effortlessly", icon: Star },
     ],
