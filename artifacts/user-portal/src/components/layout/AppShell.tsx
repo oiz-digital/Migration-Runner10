@@ -5,6 +5,7 @@ import { MobileBottomNav } from "./MobileBottomNav";
 import { SiteConfigProvider, useSiteConfig } from "@/lib/siteConfig";
 import { useAuth } from "@/lib/auth";
 import MaintenancePage from "@/pages/Maintenance";
+import { VerificationGateModal } from "@/components/VerificationGateModal";
 import { Sparkles, X } from "lucide-react";
 import { useState } from "react";
 
@@ -39,6 +40,7 @@ function ShellInner({ children }: { children: React.ReactNode }) {
       <main className="flex-1 flex flex-col pb-[3.75rem] xl:pb-0">{children}</main>
       <AppFooter />
       <MobileBottomNav />
+      <VerificationGateModal />
     </div>
   );
 }

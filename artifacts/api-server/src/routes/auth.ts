@@ -1,7 +1,7 @@
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
-import { eq, or, inArray } from "drizzle-orm";
+import { eq, or, inArray, sql } from "drizzle-orm";
 import { z, type ZodSchema } from "zod";
-import { db, usersTable, loginLogsTable, walletsTable, coinsTable, settingsTable } from "@workspace/db";
+import { db, usersTable, loginLogsTable, walletsTable, coinsTable, settingsTable, otpCodesTable } from "@workspace/db";
 import {
   hashPassword,
   verifyPassword,
@@ -453,6 +453,58 @@ router.post("/auth/register/verify", validate(VerifyBody), async (req, res): Pro
   const sessToken = await createSession(ch.userId, req);
   res.cookie(SESSION_COOKIE, sessToken, COOKIE_OPTS);
   res.status(201).json({ user: sanitizeUser(fresh ?? user) });
+});
+
+/**
+ * POST /auth/verify-contact
+ * Authenticated — verifies an OTP code and marks emailVerified / phoneVerified on the user.
+ * Body: { channel: "email"|"sms", otpId: number, code: string }
+ */
+router.post("/auth/verify-contact", requireAuth, async (req, res): Promise<void> => {
+  const { channel, otpId, code } = req.body ?? {};
+  if (!channel || !otpId || !code) {
+    res.status(400).json({ error: "channel, otpId and code are required" });
+    return;
+  }
+  if (channel !== "email" && channel !== "sms") {
+    res.status(400).json({ error: "channel must be 'email' or 'sms'" });
+    return;
+  }
+
+  const MAX_ATT = 5;
+  const [row] = await db.select().from(otpCodesTable).where(eq(otpCodesTable.id, Number(otpId))).limit(1);
+  if (!row) { res.status(404).json({ error: "OTP not found" }); return; }
+  if (new Date(row.expiresAt).getTime() < Date.now()) {
+    res.status(410).json({ error: "OTP expired — request a new one" }); return;
+  }
+  if (row.attempts >= MAX_ATT) {
+    res.status(429).json({ error: "Too many attempts — request a new code" }); return;
+  }
+
+  // Hash the submitted code and compare
+  const { createHash, randomInt: _r } = await import("crypto");
+  void _r;
+  const submitted = createHash("sha256").update(String(code).trim()).digest("hex");
+  if (submitted !== row.code) {
+    await db.update(otpCodesTable)
+      .set({ attempts: sql`${otpCodesTable.attempts} + 1` })
+      .where(eq(otpCodesTable.id, row.id));
+    res.status(400).json({ error: "Incorrect code", attemptsLeft: MAX_ATT - row.attempts - 1 });
+    return;
+  }
+
+  // Mark OTP consumed
+  await db.update(otpCodesTable).set({ verifiedAt: new Date(), expiresAt: new Date(0) }).where(eq(otpCodesTable.id, row.id));
+
+  // Update user verification flag
+  const userId = req.user!.id;
+  const upd = channel === "email"
+    ? { emailVerified: true, updatedAt: new Date() }
+    : { phoneVerified: true, updatedAt: new Date() };
+  await db.update(usersTable).set(upd).where(eq(usersTable.id, userId));
+
+  const [fresh] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+  res.json({ ok: true, user: sanitizeUser(fresh!) });
 });
 
 router.post("/auth/logout", async (req, res): Promise<void> => {
