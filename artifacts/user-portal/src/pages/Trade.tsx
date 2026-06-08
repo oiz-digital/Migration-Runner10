@@ -393,7 +393,11 @@ export default function Trade() {
     if (Array.isArray(walletData.data)) return walletData.data;
     return [];
   }, [walletData]);
-  const findWallet = (sym: string) => wallets.find((w) => (w.currency || w.symbol || w.coin) === sym);
+  const findWallet = (sym: string) => {
+    const matches = wallets.filter(w => (w.currency || w.symbol || w.coin) === sym);
+    // For spot trading, prefer SPOT-type wallet over FUTURES/FIAT
+    return matches.find(w => w.type === "SPOT") ?? matches[0];
+  };
   const availOf = (w: any) => {
     if (!w) return 0;
     if (w.available != null) return Number(w.available);
