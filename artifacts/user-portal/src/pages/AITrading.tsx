@@ -1072,6 +1072,10 @@ function BotCard({ sub, onCancel, cancelling, onInvoice }: {
   // freshly-started bot doesn't show an inflated per-day figure).
   const daysRunning = Math.max(1, elapsedMs / 86400000);
   const avgPerDay = (sub.totalEarned || 0) / daysRunning;
+  // Projected yearly average profit, annualised from the realised per-day
+  // average since the bot started running. No time limit — bot runs until stopped.
+  const yearlyAvg = avgPerDay * 365;
+  const yearlyRoi = sub.investedAmount > 0 ? (yearlyAvg / sub.investedAmount) * 100 : 0;
 
   return (
     <div
@@ -1143,9 +1147,27 @@ function BotCard({ sub, onCancel, cancelling, onInvoice }: {
           )}
           {noExpire && (
             <div className="text-[10px] text-muted-foreground mt-1">
-              Started {fmtDate(sub.startedAt)} · earning {fmtUSD(sub.dailyReturn, 2)}/day
+              Started {fmtDate(sub.startedAt)} · earning {fmtUSD(sub.dailyReturn, 2)}/day · runs with no time limit
             </div>
           )}
+        </div>
+
+        {/* Projected yearly average profit */}
+        <div className="mb-4 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.06] p-3">
+          <div className="flex items-center justify-between mb-1">
+            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+              <TrendingUp className="w-3 h-3" /> Yearly average profit
+            </span>
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+              {yearlyRoi >= 0 ? "+" : ""}{yearlyRoi.toFixed(1)}% / yr
+            </span>
+          </div>
+          <div className="font-mono font-bold text-lg tabular-nums tracking-tight text-emerald-400">
+            +{fmtUSD(yearlyAvg, 2)}<span className="text-xs font-normal text-muted-foreground"> / year</span>
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-1">
+            Annualised from {fmtUSD(avgPerDay, 4)}/day average over {Math.floor(daysRunning)}d running
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
