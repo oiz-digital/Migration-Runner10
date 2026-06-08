@@ -11,6 +11,43 @@ env = { "CI" = "true" }
 [workflows]
 runButton = "Project"
 
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "artifacts/admin: CryptoX Admin"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "artifacts/user-portal: CryptoX Exchange"
+
+[[workflows.workflow]]
+name = "artifacts/admin: CryptoX Admin"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PORT=23744 BASE_PATH=/admin/ pnpm --filter @workspace/admin run dev"
+waitForPort = 23744
+
+[[workflows.workflow]]
+name = "artifacts/user-portal: CryptoX Exchange"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PORT=23475 BASE_PATH=/user/ pnpm --filter @workspace/user-portal run dev"
+waitForPort = 23475
+
 [agent]
 stack = "PNPM_WORKSPACE"
 expertMode = true
@@ -18,3 +55,19 @@ expertMode = true
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 20000
+
+[[ports]]
+localPort = 8080
+externalPort = 80
+
+[[ports]]
+localPort = 8081
+externalPort = 8081
+
+[[ports]]
+localPort = 23475
+externalPort = 3001
+
+[[ports]]
+localPort = 23744
+externalPort = 3000

@@ -1,0 +1,2 @@
+- [Trades table schema](trades-schema.md) — actual DB columns differ from Drizzle schema; always verify with psql before writing raw SQL
+- [Admin stats endpoints](admin-stats-endpoints.md) — 3 new endpoints added; pairs.symbol is the direct symbol string (e.g. "BTC/INR")
