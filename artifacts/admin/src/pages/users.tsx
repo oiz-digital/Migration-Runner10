@@ -64,7 +64,7 @@ type Dossier = {
   futuresPositions: FuturesPos[]; loginLogs: LoginLog[];
 };
 
-const ROLES = ["user", "support", "admin", "superadmin"];
+const ROLES = ["user", "support", "finance", "compliance", "marketing", "admin", "superadmin"];
 const STATUSES = ["active", "suspended", "banned"];
 
 function relTime(iso?: string | null): string {

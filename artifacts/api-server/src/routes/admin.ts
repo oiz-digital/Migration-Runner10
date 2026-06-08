@@ -53,7 +53,7 @@ import { broadcastPush } from "../lib/push";
 
 const router: IRouter = Router();
 const adminOnly = requireRole("admin", "superadmin");
-const supportPlus = requireRole("admin", "superadmin", "support");
+const supportPlus = requireRole("admin", "superadmin", "support", "finance", "compliance", "marketing");
 
 // Dashboard stats
 router.get("/admin/stats", supportPlus, async (_req, res): Promise<void> => {

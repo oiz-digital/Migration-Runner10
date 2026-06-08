@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refresh = async () => {
     try {
       const res = await get<{ user: AdminUser }>("/auth/me");
-      const ok = ["support", "admin", "superadmin"].includes(res.user.role);
+      const ok = ["support", "finance", "compliance", "marketing", "admin", "superadmin"].includes(res.user.role);
       setUser(ok ? res.user : null);
     } catch {
       setUser(null);
@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const res = await post<{ user: AdminUser }>("/auth/login", { email, password });
-    if (!["admin", "superadmin", "support"].includes(res.user.role)) {
+    if (!["admin", "superadmin", "support", "finance", "compliance", "marketing"].includes(res.user.role)) {
       await post("/auth/logout");
       throw new Error("You do not have permission to access the admin panel");
     }
