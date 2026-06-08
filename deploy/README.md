@@ -31,7 +31,7 @@ Nginx (port 80/443 + SSL)
 | CPU | 2 vCPU | 4 vCPU |
 | RAM | 4 GB | 8 GB |
 | Disk | 40 GB SSD | 80 GB SSD |
-| Domain | Required (for SSL) | cryptox.in |
+| Domain | Required (for SSL) | zebvix.com |
 
 ---
 
@@ -125,8 +125,8 @@ pm2 logs cryptox-go
 ## Step 6 — SSL with Let's Encrypt
 
 ```bash
-# Replace cryptox.in with your actual domain
-sudo certbot --nginx -d cryptox.in -d www.cryptox.in
+# Replace zebvix.com with your actual domain
+sudo certbot --nginx -d zebvix.com -d www.zebvix.com
 ```
 
 Certbot auto-renews via cron. Nginx config already has SSL stubs ready.
@@ -137,10 +137,10 @@ Certbot auto-renews via cron. Nginx config already has SSL stubs ready.
 
 ```bash
 # API health check
-curl https://cryptox.in/api/healthz
+curl https://zebvix.com/api/healthz
 
 # Go service health check
-curl https://cryptox.in/go-service/healthz
+curl https://zebvix.com/go-service/healthz
 
 # Check PM2 status
 pm2 status
@@ -217,7 +217,7 @@ Logs are rotated daily, kept 14 days, compressed after 1 day.
 
 ## Admin Panel Setup (first run)
 
-1. Open `https://cryptox.in/admin/`
+1. Open `https://zebvix.com/admin/`
 2. Login with admin credentials
 3. Go to **API Integrations → Email** — configure SMTP/SendGrid
 4. Go to **Networks** — set hot wallet address + private key for BSC USDT

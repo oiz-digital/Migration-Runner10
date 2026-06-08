@@ -140,7 +140,7 @@ echo "  2. nano .env  (fill all values, especially DATABASE_URL and SESSION_SECR
 echo "  3. sudo -u $APP_USER bash deploy/build.sh"
 echo "  4. pm2 start deploy/pm2.config.cjs"
 echo "  5. pm2 save"
-echo "  6. certbot --nginx -d cryptox.in -d www.cryptox.in"
+echo "  6. certbot --nginx -d zebvix.com -d www.zebvix.com"
 echo ""
 echo "DB password saved to: /tmp/cryptox_db_url"
 cat /tmp/cryptox_db_url

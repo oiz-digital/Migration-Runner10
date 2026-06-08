@@ -63,7 +63,7 @@ async function sendViaSendGrid(cfg: typeof emailConfigsTable.$inferSelect, paylo
       headers: { "Authorization": `Bearer ${cfg.apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         personalizations: [{ to: [{ email: payload.to }], subject: payload.subject }],
-        from: { email: cfg.fromEmail || "no-reply@cryptox.in", name: cfg.fromName || "CryptoX" },
+        from: { email: cfg.fromEmail || "no-reply@zebvix.com", name: cfg.fromName || "CryptoX" },
         content: [
           { type: "text/plain", value: payload.text ?? payload.html.replace(/<[^>]+>/g, "") },
           { type: "text/html", value: payload.html },
@@ -122,7 +122,7 @@ async function sendViaPostmark(cfg: typeof emailConfigsTable.$inferSelect, paylo
       method: "POST",
       headers: { "Accept": "application/json", "Content-Type": "application/json", "X-Postmark-Server-Token": cfg.apiKey },
       body: JSON.stringify({
-        From: cfg.fromEmail ? `${cfg.fromName || "CryptoX"} <${cfg.fromEmail}>` : "no-reply@cryptox.in",
+        From: cfg.fromEmail ? `${cfg.fromName || "CryptoX"} <${cfg.fromEmail}>` : "no-reply@zebvix.com",
         To: payload.to,
         Subject: payload.subject,
         HtmlBody: payload.html,
@@ -257,14 +257,14 @@ export async function sendWelcomeEmail(to: string, opts: { name?: string }): Pro
           <tr><td style="padding:8px 0;color:#7d8590">📈</td><td style="padding:8px 0">Start trading 200+ spot and futures markets</td></tr>
         </table>
         <div style="text-align:center;margin-bottom:24px">
-          <a href="https://cryptox.in/user/markets" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:12px 32px;border-radius:8px;text-decoration:none">Start Trading</a>
+          <a href="https://zebvix.com/user/markets" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:12px 32px;border-radius:8px;text-decoration:none">Start Trading</a>
         </div>
         <div style="border-top:1px solid #30363d;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
-          © ${new Date().getFullYear()} CryptoX · Secure Indian Crypto Exchange · <a href="https://cryptox.in/user/support-tickets" style="color:#484f58">Support</a>
+          © ${new Date().getFullYear()} CryptoX · Secure Indian Crypto Exchange · <a href="https://zebvix.com/user/support-tickets" style="color:#484f58">Support</a>
         </div>
       </div>
     `,
-    text: `Welcome to CryptoX, ${name}!\n\nYour account is ready. Enable 2FA, complete KYC, and start trading 200+ markets.\n\nhttps://cryptox.in`,
+    text: `Welcome to CryptoX, ${name}!\n\nYour account is ready. Enable 2FA, complete KYC, and start trading 200+ markets.\n\nhttps://zebvix.com`,
   });
 }
 
@@ -284,7 +284,7 @@ export async function sendKycApprovedEmail(to: string, opts: { name?: string; le
         <p style="color:#e6edf3;font-size:14px;margin:0 0 12px">Hi ${name},</p>
         <p style="color:#7d8590;font-size:14px;margin:0 0 20px;line-height:1.6">Your KYC Level ${opts.level} verification has been <strong style="color:#3fb950">approved</strong>. Your withdrawal limits and trading features have been upgraded.</p>
         <div style="text-align:center">
-          <a href="https://cryptox.in/user/wallet" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">Go to Wallet</a>
+          <a href="https://zebvix.com/user/wallet" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">Go to Wallet</a>
         </div>
         <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
           © ${new Date().getFullYear()} CryptoX
@@ -314,7 +314,7 @@ export async function sendKycRejectedEmail(to: string, opts: { name?: string; le
         </div>
         <p style="color:#7d8590;font-size:12px;margin:0 0 20px">Ensure documents are clear, well-lit, and match your registered details exactly. Screenshots are not accepted.</p>
         <div style="text-align:center">
-          <a href="https://cryptox.in/user/kyc" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">Resubmit KYC</a>
+          <a href="https://zebvix.com/user/kyc" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">Resubmit KYC</a>
         </div>
         <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
           © ${new Date().getFullYear()} CryptoX
@@ -406,7 +406,7 @@ export async function sendSecurityAlertEmail(to: string, opts: {
           <li>Open a high-priority support ticket</li>
         </ol>
         <div style="text-align:center">
-          <a href="https://cryptox.in/user/settings" style="display:inline-block;background:#f85149;color:#fff;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">Secure My Account</a>
+          <a href="https://zebvix.com/user/settings" style="display:inline-block;background:#f85149;color:#fff;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">Secure My Account</a>
         </div>
         <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
           © ${new Date().getFullYear()} CryptoX
@@ -436,7 +436,7 @@ export async function sendNewLoginEmail(to: string, opts: {
         </table>
         <p style="color:#7d8590;font-size:13px;margin:0 0 20px">If this sign-in was you, no action is needed. If you don't recognise this activity, secure your account immediately.</p>
         <div style="text-align:center">
-          <a href="https://cryptox.in/user/settings" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">Review Sessions</a>
+          <a href="https://zebvix.com/user/settings" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">Review Sessions</a>
         </div>
         <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
           © ${new Date().getFullYear()} CryptoX
@@ -493,7 +493,7 @@ export async function sendAiEarningEmail(to: string, opts: {
         <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:20px">
           <tr><td style="color:#7d8590;padding:6px 0">Total Earned (plan)</td><td style="text-align:right;font-family:monospace;font-weight:700;color:#a78bfa">$${opts.totalEarnedUsdt} USDT</td></tr>
         </table>
-        <p style="color:#7d8590;font-size:13px">Earnings have been credited to your spot wallet. View full history on your <a href="https://cryptox.in/user/ledger" style="color:#f0b429;text-decoration:none">Fund Ledger</a>.</p>
+        <p style="color:#7d8590;font-size:13px">Earnings have been credited to your spot wallet. View full history on your <a href="https://zebvix.com/user/ledger" style="color:#f0b429;text-decoration:none">Fund Ledger</a>.</p>
         <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
           © ${new Date().getFullYear()} CryptoX
         </div>
@@ -525,7 +525,7 @@ export async function sendP2PMatchedEmail(to: string, opts: {
         </table>
         <p style="color:#7d8590;font-size:13px;margin:0 0 16px">${isSell ? "Wait for the buyer to complete payment, then release the crypto from escrow." : "Complete the payment within the time limit, then mark it as paid."}</p>
         <div style="text-align:center">
-          <a href="https://cryptox.in/user/p2p" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">View Order</a>
+          <a href="https://zebvix.com/user/p2p" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">View Order</a>
         </div>
         <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
           © ${new Date().getFullYear()} CryptoX
@@ -552,7 +552,7 @@ export async function sendReferralBonusEmail(to: string, opts: {
         </div>
         <p style="color:#7d8590;font-size:14px">Your bonus has been credited to your spot wallet. Keep sharing your referral link to earn more!</p>
         <div style="text-align:center;margin-top:20px">
-          <a href="https://cryptox.in/user/referrals" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">View Referrals</a>
+          <a href="https://zebvix.com/user/referrals" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">View Referrals</a>
         </div>
         <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
           © ${new Date().getFullYear()} CryptoX
@@ -592,7 +592,7 @@ export async function sendCryptoDepositConfirmedEmail(to: string, opts: {
         <p style="color:#7d8590;font-size:13px;margin:0 0 16px">Your balance has been credited to your spot wallet. You can now trade or withdraw your funds.</p>
         ${explorerLink ? `<p style="text-align:center;margin:0 0 20px"><a href="${explorerLink}" style="color:#f0b429;font-size:12px;text-decoration:none">View transaction on explorer ↗</a></p>` : ""}
         <div style="text-align:center">
-          <a href="https://cryptox.in/user/wallet" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">Go to Wallet</a>
+          <a href="https://zebvix.com/user/wallet" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">Go to Wallet</a>
         </div>
         <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
           © ${new Date().getFullYear()} CryptoX · Secure Indian Crypto Exchange
@@ -628,7 +628,7 @@ export async function sendFuturesLiquidationEmail(to: string, opts: {
         <p style="color:#7d8590;font-size:13px;margin:0 0 16px">Your position has been automatically closed at the liquidation price because your margin fell below the maintenance requirement.</p>
         <p style="color:#484f58;font-size:12px;margin:0 0 20px">Tip: Use lower leverage or set a stop-loss to avoid future liquidations.</p>
         <div style="text-align:center">
-          <a href="https://cryptox.in/user/futures" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">View Futures</a>
+          <a href="https://zebvix.com/user/futures" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">View Futures</a>
         </div>
         <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
           © ${new Date().getFullYear()} CryptoX
@@ -661,7 +661,7 @@ export async function sendMarginCallEmail(to: string, opts: {
         <p style="color:#e6edf3;font-size:14px;font-weight:600;margin:0 0 8px">Your position is close to liquidation.</p>
         <p style="color:#7d8590;font-size:13px;margin:0 0 20px">Add margin to your position or reduce your exposure immediately to avoid forced liquidation.</p>
         <div style="text-align:center">
-          <a href="https://cryptox.in/user/futures" style="display:inline-block;background:#f85149;color:#fff;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">Add Margin Now</a>
+          <a href="https://zebvix.com/user/futures" style="display:inline-block;background:#f85149;color:#fff;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">Add Margin Now</a>
         </div>
         <div style="border-top:1px solid #30363d;margin-top:24px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
           © ${new Date().getFullYear()} CryptoX
@@ -695,7 +695,7 @@ export async function sendPriceAlertEmail(to: string, opts: {
           <tr><td style="color:#7d8590;padding:6px 0">Current Price</td><td style="text-align:right;font-family:monospace;color:${color};font-weight:700">₹${opts.currentPrice}</td></tr>
         </table>
         <div style="text-align:center">
-          <a href="https://cryptox.in/user/markets" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">Trade Now</a>
+          <a href="https://zebvix.com/user/markets" style="display:inline-block;background:#f0b429;color:#000;font-weight:700;font-size:14px;padding:10px 28px;border-radius:8px;text-decoration:none">Trade Now</a>
         </div>
         <p style="color:#484f58;font-size:11px;margin-top:20px;text-align:center">This alert has been triggered and will not fire again for this target. Set a new alert in your price alerts.</p>
         <div style="border-top:1px solid #30363d;margin-top:16px;padding-top:16px;text-align:center;color:#484f58;font-size:11px">
@@ -703,6 +703,6 @@ export async function sendPriceAlertEmail(to: string, opts: {
         </div>
       </div>
     `,
-    text: `${opts.symbol} price alert: price has ${hit} ₹${opts.targetPrice}. Current price: ₹${opts.currentPrice}. Trade now at cryptox.in`,
+    text: `${opts.symbol} price alert: price has ${hit} ₹${opts.targetPrice}. Current price: ₹${opts.currentPrice}. Trade now at zebvix.com`,
   });
 }
