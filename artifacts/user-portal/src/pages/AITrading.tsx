@@ -49,7 +49,10 @@ interface Subscription {
   investedAmount: number;
   currentValue: number;
   startedAt: string;
-  expiresAt: string;
+  expiresAt: string | null;
+  noExpire: boolean;
+  durationDays: number;
+  dailyReturnPercent: number;
   status: "active" | "completed" | "cancelled";
   totalEarned: number;
   dailyReturn: number;
@@ -102,6 +105,30 @@ function getRisk(key: string) {
 
 function daysLeft(expiresAt: string) {
   return Math.max(0, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 86_400_000));
+}
+
+/** Re-render every second so countdown / elapsed timers tick live. */
+function useNow(active = true) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!active) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [active]);
+  return now;
+}
+
+/** Format a millisecond duration as "2d 04h 12m 30s" (omits leading zero units). */
+function fmtDuration(ms: number) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  if (d > 0) return `${d}d ${pad(h)}h ${pad(m)}m ${pad(sec)}s`;
+  if (h > 0) return `${pad(h)}h ${pad(m)}m ${pad(sec)}s`;
+  return `${pad(m)}m ${pad(sec)}s`;
 }
 
 function fmtDate(iso: string) {
@@ -264,6 +291,18 @@ export default function AITrading() {
     return Array.from(map.entries()).slice(-14).map(([date, amount]) => ({ date, amount }));
   }, [earnings]);
 
+  // Profit & Loss breakdown across all credited entries (losses are negative).
+  const pnlStats = useMemo(() => {
+    let profit = 0, loss = 0, wins = 0, losses = 0;
+    for (const e of earnings) {
+      if (e.amountUsdt >= 0) { profit += e.amountUsdt; wins++; }
+      else { loss += e.amountUsdt; losses++; }
+    }
+    const net = profit + loss;
+    const winRate = earnings.length > 0 ? (wins / earnings.length) * 100 : 0;
+    return { profit, loss, net, wins, losses, winRate };
+  }, [earnings]);
+
   const counterInvested = useCountUp(totalInvested);
   const counterEarned = useCountUp(totalEarned);
 
@@ -371,7 +410,7 @@ export default function AITrading() {
           )}
           {user && (
             <TabsTrigger value="earnings" className="gap-1.5">
-              <BarChart2 className="w-4 h-4" /> Earnings
+              <BarChart2 className="w-4 h-4" /> Profit &amp; Loss
             </TabsTrigger>
           )}
         </TabsList>
@@ -502,7 +541,7 @@ export default function AITrading() {
                               </div>
                               <div>
                                 <div className="text-sm font-medium">{sub.planName}</div>
-                                <div className="text-[11px] text-muted-foreground">{fmtDate(sub.startedAt)} → {fmtDate(sub.expiresAt)}</div>
+                                <div className="text-[11px] text-muted-foreground">{fmtDate(sub.startedAt)} → {sub.expiresAt ? fmtDate(sub.expiresAt) : "stopped"}</div>
                               </div>
                             </div>
                             <div className="text-right">
@@ -550,10 +589,38 @@ export default function AITrading() {
               </SectionCard>
             )}
 
-            {/* Daily bar chart */}
+            {/* P&L summary cards */}
+            {earnings.length > 0 && (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-4">
+                  <div className="text-[11px] text-muted-foreground mb-1">Total Profit</div>
+                  <div className="text-lg font-bold font-mono text-emerald-400">+{fmtUSD(pnlStats.profit, 4)}</div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5">{pnlStats.wins} winning credits</div>
+                </div>
+                <div className="rounded-xl border border-rose-500/25 bg-rose-500/10 p-4">
+                  <div className="text-[11px] text-muted-foreground mb-1">Total Loss</div>
+                  <div className="text-lg font-bold font-mono text-rose-400">{fmtUSD(pnlStats.loss, 4)}</div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5">{pnlStats.losses} losing credits</div>
+                </div>
+                <div className={`rounded-xl border p-4 ${pnlStats.net >= 0 ? "border-emerald-500/25 bg-emerald-500/5" : "border-rose-500/25 bg-rose-500/5"}`}>
+                  <div className="text-[11px] text-muted-foreground mb-1">Net P&amp;L</div>
+                  <div className={`text-lg font-bold font-mono ${pnlStats.net >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                    {pnlStats.net >= 0 ? "+" : ""}{fmtUSD(pnlStats.net, 4)}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5">across {earnings.length} entries</div>
+                </div>
+                <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
+                  <div className="text-[11px] text-muted-foreground mb-1">Win Rate</div>
+                  <div className="text-lg font-bold font-mono text-foreground">{pnlStats.winRate.toFixed(1)}%</div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5">profitable credits</div>
+                </div>
+              </div>
+            )}
+
+            {/* Daily P&L bar chart (green profit / red loss) */}
             {dailyEarnings.length > 0 && (
-              <SectionCard title="Daily Earnings" icon={BarChart2}
-                description="Per-day bot credit breakdown (last 14 days)">
+              <SectionCard title="Daily Profit / Loss" icon={BarChart2}
+                description="Per-day net bot result (last 14 days)">
                 <div className="h-44">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={dailyEarnings} margin={{ top: 5, right: 5, left: 5, bottom: 0 }}>
@@ -562,41 +629,56 @@ export default function AITrading() {
                       <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false}
                         tickFormatter={v => `$${v.toFixed(4)}`} width={60} />
                       <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 10, fontSize: 12 }}
-                        formatter={(v: any) => [`$${Number(v).toFixed(6)} USDT`, "Earned"]} />
-                      <Bar dataKey="amount" name="Daily Earnings" radius={[4, 4, 0, 0]} fill="#f59e0b" />
+                        formatter={(v: any) => [`${Number(v) >= 0 ? "+" : ""}$${Number(v).toFixed(6)} USDT`, Number(v) >= 0 ? "Profit" : "Loss"]} />
+                      <Bar dataKey="amount" name="Daily P&L" radius={[4, 4, 0, 0]}>
+                        {dailyEarnings.map((d, i) => (
+                          <Cell key={i} fill={d.amount >= 0 ? "#10b981" : "#f43f5e"} />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </SectionCard>
             )}
 
-            {/* Transaction list */}
-            <SectionCard title="Earnings History" icon={Activity}
-              description={`${earnings.length} total credits`} padded={false}>
+            {/* P&L history list */}
+            <SectionCard title="Profit & Loss History" icon={Activity}
+              description={`${earnings.length} total entries`} padded={false}>
               {earningsQ.isLoading ? (
-                <div className="p-8 text-center text-muted-foreground text-sm">Loading earnings…</div>
+                <div className="p-8 text-center text-muted-foreground text-sm">Loading history…</div>
               ) : earnings.length === 0 ? (
-                <EmptyState icon={BarChart2} title="No earnings yet"
-                  description="Bot earnings are credited daily at midnight UTC." />
+                <EmptyState icon={BarChart2} title="No history yet"
+                  description="Bot profit and loss entries are credited automatically as your bots trade." />
               ) : (
                 <div className="divide-y divide-border/50">
-                  {earnings.map(e => (
-                    <div key={e.id} className="flex items-center justify-between px-5 py-3 hover:bg-muted/10 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
-                          <Bot className="w-3.5 h-3.5 text-amber-400" />
+                  {earnings.map(e => {
+                    const isProfit = e.amountUsdt >= 0;
+                    return (
+                      <div key={e.id} className="flex items-center justify-between px-5 py-3 hover:bg-muted/10 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-full border flex items-center justify-center shrink-0 ${
+                            isProfit ? "bg-emerald-500/10 border-emerald-500/25" : "bg-rose-500/10 border-rose-500/25"
+                          }`}>
+                            {isProfit
+                              ? <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" />
+                              : <TrendingUp className="w-3.5 h-3.5 text-rose-400 rotate-180" />}
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium">{e.planName}</div>
+                            <div className="text-[11px] text-muted-foreground">
+                              {new Date(e.creditedAt).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="text-sm font-medium">{e.planName}</div>
-                          <div className="text-[11px] text-muted-foreground">{fmtDate(e.creditedAt)}</div>
+                        <div className="text-right">
+                          <div className={`font-mono font-semibold text-sm ${isProfit ? "text-emerald-400" : "text-rose-400"}`}>
+                            {isProfit ? "+" : ""}{e.amountUsdt.toFixed(6)} USDT
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">{isProfit ? "Profit" : "Loss"}</div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1.5 font-mono font-semibold text-sm text-emerald-400">
-                        <ArrowUpRight className="w-3.5 h-3.5" />
-                        +{e.amountUsdt.toFixed(6)} USDT
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </SectionCard>
@@ -772,9 +854,15 @@ function BotCard({ sub, onCancel, cancelling }: {
   sub: Subscription; onCancel: () => void; cancelling: boolean;
 }) {
   const risk = getRisk(sub.riskLevel.toLowerCase());
-  const left = daysLeft(sub.expiresAt);
-  const total = Math.ceil((new Date(sub.expiresAt).getTime() - new Date(sub.startedAt).getTime()) / 86_400_000);
-  const progress = total > 0 ? Math.min(100, ((total - left) / total) * 100) : 0;
+  const now = useNow();
+  const startMs = new Date(sub.startedAt).getTime();
+  const noExpire = sub.noExpire || !sub.expiresAt;
+  const elapsedMs = now - startMs;
+  const remainingMs = sub.expiresAt ? new Date(sub.expiresAt).getTime() - now : 0;
+  const totalMs = sub.expiresAt ? new Date(sub.expiresAt).getTime() - startMs : 0;
+  const progress = noExpire
+    ? 100
+    : totalMs > 0 ? Math.min(100, ((totalMs - Math.max(0, remainingMs)) / totalMs) * 100) : 0;
   const roi = sub.investedAmount > 0 ? ((sub.totalEarned || 0) / sub.investedAmount) * 100 : 0;
 
   return (
@@ -812,30 +900,53 @@ function BotCard({ sub, onCancel, cancelling }: {
           ))}
         </div>
 
-        <div className="mb-4">
-          <div className="flex justify-between text-[11px] text-muted-foreground mb-1.5">
-            <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> Progress</span>
-            <span className="font-medium">{left} days remaining</span>
+        {/* Live timer */}
+        <div className="mb-4 rounded-xl border p-3" style={{ borderColor: `${risk.color}25`, background: `${risk.color}08` }}>
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+              <Clock className="w-3 h-3" />
+              {noExpire ? "Running for" : "Time remaining"}
+            </span>
+            {noExpire ? (
+              <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                <Infinity className="w-3 h-3" /> No expiry
+              </span>
+            ) : (
+              <span className="text-[10px] text-muted-foreground">{daysLeft(sub.expiresAt!)} days left</span>
+            )}
           </div>
-          <div className="h-2 bg-muted/40 rounded-full overflow-hidden">
-            <div className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${progress}%`, background: `linear-gradient(90deg, ${risk.color}, ${risk.color}80)` }} />
+          <div className="font-mono font-bold text-lg tabular-nums tracking-tight" style={{ color: risk.color }}>
+            {noExpire ? fmtDuration(elapsedMs) : fmtDuration(Math.max(0, remainingMs))}
           </div>
-          <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-            <span>{fmtDate(sub.startedAt)}</span>
-            <span>{Math.round(progress)}% done</span>
-            <span>{fmtDate(sub.expiresAt)}</span>
-          </div>
+          {!noExpire && (
+            <>
+              <div className="h-2 bg-muted/40 rounded-full overflow-hidden mt-2">
+                <div className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${progress}%`, background: `linear-gradient(90deg, ${risk.color}, ${risk.color}80)` }} />
+              </div>
+              <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                <span>{fmtDate(sub.startedAt)}</span>
+                <span>{Math.round(progress)}% done</span>
+                <span>{fmtDate(sub.expiresAt!)}</span>
+              </div>
+            </>
+          )}
+          {noExpire && (
+            <div className="text-[10px] text-muted-foreground mt-1">
+              Started {fmtDate(sub.startedAt)} · earning {fmtUSD(sub.dailyReturn, 2)}/day
+            </div>
+          )}
         </div>
 
         <Button
           variant="outline"
           size="sm"
-          className="w-full border-rose-500/30 text-rose-400 hover:bg-rose-500/10 text-xs h-8"
+          className="w-full border-rose-500/30 text-rose-400 hover:bg-rose-500/10 text-xs h-8 gap-1.5"
           onClick={onCancel}
           disabled={cancelling}
         >
-          Cancel & Refund
+          <Lock className="w-3.5 h-3.5" />
+          {cancelling ? "Stopping…" : "Stop Bot & Withdraw"}
         </Button>
       </div>
     </div>
@@ -848,6 +959,7 @@ function SubscribeDialog({ plan, open, onClose, onSuccess }: {
 }) {
   const [amount, setAmount] = useState(String(plan.minInvestment));
   const [currency, setCurrency] = useState<"USDT" | "INR">("USDT");
+  const [noExpire, setNoExpire] = useState(true);
   const risk = getRisk(plan.riskLevel);
 
   const rateQ = useQuery<{ inrRate: number }>({
@@ -935,6 +1047,37 @@ function SubscribeDialog({ plan, open, onClose, onSuccess }: {
             )}
           </div>
 
+          {/* Run duration */}
+          <div>
+            <Label className="text-sm text-muted-foreground mb-1.5 block">Run Duration</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setNoExpire(true)}
+                className={`flex flex-col items-start gap-0.5 p-3 rounded-xl border text-left transition-all ${
+                  noExpire ? "border-emerald-500/50 bg-emerald-500/10" : "border-border/60 hover:border-border"
+                }`}
+              >
+                <span className="flex items-center gap-1.5 text-sm font-semibold">
+                  <Infinity className="w-4 h-4 text-emerald-400" /> Run forever
+                </span>
+                <span className="text-[10px] text-muted-foreground">No expiry · stop anytime</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setNoExpire(false)}
+                className={`flex flex-col items-start gap-0.5 p-3 rounded-xl border text-left transition-all ${
+                  !noExpire ? "border-amber-500/50 bg-amber-500/10" : "border-border/60 hover:border-border"
+                }`}
+              >
+                <span className="flex items-center gap-1.5 text-sm font-semibold">
+                  <Calendar className="w-4 h-4 text-amber-400" /> {plan.durationDays}-day term
+                </span>
+                <span className="text-[10px] text-muted-foreground">Auto-completes at end</span>
+              </button>
+            </div>
+          </div>
+
           {/* Projection */}
           {amtInUsdt > 0 && (
             <>
@@ -957,9 +1100,19 @@ function SubscribeDialog({ plan, open, onClose, onSuccess }: {
                   </div>
                 </div>
                 <div className="text-center">
-                  <span className="text-xs text-muted-foreground">Total ROI: </span>
-                  <span className="text-xs font-bold text-emerald-400">+{roi.toFixed(2)}%</span>
-                  <span className="text-xs text-muted-foreground"> over {plan.durationDays} days</span>
+                  {noExpire ? (
+                    <>
+                      <span className="text-xs text-muted-foreground">Est. </span>
+                      <span className="text-xs font-bold text-emerald-400">+{roi.toFixed(2)}%</span>
+                      <span className="text-xs text-muted-foreground"> per {plan.durationDays} days · runs until you stop it</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-xs text-muted-foreground">Total ROI: </span>
+                      <span className="text-xs font-bold text-emerald-400">+{roi.toFixed(2)}%</span>
+                      <span className="text-xs text-muted-foreground"> over {plan.durationDays} days</span>
+                    </>
+                  )}
                 </div>
                 {projectionData.length > 0 && (
                   <div className="h-24 -mx-1">
@@ -994,11 +1147,11 @@ function SubscribeDialog({ plan, open, onClose, onSuccess }: {
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button
             disabled={!isValid || subscribeMutation.isPending}
-            onClick={() => subscribeMutation.mutate({ planId: plan.id, amount: currency === "INR" ? numAmt : amtInUsdt, currency })}
+            onClick={() => subscribeMutation.mutate({ planId: plan.id, amount: currency === "INR" ? numAmt : amtInUsdt, currency, noExpire })}
             style={isValid ? { background: risk.color, color: "#000" } : {}}
             className="font-bold gap-2"
           >
-            {subscribeMutation.isPending ? "Activating…" : <><Play className="w-4 h-4" /> Activate Bot</>}
+            {subscribeMutation.isPending ? "Activating…" : <><Play className="w-4 h-4" /> Run Bot</>}
           </Button>
         </DialogFooter>
       </DialogContent>

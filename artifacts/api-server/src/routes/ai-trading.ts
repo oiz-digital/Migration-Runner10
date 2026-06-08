@@ -47,14 +47,19 @@ function serializePlan(p: any, investors = 0) {
 function serializeSub(s: any, plan: any) {
   const invested = parseFloat(s.investedAmount);
   const dailyPct = parseFloat(plan.dailyReturnPercent);
-  const days = Math.max(0, (Date.now() - new Date(s.startedAt).getTime()) / 86400000);
-  const effectiveDays = Math.min(days, plan.durationDays);
-  const totalEarned = invested * (dailyPct / 100) * effectiveDays;
+  const noExpire = s.expiresAt == null;
+  // Authoritative earnings come from the credit engine (persisted on the row).
+  // Using the stored value freezes accrual when a bot is stopped/completed,
+  // instead of growing forever from elapsed wall-clock time.
+  const totalEarned = parseFloat(s.totalEarned ?? "0");
   return {
     id: s.id, planId: s.planId, planName: plan.name, riskLevel: plan.riskLevel,
     investedAmount: invested, currentValue: parseFloat((invested + totalEarned).toFixed(2)),
     startedAt: s.startedAt instanceof Date ? s.startedAt.toISOString() : s.startedAt,
-    expiresAt: s.expiresAt instanceof Date ? s.expiresAt.toISOString() : s.expiresAt,
+    expiresAt: s.expiresAt instanceof Date ? s.expiresAt.toISOString() : (s.expiresAt ?? null),
+    noExpire,
+    durationDays: plan.durationDays,
+    dailyReturnPercent: dailyPct,
     status: s.status, totalEarned: parseFloat(totalEarned.toFixed(2)),
     dailyReturn: parseFloat((invested * dailyPct / 100).toFixed(2)),
   };
@@ -113,7 +118,7 @@ router.get("/ai-trading/earnings", requireAuth, async (req, res): Promise<void> 
 });
 
 router.post("/ai-trading/subscribe", requireAuth, async (req, res): Promise<void> => {
-  const { planId, amount, currency } = req.body;
+  const { planId, amount, currency, noExpire } = req.body;
   if (!planId || !amount || amount <= 0) { res.status(400).json({ error: "Invalid input" }); return; }
 
   const [plan] = await db.select().from(aiTradingPlansTable)
@@ -121,7 +126,8 @@ router.post("/ai-trading/subscribe", requireAuth, async (req, res): Promise<void
   if (!plan) { res.status(404).json({ error: "Plan not found" }); return; }
 
   const min = parseFloat(plan.minInvestment), max = parseFloat(plan.maxInvestment);
-  const expiresAt = new Date(Date.now() + plan.durationDays * 86400000);
+  // No-expire bots run indefinitely until the user stops them.
+  const expiresAt = noExpire ? null : new Date(Date.now() + plan.durationDays * 86400000);
   const userId = req.user!.id;
 
   if (currency === "INR") {

@@ -25,7 +25,7 @@ export const aiTradingSubscriptionsTable = pgTable("ai_trading_subscriptions", {
   planId: integer("plan_id").notNull().references(() => aiTradingPlansTable.id),
   investedAmount: numeric("invested_amount", { precision: 20, scale: 8 }).notNull(),
   startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
-  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
   status: aiSubStatusEnum("status").notNull().default("active"),
   totalEarned: numeric("total_earned", { precision: 20, scale: 8 }).notNull().default("0"),
   lastCreditedAt: timestamp("last_credited_at", { withTimezone: true }),

@@ -142,7 +142,8 @@ async function creditTick(): Promise<void> {
       }
 
       const newTotalEarned = parseFloat((totalEarned + credit).toFixed(8));
-      const isExpired      = now >= new Date(sub.expiresAt);
+      // No-expire bots (expiresAt == null) run indefinitely until manually stopped.
+      const isExpired      = sub.expiresAt != null && now >= new Date(sub.expiresAt);
 
       await db.update(aiTradingSubscriptionsTable).set({
         totalEarned:    String(newTotalEarned),
