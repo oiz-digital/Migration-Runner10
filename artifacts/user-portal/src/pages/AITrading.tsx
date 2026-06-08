@@ -22,6 +22,7 @@ import {
   ChevronRight, RefreshCw, BarChart2, Cpu, Target, Sparkles,
   Calendar, ArrowUpRight, CheckCircle2, Activity, Lock,
   Star, Users, Play, Info, Award, Layers, Infinity,
+  Receipt, Printer, IndianRupee, XCircle,
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -257,6 +258,8 @@ export default function AITrading() {
 
   const activeSubs = subs.filter(s => s.status === "active");
   const completedSubs = subs.filter(s => s.status === "completed");
+  const pastSubs = subs.filter(s => s.status === "completed" || s.status === "cancelled");
+  const [invoiceSubId, setInvoiceSubId] = useState<number | null>(null);
   const totalInvested = activeSubs.reduce((s, x) => s + x.investedAmount, 0);
   const totalEarned = subs.reduce((s, x) => s + (x.totalEarned || 0), 0);
   const totalCurrentValue = activeSubs.reduce((s, x) => s + (x.currentValue || x.investedAmount), 0);
@@ -521,32 +524,45 @@ export default function AITrading() {
                       Active Bots ({activeSubs.length})
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {activeSubs.map(sub => <BotCard key={sub.id} sub={sub} onCancel={() => cancelMutation.mutate(sub.id)} cancelling={cancelMutation.isPending} />)}
+                      {activeSubs.map(sub => <BotCard key={sub.id} sub={sub} onCancel={() => cancelMutation.mutate(sub.id)} cancelling={cancelMutation.isPending} onInvoice={() => setInvoiceSubId(sub.id)} />)}
                     </div>
                   </div>
                 )}
 
-                {completedSubs.length > 0 && (
-                  <SectionCard title="Completed Bots" icon={CheckCircle2}
-                    description={`${completedSubs.length} completed strategies`} padded={false}>
+                {pastSubs.length > 0 && (
+                  <SectionCard title="Bot History" icon={CheckCircle2}
+                    description={`${pastSubs.length} past ${pastSubs.length === 1 ? "bot" : "bots"} — buy & stop records with invoices`} padded={false}>
                     <div className="divide-y divide-border/50">
-                      {completedSubs.map(sub => {
+                      {pastSubs.map(sub => {
                         const roi = sub.investedAmount > 0 ? ((sub.totalEarned || 0) / sub.investedAmount) * 100 : 0;
                         const risk = getRisk(sub.riskLevel.toLowerCase());
+                        const earnedPositive = (sub.totalEarned || 0) >= 0;
                         return (
-                          <div key={sub.id} className="flex items-center justify-between px-5 py-3.5 hover:bg-muted/10 transition-colors">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: risk.glow, border: `1px solid ${risk.color}30` }}>
+                          <div key={sub.id} className="flex items-center justify-between gap-3 px-5 py-3.5 hover:bg-muted/10 transition-colors">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: risk.glow, border: `1px solid ${risk.color}30` }}>
                                 <span style={{ color: risk.color }}>{risk.icon}</span>
                               </div>
-                              <div>
-                                <div className="text-sm font-medium">{sub.planName}</div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-medium truncate">{sub.planName}</span>
+                                  <StatusPill status={sub.status} />
+                                </div>
                                 <div className="text-[11px] text-muted-foreground">{fmtDate(sub.startedAt)} → {sub.expiresAt ? fmtDate(sub.expiresAt) : "stopped"}</div>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <div className="text-sm font-mono font-semibold text-emerald-400">+{fmtUSD(sub.totalEarned || 0, 4)}</div>
-                              <div className="text-[11px] text-muted-foreground">{roi.toFixed(2)}% ROI · {fmtUSD(sub.investedAmount)} invested</div>
+                            <div className="flex items-center gap-3 shrink-0">
+                              <div className="text-right">
+                                <div className={`text-sm font-mono font-semibold ${earnedPositive ? "text-emerald-400" : "text-rose-400"}`}>
+                                  {earnedPositive ? "+" : ""}{fmtUSD(sub.totalEarned || 0, 4)}
+                                </div>
+                                <div className="text-[11px] text-muted-foreground">{roi.toFixed(2)}% ROI · {fmtUSD(sub.investedAmount)} invested</div>
+                              </div>
+                              <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs"
+                                onClick={() => setInvoiceSubId(sub.id)}>
+                                <Receipt className="w-3.5 h-3.5" />
+                                Invoice
+                              </Button>
                             </div>
                           </div>
                         );
@@ -695,7 +711,195 @@ export default function AITrading() {
           onSuccess={() => { qc.invalidateQueries({ queryKey: ["ai-trading-subs"] }); }}
         />
       )}
+
+      {/* AI Trading Invoice / Statement */}
+      <AiInvoiceDialog subId={invoiceSubId} onClose={() => setInvoiceSubId(null)} />
     </div>
+  );
+}
+
+/* ─────────────────────── AI Trading Invoice Dialog ──────────────────────── */
+interface AiInvoice {
+  invoiceNo: string;
+  issuedAt: string;
+  exchange: { name: string; short: string; legal: string; cin: string; gst: string; address: string };
+  user: { id?: number; name: string; email: string };
+  bot: {
+    subscriptionId: number; planName: string; riskLevel: string | null;
+    dailyReturnPercent: number | null; durationDays: number | null;
+    status: "active" | "completed" | "cancelled"; statusLabel: string; payouts: number;
+    startedAt: string | null; expiresAt: string | null; lastCreditedAt: string | null;
+  };
+  charges: { tdsEnabled: boolean; tdsRatePct: number; tdsNote: string };
+  totals: {
+    principalUsdt: number; grossProfitUsdt: number; tdsUsdt: number; netProfitUsdt: number;
+    principalReturned: boolean; payoutUsdt: number; roiPct: number;
+    principalInr: number; grossProfitInr: number; tdsInr: number; netProfitInr: number;
+    payoutInr: number; inrRate: number;
+  };
+  legend: string;
+}
+
+function fmtInr(n: number) {
+  return "₹" + n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function AiInvoiceDialog({ subId, onClose }: { subId: number | null; onClose: () => void }) {
+  const invQ = useQuery<AiInvoice>({
+    queryKey: ["ai-trading-invoice", subId],
+    queryFn: () => get<AiInvoice>(`/ai-trading/subscriptions/${subId}/invoice`),
+    enabled: subId != null,
+  });
+  const inv = invQ.data;
+
+  function handlePrint() {
+    if (!inv) return;
+    const profitPositive = inv.totals.grossProfitUsdt >= 0;
+    // Escape every dynamic value before injecting into the print document to
+    // avoid HTML/script injection from user- or plan-controlled strings.
+    const esc = (v: unknown) =>
+      String(v ?? "").replace(/[&<>"']/g, c =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
+    const row = (label: string, usdt: string, inr: string, strong = false) =>
+      `<tr${strong ? ' style="font-weight:700"' : ""}><td>${esc(label)}</td><td style="text-align:right">${esc(usdt)}</td><td style="text-align:right">${esc(inr)}</td></tr>`;
+    const html = `<!doctype html><html><head><meta charset="utf-8"/><title>${esc(inv.invoiceNo)}</title>
+      <style>
+        *{box-sizing:border-box} body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:0;padding:32px;font-size:13px}
+        h1{font-size:20px;margin:0 0 2px} .muted{color:#666} .right{text-align:right}
+        .head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:16px}
+        .grid{display:flex;gap:32px;margin-bottom:16px} .grid>div{flex:1}
+        table{width:100%;border-collapse:collapse;margin-top:8px} th,td{padding:7px 8px;border-bottom:1px solid #e5e5e5}
+        th{text-align:left;background:#f5f5f5;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+        .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;border:1px solid}
+        .total{font-size:15px} .legend{margin-top:14px;color:#666;font-size:11px}
+      </style></head><body>
+      <div class="head">
+        <div><h1>${esc(inv.exchange.name)}</h1><div class="muted">${esc(inv.exchange.legal)}</div>
+          <div class="muted">${esc(inv.exchange.address)} · CIN ${esc(inv.exchange.cin)} · GST ${esc(inv.exchange.gst)}</div></div>
+        <div class="right"><div style="font-size:16px;font-weight:700">INVOICE</div>
+          <div class="muted">${esc(inv.invoiceNo)}</div>
+          <div class="muted">${esc(new Date(inv.issuedAt).toLocaleString("en-IN"))}</div>
+          <div style="margin-top:6px"><span class="badge">${esc(inv.bot.statusLabel)}</span></div></div>
+      </div>
+      <div class="grid">
+        <div><div class="muted">Billed To</div><div style="font-weight:700">${esc(inv.user.name)}</div>
+          <div class="muted">${esc(inv.user.email)}</div><div class="muted">User ID: ${esc(inv.user.id ?? "—")}</div></div>
+        <div class="right"><div class="muted">Bot / Strategy</div><div style="font-weight:700">${esc(inv.bot.planName)}</div>
+          <div class="muted">Sub #${esc(inv.bot.subscriptionId)} · ${esc(inv.bot.dailyReturnPercent ?? "—")}%/day</div>
+          <div class="muted">Started ${esc(inv.bot.startedAt ? new Date(inv.bot.startedAt).toLocaleDateString("en-IN") : "—")}</div>
+          <div class="muted">${esc(inv.bot.expiresAt ? "Ends " + new Date(inv.bot.expiresAt).toLocaleDateString("en-IN") : "No fixed expiry")}</div></div>
+      </div>
+      <table><thead><tr><th>Description</th><th class="right">USDT</th><th class="right">INR</th></tr></thead><tbody>
+        ${row("Principal invested (Buy)", "$" + inv.totals.principalUsdt.toFixed(4), fmtInr(inv.totals.principalInr))}
+        ${row(profitPositive ? "Gross profit" : "Gross loss", (profitPositive ? "+" : "") + "$" + inv.totals.grossProfitUsdt.toFixed(4), fmtInr(inv.totals.grossProfitInr))}
+        ${row(`TDS (${inv.charges.tdsRatePct}% on profit)`, "-$" + inv.totals.tdsUsdt.toFixed(4), "-" + fmtInr(inv.totals.tdsInr))}
+        ${row("Net profit / loss", (profitPositive ? "+" : "") + "$" + inv.totals.netProfitUsdt.toFixed(4), fmtInr(inv.totals.netProfitInr), true)}
+        ${row(inv.totals.principalReturned ? "Total payout (principal + net)" : "Net profit so far (principal still locked)", "$" + inv.totals.payoutUsdt.toFixed(4), fmtInr(inv.totals.payoutInr), true)}
+      </tbody></table>
+      <div class="legend">${esc(inv.legend)}<br/>ROI: ${esc(inv.totals.roiPct)}% · Payouts credited: ${esc(inv.bot.payouts)} · 1 USDT ≈ ₹${esc(inv.totals.inrRate.toFixed(2))}</div>
+      <div class="legend">This is a system-generated statement for AI Trading activity and does not require a signature.</div>
+      </body></html>`;
+    const w = window.open("", "_blank", "width=820,height=900");
+    if (!w) { toast.error("Allow pop-ups to print the invoice."); return; }
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 300);
+  }
+
+  const profitPositive = (inv?.totals.grossProfitUsdt ?? 0) >= 0;
+
+  return (
+    <Dialog open={subId != null} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Receipt className="w-4 h-4 text-primary" />
+            AI Trading Invoice
+          </DialogTitle>
+          <DialogDescription>
+            Buy, stop &amp; profit/loss statement for this bot.
+          </DialogDescription>
+        </DialogHeader>
+
+        {invQ.isLoading ? (
+          <div className="py-12 text-center text-sm text-muted-foreground">Loading invoice…</div>
+        ) : invQ.isError || !inv ? (
+          <div className="py-12 text-center text-sm text-rose-400 flex flex-col items-center gap-2">
+            <XCircle className="w-6 h-6" />
+            Could not load this invoice.
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Header block */}
+            <div className="flex items-start justify-between rounded-xl border border-border/60 bg-muted/20 p-4">
+              <div>
+                <div className="font-bold text-foreground">{inv.exchange.name}</div>
+                <div className="text-[11px] text-muted-foreground">{inv.exchange.legal}</div>
+                <div className="text-[11px] text-muted-foreground mt-1">Invoice {inv.invoiceNo}</div>
+              </div>
+              <StatusPill status={inv.bot.status} />
+            </div>
+
+            {/* Bot + user */}
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="rounded-lg border border-border/50 p-3">
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Billed to</div>
+                <div className="font-medium text-foreground truncate">{inv.user.name}</div>
+                <div className="text-muted-foreground truncate">{inv.user.email}</div>
+              </div>
+              <div className="rounded-lg border border-border/50 p-3">
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Bot</div>
+                <div className="font-medium text-foreground truncate">{inv.bot.planName}</div>
+                <div className="text-muted-foreground">
+                  {inv.bot.dailyReturnPercent ?? "—"}%/day · #{inv.bot.subscriptionId}
+                </div>
+                <div className="text-muted-foreground">
+                  {inv.bot.startedAt ? fmtDate(inv.bot.startedAt) : "—"} → {inv.bot.expiresAt ? fmtDate(inv.bot.expiresAt) : "no expiry"}
+                </div>
+              </div>
+            </div>
+
+            {/* Line items */}
+            <div className="rounded-xl border border-border/60 overflow-hidden">
+              <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 px-4 py-2 bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
+                <span>Description</span><span className="text-right">USDT</span><span className="text-right">INR</span>
+              </div>
+              {[
+                { label: "Principal invested (Buy)", usdt: `$${inv.totals.principalUsdt.toFixed(4)}`, inr: fmtInr(inv.totals.principalInr), cls: "" },
+                { label: profitPositive ? "Gross profit" : "Gross loss", usdt: `${profitPositive ? "+" : ""}$${inv.totals.grossProfitUsdt.toFixed(4)}`, inr: fmtInr(inv.totals.grossProfitInr), cls: profitPositive ? "text-emerald-400" : "text-rose-400" },
+                { label: `TDS (${inv.charges.tdsRatePct}% on profit)`, usdt: `-$${inv.totals.tdsUsdt.toFixed(4)}`, inr: `-${fmtInr(inv.totals.tdsInr)}`, cls: "text-muted-foreground" },
+                { label: "Net profit / loss", usdt: `${profitPositive ? "+" : ""}$${inv.totals.netProfitUsdt.toFixed(4)}`, inr: fmtInr(inv.totals.netProfitInr), cls: profitPositive ? "text-emerald-400 font-bold" : "text-rose-400 font-bold" },
+              ].map(r => (
+                <div key={r.label} className="grid grid-cols-[1fr_auto_auto] gap-x-4 px-4 py-2.5 border-t border-border/40 text-xs items-center">
+                  <span className="text-muted-foreground">{r.label}</span>
+                  <span className={`text-right font-mono ${r.cls}`}>{r.usdt}</span>
+                  <span className={`text-right font-mono ${r.cls}`}>{r.inr}</span>
+                </div>
+              ))}
+              <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 px-4 py-3 border-t-2 border-border bg-muted/30 text-sm items-center">
+                <span className="font-semibold">{inv.totals.principalReturned ? "Total payout" : "Net P&L so far"}</span>
+                <span className="text-right font-mono font-bold">${inv.totals.payoutUsdt.toFixed(4)}</span>
+                <span className="text-right font-mono font-bold flex items-center justify-end gap-0.5"><IndianRupee className="w-3 h-3" />{inv.totals.payoutInr.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
+            </div>
+
+            <div className="text-[11px] text-muted-foreground leading-relaxed">
+              {inv.legend}<br />
+              ROI: <span className={profitPositive ? "text-emerald-400" : "text-rose-400"}>{inv.totals.roiPct}%</span> · Payouts credited: {inv.bot.payouts} · 1 USDT ≈ ₹{inv.totals.inrRate.toFixed(2)}
+              {!inv.totals.principalReturned && <><br />Principal is still locked while this bot is active and will be returned to your wallet when you stop it.</>}
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={handlePrint}>
+                <Printer className="w-3.5 h-3.5" />
+                Print / Save PDF
+              </Button>
+            </DialogFooter>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -850,8 +1054,8 @@ function PlanCard({ plan, onSubscribe }: { plan: Plan; onSubscribe: () => void }
 }
 
 /* ─────────────────────── Bot Card ───────────────────────────────────────── */
-function BotCard({ sub, onCancel, cancelling }: {
-  sub: Subscription; onCancel: () => void; cancelling: boolean;
+function BotCard({ sub, onCancel, cancelling, onInvoice }: {
+  sub: Subscription; onCancel: () => void; cancelling: boolean; onInvoice: () => void;
 }) {
   const risk = getRisk(sub.riskLevel.toLowerCase());
   const now = useNow();
@@ -944,16 +1148,27 @@ function BotCard({ sub, onCancel, cancelling }: {
           )}
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full border-rose-500/30 text-rose-400 hover:bg-rose-500/10 text-xs h-8 gap-1.5"
-          onClick={onCancel}
-          disabled={cancelling}
-        >
-          <Lock className="w-3.5 h-3.5" />
-          {cancelling ? "Stopping…" : "Stop Bot & Withdraw"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 border-rose-500/30 text-rose-400 hover:bg-rose-500/10 text-xs h-8 gap-1.5"
+            onClick={onCancel}
+            disabled={cancelling}
+          >
+            <Lock className="w-3.5 h-3.5" />
+            {cancelling ? "Stopping…" : "Stop Bot & Withdraw"}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs"
+            onClick={onInvoice}
+          >
+            <Receipt className="w-3.5 h-3.5" />
+            Invoice
+          </Button>
+        </div>
       </div>
     </div>
   );

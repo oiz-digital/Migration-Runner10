@@ -4,3 +4,4 @@
 - [NinzaSMS integration](ninzasms.md) — NinzaSMS + WhatsApp OTP provider added to backend sms.ts and admin OTP providers dropdown.
 - [Currency symbol fix](currency-symbols.md) — INR shows ₹, USDT/USD shows $, others show quote suffix; fixed in Trade.tsx, Futures.tsx, Predictions.tsx.
 - [AI trading earnings](ai-trading-earnings.md) — serialize bot P&L from persisted `totalEarned` (engine is source of truth), never re-project from elapsed time; no-expire = `expiresAt` null.
+- [Print-to-popup XSS](print-popup-xss.md) — client print/PDF features that build HTML + `window.open`/`document.write` must HTML-escape every dynamic value (same-origin DOM XSS).

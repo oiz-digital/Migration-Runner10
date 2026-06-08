@@ -1,8 +1,10 @@
 import { Router, type IRouter } from "express";
-import { db, aiTradingPlansTable, aiTradingSubscriptionsTable, aiTradingEarningsTable, walletsTable, coinsTable } from "@workspace/db";
+import { db, aiTradingPlansTable, aiTradingSubscriptionsTable, aiTradingEarningsTable, walletsTable, coinsTable, usersTable } from "@workspace/db";
 import { eq, and, desc, count } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 import { getInrRate } from "../lib/price-service";
+
+const AI_TDS_RATE = 0.01; // 1% India VDA TDS, applied to realized profit only
 
 /* ── Public rate endpoint ── */
 
@@ -190,6 +192,99 @@ router.post("/ai-trading/subscriptions/:id/cancel", requireAuth, async (req, res
   await db.update(aiTradingSubscriptionsTable).set({ status: "cancelled" })
     .where(eq(aiTradingSubscriptionsTable.id, id));
   res.json({ success: true });
+});
+
+/* ── Invoice / statement for an AI-trading bot subscription ──
+ * Covers the full lifecycle of one bot: the BUY (principal invested),
+ * its current STATUS (active / cancelled / completed) and realized
+ * PROFIT & LOSS (total earned, TDS on profit, net). Returns figures in
+ * both USDT and INR, mirroring the spot order invoice. */
+router.get("/ai-trading/subscriptions/:id/invoice", requireAuth, async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id as string, 10);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid subscription id" }); return; }
+  const userId = req.user!.id;
+
+  const [sub] = await db.select().from(aiTradingSubscriptionsTable)
+    .where(and(eq(aiTradingSubscriptionsTable.id, id), eq(aiTradingSubscriptionsTable.userId, userId))).limit(1);
+  if (!sub) { res.status(404).json({ error: "Subscription not found" }); return; }
+
+  const [plan] = await db.select().from(aiTradingPlansTable).where(eq(aiTradingPlansTable.id, sub.planId)).limit(1);
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+  const [{ payouts }] = await db.select({ payouts: count() }).from(aiTradingEarningsTable)
+    .where(and(eq(aiTradingEarningsTable.subscriptionId, id), eq(aiTradingEarningsTable.userId, userId)));
+
+  const principalUsdt   = parseFloat(sub.investedAmount);
+  const grossProfitUsdt = parseFloat(sub.totalEarned ?? "0");
+  const tdsUsdt         = grossProfitUsdt > 0 ? +(grossProfitUsdt * AI_TDS_RATE).toFixed(8) : 0;
+  const netProfitUsdt   = +(grossProfitUsdt - tdsUsdt).toFixed(8);
+  const roiPct          = principalUsdt > 0 ? +((grossProfitUsdt / principalUsdt) * 100).toFixed(2) : 0;
+  // Principal is returned to the wallet only once the bot is no longer active.
+  const principalReturned = sub.status !== "active";
+  const payoutUsdt        = +((principalReturned ? principalUsdt : 0) + netProfitUsdt).toFixed(8);
+
+  const inrRate = getInrRate();
+  const toInr   = (v: number) => +(v * inrRate).toFixed(2);
+  const iso     = (d: any) => (d instanceof Date ? d.toISOString() : (d ?? null));
+
+  const statusLabel =
+    sub.status === "cancelled" ? "Bot Stopped (Cancelled)" :
+    sub.status === "completed" ? "Bot Completed (Matured)"  :
+    "Bot Active";
+
+  res.json({
+    invoiceNo: `AIT-${String(sub.id).padStart(8, "0")}`,
+    issuedAt:  new Date().toISOString(),
+    type:      "ai_trading",
+    exchange: {
+      name:  "Zebvix Exchange",
+      short: "ZBX",
+      legal: "Zebvix Exchange — AI Trading Statement & Tax Invoice",
+      cin:   "U74999KA2020PTC123456",
+      gst:   "29AAAAZ0000Z1Z1",
+      address: "Bangalore, India",
+    },
+    user: {
+      id:    user?.id,
+      name:  user?.name ?? user?.email ?? "Customer",
+      email: user?.email ?? "",
+    },
+    bot: {
+      subscriptionId:     sub.id,
+      planName:           plan?.name ?? "AI Trading Bot",
+      riskLevel:          plan?.riskLevel ?? null,
+      dailyReturnPercent: plan ? parseFloat(plan.dailyReturnPercent) : null,
+      durationDays:       plan?.durationDays ?? null,
+      status:             sub.status,
+      statusLabel,
+      payouts,
+      startedAt:          iso(sub.startedAt),
+      expiresAt:          iso(sub.expiresAt),
+      lastCreditedAt:     iso(sub.lastCreditedAt),
+    },
+    charges: {
+      tdsEnabled: true,
+      tdsRatePct: AI_TDS_RATE * 100,
+      tdsNote:    "TDS applies on realized profit only",
+    },
+    totals: {
+      principalUsdt:    +principalUsdt.toFixed(8),
+      grossProfitUsdt:  +grossProfitUsdt.toFixed(8),
+      tdsUsdt,
+      netProfitUsdt,
+      principalReturned,
+      payoutUsdt,
+      roiPct,
+      principalInr:   toInr(principalUsdt),
+      grossProfitInr: toInr(grossProfitUsdt),
+      tdsInr:         toInr(tdsUsdt),
+      netProfitInr:   toInr(netProfitUsdt),
+      payoutInr:      toInr(payoutUsdt),
+      inrRate,
+    },
+    legend: grossProfitUsdt >= 0
+      ? "Net Profit = Gross Profit − TDS. Payout = Returned Principal + Net Profit."
+      : "Loss recorded on this bot. Net = Gross Profit (no TDS on losses).",
+  });
 });
 
 export default router;
