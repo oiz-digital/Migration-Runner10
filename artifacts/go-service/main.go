@@ -182,14 +182,15 @@ func main() {
         mux.HandleFunc("/internal/futures/seed", srv.handleSeed)
         mux.HandleFunc("/internal/futures/snapshot", srv.handleSnapshot)
 
-        // The Go service is reached only by the Node api-server on the same
-        // host. Binding to 127.0.0.1 prevents any external caller from hitting
-        // the unauthenticated /internal/futures/* matching RPC, which can
-        // mutate book state. A shared-secret middleware is tracked as a
-        // follow-up; loopback binding is the network-level guarantee.
+        // Binds to 0.0.0.0 so Replit's port detection sees the service and the
+        // shared proxy can route the /go-service/ preview. The proxy only exposes
+        // the /go-service/ path prefix externally, so the unauthenticated
+        // /internal/futures/* matching RPC is not reachable from outside the
+        // container. Set BIND_ADDR=127.0.0.1 to restore loopback-only binding
+        // (a shared-secret middleware for /internal/* is tracked as a follow-up).
         bind := os.Getenv("BIND_ADDR")
         if bind == "" {
-                bind = "127.0.0.1"
+                bind = "0.0.0.0"
         }
         addr := bind + ":" + port
         log.Printf("cryptox-go listening on %s (futures matching engine ready)", addr)

@@ -864,6 +864,10 @@ function BotCard({ sub, onCancel, cancelling }: {
     ? 100
     : totalMs > 0 ? Math.min(100, ((totalMs - Math.max(0, remainingMs)) / totalMs) * 100) : 0;
   const roi = sub.investedAmount > 0 ? ((sub.totalEarned || 0) / sub.investedAmount) * 100 : 0;
+  // Average earning per day since the bot was bought (min 1 day so a
+  // freshly-started bot doesn't show an inflated per-day figure).
+  const daysRunning = Math.max(1, elapsedMs / 86400000);
+  const avgPerDay = (sub.totalEarned || 0) / daysRunning;
 
   return (
     <div
@@ -890,7 +894,9 @@ function BotCard({ sub, onCancel, cancelling }: {
           {[
             { label: "Invested", value: fmtUSD(sub.investedAmount), cls: "" },
             { label: "Earned", value: `+${fmtUSD(sub.totalEarned || 0, 4)}`, cls: "text-emerald-400" },
+            { label: "Avg earning", value: `+${fmtUSD(avgPerDay, 4)}/day`, cls: "text-emerald-400" },
             { label: "Daily return", value: `+${fmtUSD(sub.dailyReturn, 2)}/day`, cls: "text-amber-400" },
+            { label: "Current value", value: fmtUSD(sub.currentValue ?? sub.investedAmount, 2), cls: "" },
             { label: "ROI", value: `${roi.toFixed(2)}%`, cls: roi >= 0 ? "text-emerald-400" : "text-rose-400" },
           ].map(m => (
             <div key={m.label} className="p-2.5 rounded-xl bg-muted/30 border border-border/40">
