@@ -334,6 +334,16 @@ export function useOhlcv(symbol?: string, interval = "1h") {
 export function encodeSymbol(s: string): string {
   return s.replace("/", "_");
 }
+
+const KNOWN_QUOTES = ["USDT", "INR", "BTC", "ETH", "BNB", "BUSD"] as const;
+
 export function decodeSymbol(s: string): string {
-  return s.includes("_") ? s.replace("_", "/") : s.includes("-") ? s.replace("-", "/") : s;
+  if (s.includes("/")) return s;
+  if (s.includes("_")) return s.replace("_", "/");
+  if (s.includes("-")) return s.replace("-", "/");
+  // Parse compact symbols like BTCUSDT → BTC/USDT, ETHINR → ETH/INR
+  for (const q of KNOWN_QUOTES) {
+    if (s.endsWith(q) && s.length > q.length) return `${s.slice(0, s.length - q.length)}/${q}`;
+  }
+  return s;
 }

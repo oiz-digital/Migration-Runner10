@@ -202,7 +202,7 @@ function SymbolSwitcher({ current, enabledPairSet }: { current: string; enabledP
                 Favorites
               </div>
               {favList.map((t) => (
-                <SwitcherRow key={`fav-${t.symbol}`} t={t} active={t.symbol === current} onPick={() => { setOpen(false); navigate(`/trade/${encodeSymbol(t.symbol)}`); }} />
+                <SwitcherRow key={`fav-${t.symbol}`} t={t} active={decodeSymbol(t.symbol) === current} onPick={() => { setOpen(false); navigate(`/trade/${encodeSymbol(t.symbol)}`); }} />
               ))}
             </div>
           )}
@@ -210,7 +210,7 @@ function SymbolSwitcher({ current, enabledPairSet }: { current: string; enabledP
             All markets
           </div>
           {otherList.map((t) => (
-            <SwitcherRow key={t.symbol} t={t} active={t.symbol === current} onPick={() => { setOpen(false); navigate(`/trade/${encodeSymbol(t.symbol)}`); }} />
+            <SwitcherRow key={t.symbol} t={t} active={decodeSymbol(t.symbol) === current} onPick={() => { setOpen(false); navigate(`/trade/${encodeSymbol(t.symbol)}`); }} />
           ))}
           {list.length === 0 && (
             <div className="px-4 py-6 text-center text-xs text-muted-foreground">No matches.</div>
