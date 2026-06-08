@@ -36,8 +36,8 @@ type ActivityFeed = {
     side: string; created_at: string; user_email?: string;
   }>;
   orders: Array<{
-    id: number; currency: string; pair: string; side: string;
-    type: string; price: number; amount: number; status: string;
+    id: number; pair: string; side: string;
+    type: string; price: number; qty: number; status: string;
     created_at: string; user_email?: string;
   }>;
 };
@@ -208,8 +208,8 @@ export default function DashboardPage() {
     })),
     ...(activityFeed.data?.orders ?? []).map((o) => ({
       id: `o-${o.id}`, type: "order" as const,
-      label: `${o.side?.toUpperCase()} ${o.currency}/${o.pair}`,
-      sub: `${o.type} · ${fmt(o.amount, { compact: true })} · ${o.status}`,
+      label: `${o.side?.toUpperCase()} ${o.pair ?? "—"}`,
+      sub: `${o.type} · ${fmt(o.qty ?? 0, { compact: true })} · ${o.status}`,
       user: o.user_email ?? "—",
       ts: o.created_at,
       positive: o.side === "buy",
