@@ -58,6 +58,7 @@ import adminWalletManagerRouter from "./admin-wallet-manager";
 import adminSystemRouter from "./admin-system";
 import adminPriceAlertsRouter from "./admin-price-alerts";
 import razorpayRouter from "./razorpay";
+import webhooksRouter from "./webhooks";
 import apiAliasesRouter from "./api-aliases";
 
 const router: IRouter = Router();
@@ -130,6 +131,7 @@ router.use(adminWalletManagerRouter);
 router.use(adminSystemRouter);
 router.use(adminPriceAlertsRouter);
 router.use(razorpayRouter);
+router.use(webhooksRouter);
 router.use(v1Router);
 
 export default router;
