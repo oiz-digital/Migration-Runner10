@@ -6,3 +6,5 @@
 - [AI trading earnings](ai-trading-earnings.md) — serialize bot P&L from persisted `totalEarned` (engine is source of truth), never re-project from elapsed time; no-expire = `expiresAt` null.
 - [Print-to-popup XSS](print-popup-xss.md) — client print/PDF features that build HTML + `window.open`/`document.write` must HTML-escape every dynamic value (same-origin DOM XSS).
 - [Mobile app design](mobile-design.md) — SparkLine/AnimatedPrice/CandleChart use react-native-svg + Reanimated; deterministic spark data from `genSparkData(price, change24h, symbol)` with seeded RNG avoids re-render flicker; klines API at `/api/klines?symbol=BTCUSDT&interval=1h&limit=60`.
+- [Mobile favorites](mobile-favorites.md) — useFavorites hook (AsyncStorage key: zebvix_favorites_v1) persists star'd coins; Markets has ⭐ tab, Trade screen has star icon in header; toggle(symbol) syncs instantly.
+- [Mobile AI chat](mobile-ai-chat.md) — AI Chat tab in ai-trading is local response-map based (no API call needed); add real entries to AI_RESPONSES dict or wire /api/ai/chat endpoint when available.

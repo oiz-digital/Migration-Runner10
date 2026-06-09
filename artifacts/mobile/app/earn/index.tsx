@@ -46,11 +46,18 @@ interface EarnPos {
 }
 
 type Tab = "explore" | "mine";
+type Filter = "all" | "flexible" | "fixed";
 
 const COIN_COLORS: Record<string, string> = {
   BTC: "#f7931a", ETH: "#627eea", USDT: "#26a17b", BNB: "#f3ba2f",
   SOL: "#9945ff", ADA: "#3cc8c8", MATIC: "#8247e5", DEFAULT: "#eb9100",
 };
+
+function getApyColor(apy: number): string {
+  if (apy >= 30) return "#ef4444";
+  if (apy >= 15) return "#f59e0b";
+  return "#22c55e";
+}
 
 export default function EarnScreen() {
   const colors = useColors();
@@ -59,6 +66,7 @@ export default function EarnScreen() {
   const qc = useQueryClient();
   const { isAuthenticated } = useAuth();
   const [tab, setTab] = useState<Tab>("explore");
+  const [filter, setFilter] = useState<Filter>("all");
   const [modal, setModal] = useState<EarnPool | null>(null);
   const [stakeAmt, setStakeAmt] = useState("");
 
@@ -87,8 +95,12 @@ export default function EarnScreen() {
     },
   });
 
-  const activePools = (pools ?? []).filter((p) => p.status === "active");
+  const activePools = (pools ?? []).filter((p) => p.status === "active" || !p.status);
+  const filteredPools = filter === "all" ? activePools : activePools.filter((p) => filter === "flexible" ? p.flexible : !p.flexible);
+
   const totalEarnings = (myPositions ?? []).reduce((s, p) => s + parseFloat(p.earnings || "0"), 0);
+  const totalStakedAmt = (myPositions ?? []).reduce((s, p) => s + parseFloat(p.amount || "0"), 0);
+  const maxApy = activePools.length > 0 ? Math.max(...activePools.map((p) => parseFloat(p.apy || "0"))) : 0;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -96,44 +108,32 @@ export default function EarnScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Feather name="arrow-left" size={22} color={colors.foreground} />
         </TouchableOpacity>
-        <Text style={[styles.title, { color: colors.foreground }]}>Earn</Text>
+        <Text style={[styles.title, { color: colors.foreground }]}>Earn / Staking</Text>
         <View style={styles.backBtn} />
       </View>
 
-      {/* Hero */}
-      <LinearGradient
-        colors={["#001a0f", "#0d1524"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.hero, { borderColor: "#003322" }]}
-      >
-        <View>
-          <Text style={styles.heroTitle}>Earn Passive Income</Text>
-          <Text style={styles.heroSub}>Stake your crypto and earn up to 120% APY</Text>
+      {/* Hero banner */}
+      <LinearGradient colors={["#0a1a0e", "#0d1524"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.heroTitle}>Earn Up to {maxApy.toFixed(1)}% APY</Text>
+          <Text style={styles.heroSub}>Stake crypto, earn daily rewards. No lock-up on flexible plans.</Text>
+          {isAuthenticated && totalStakedAmt > 0 && (
+            <View style={styles.earnStats}>
+              <View style={styles.earnChip}>
+                <Feather name="lock" size={10} color={colors.primary} />
+                <Text style={[styles.earnChipText, { color: colors.primary }]}>${totalStakedAmt.toFixed(2)} staked</Text>
+              </View>
+              <View style={styles.earnChip}>
+                <Feather name="gift" size={10} color="#22c55e" />
+                <Text style={[styles.earnChipText, { color: "#22c55e" }]}>+${totalEarnings.toFixed(4)} earned</Text>
+              </View>
+            </View>
+          )}
         </View>
         <View style={[styles.heroIcon, { backgroundColor: "#22c55e20" }]}>
-          <Feather name="trending-up" size={32} color="#22c55e" />
+          <Feather name="percent" size={28} color="#22c55e" />
         </View>
       </LinearGradient>
-
-      {/* My earnings summary */}
-      {isAuthenticated && (myPositions ?? []).length > 0 && (
-        <View style={[styles.summaryRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={styles.summaryItem}>
-            <Text style={[styles.summaryVal, { color: colors.success }]}>
-              +${totalEarnings.toFixed(4)}
-            </Text>
-            <Text style={[styles.summaryLbl, { color: colors.mutedForeground }]}>Total Earnings</Text>
-          </View>
-          <View style={[styles.summarySep, { backgroundColor: colors.border }]} />
-          <View style={styles.summaryItem}>
-            <Text style={[styles.summaryVal, { color: colors.foreground }]}>
-              {(myPositions ?? []).length}
-            </Text>
-            <Text style={[styles.summaryLbl, { color: colors.mutedForeground }]}>Active Positions</Text>
-          </View>
-        </View>
-      )}
 
       {/* Tabs */}
       <View style={[styles.tabRow, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
@@ -143,118 +143,180 @@ export default function EarnScreen() {
             style={[styles.tabBtn, t === tab && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
             onPress={() => setTab(t)}
           >
+            <Feather name={t === "explore" ? "search" : "layers"} size={14} color={t === tab ? colors.primary : colors.mutedForeground} />
             <Text style={[styles.tabLabel, { color: t === tab ? colors.primary : colors.mutedForeground }]}>
-              {t === "explore" ? "Earn Pools" : "My Positions"}
+              {t === "explore" ? "Explore Plans" : "My Positions"}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {tab === "explore" ? (
-        isLoading ? (
-          <View style={styles.center}><ActivityIndicator color={colors.primary} size="large" /></View>
-        ) : activePools.length === 0 ? (
-          <EmptyState icon="percent" title="No pools available" subtitle="Check back soon for earning opportunities" />
-        ) : (
-          <FlatList
-            data={activePools}
-            keyExtractor={(p) => p.id.toString()}
-            contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: botPt + 20 }}
-            renderItem={({ item: p }) => {
-              const apy = parseFloat(p.apy || "0");
-              const bg = COIN_COLORS[p.coinSymbol?.toUpperCase()] ?? COIN_COLORS.DEFAULT;
-              const totalStaked = parseFloat(p.totalStaked || "0");
-              return (
-                <View style={[styles.poolCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                  <View style={styles.poolTop}>
-                    <View style={[styles.poolIcon, { backgroundColor: bg + "22" }]}>
-                      <Text style={[styles.poolIconText, { color: bg }]}>{(p.coinSymbol ?? "?").charAt(0)}</Text>
-                    </View>
-                    <View style={styles.poolInfo}>
-                      <Text style={[styles.poolName, { color: colors.foreground }]}>{p.name}</Text>
-                      <View style={styles.poolBadges}>
-                        {p.flexible && (
-                          <View style={[styles.badge, { backgroundColor: "#22c55e20" }]}>
-                            <Text style={[styles.badgeText, { color: "#22c55e" }]}>Flexible</Text>
-                          </View>
-                        )}
-                        {!p.flexible && (
-                          <View style={[styles.badge, { backgroundColor: "#eb910020" }]}>
-                            <Text style={[styles.badgeText, { color: "#eb9100" }]}>{p.duration}d Lock</Text>
-                          </View>
-                        )}
+      {tab === "explore" && (
+        <>
+          {/* Filter chips */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingVertical: 10 }}>
+            {(["all", "flexible", "fixed"] as Filter[]).map((f) => (
+              <TouchableOpacity
+                key={f}
+                onPress={() => setFilter(f)}
+                style={[styles.filterChip, { backgroundColor: filter === f ? colors.primary : colors.card, borderColor: filter === f ? colors.primary : colors.border }]}
+              >
+                <Text style={[styles.filterChipText, { color: filter === f ? "#fff" : colors.mutedForeground }]}>
+                  {f === "all" ? "All Plans" : f === "flexible" ? "⚡ Flexible" : "🔒 Fixed"}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          {isLoading ? (
+            <View style={styles.center}><ActivityIndicator color={colors.primary} size="large" /></View>
+          ) : filteredPools.length === 0 ? (
+            <EmptyState icon="percent" title="No plans available" subtitle="Staking plans coming soon" />
+          ) : (
+            <FlatList
+              data={filteredPools}
+              keyExtractor={(p) => p.id.toString()}
+              contentContainerStyle={{ padding: 16, paddingTop: 4, gap: 12, paddingBottom: botPt + 20 }}
+              renderItem={({ item: pool }) => {
+                const coinColor = COIN_COLORS[pool.coinSymbol] ?? COIN_COLORS.DEFAULT;
+                const apy = parseFloat(pool.apy || "0");
+                const apyColor = getApyColor(apy);
+                const staked = parseFloat(pool.totalStaked || "0");
+                return (
+                  <TouchableOpacity
+                    style={[styles.poolCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+                    onPress={() => { setModal(pool); setStakeAmt(""); }}
+                    activeOpacity={0.8}
+                  >
+                    <LinearGradient colors={[coinColor + "08", "transparent"]} style={StyleSheet.absoluteFillObject} />
+                    <View style={styles.poolTop}>
+                      <View style={[styles.coinCircle, { backgroundColor: coinColor + "25" }]}>
+                        <Text style={[styles.coinText, { color: coinColor }]}>{pool.coinSymbol.slice(0, 3)}</Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <View style={styles.poolNameRow}>
+                          <Text style={[styles.poolName, { color: colors.foreground }]}>{pool.name}</Text>
+                          {pool.flexible && (
+                            <View style={[styles.flexBadge, { backgroundColor: "#22c55e15" }]}>
+                              <Text style={{ color: "#22c55e", fontSize: 10, fontWeight: "700" }}>FLEXIBLE</Text>
+                            </View>
+                          )}
+                        </View>
+                        <Text style={[styles.poolCoin, { color: colors.mutedForeground }]}>
+                          {pool.coinSymbol} · {pool.duration === 0 ? "No lockup" : `${pool.duration}d lock`}
+                        </Text>
+                      </View>
+                      <View style={styles.apyWrap}>
+                        <Text style={[styles.apyVal, { color: apyColor }]}>{apy.toFixed(1)}%</Text>
+                        <Text style={[styles.apyLbl, { color: colors.mutedForeground }]}>APY</Text>
                       </View>
                     </View>
-                    <View style={styles.poolApy}>
-                      <Text style={[styles.poolApyVal, { color: "#22c55e" }]}>{apy.toFixed(1)}%</Text>
-                      <Text style={[styles.poolApyLbl, { color: colors.mutedForeground }]}>APY</Text>
+
+                    <View style={[styles.poolSep, { backgroundColor: colors.border }]} />
+
+                    <View style={styles.poolStats}>
+                      <View style={styles.poolStat}>
+                        <Text style={[styles.poolStatVal, { color: colors.foreground }]}>
+                          {parseFloat(pool.minAmount).toFixed(0)} {pool.coinSymbol}
+                        </Text>
+                        <Text style={[styles.poolStatLbl, { color: colors.mutedForeground }]}>Min Stake</Text>
+                      </View>
+                      <View style={styles.poolStat}>
+                        <Text style={[styles.poolStatVal, { color: colors.foreground }]}>
+                          ${staked > 0 ? (staked / 1000).toFixed(1) + "K" : "0"}
+                        </Text>
+                        <Text style={[styles.poolStatLbl, { color: colors.mutedForeground }]}>Total Staked</Text>
+                      </View>
+                      <View style={styles.poolStat}>
+                        <Text style={[styles.poolStatVal, { color: colors.foreground }]}>Daily</Text>
+                        <Text style={[styles.poolStatLbl, { color: colors.mutedForeground }]}>Rewards</Text>
+                      </View>
                     </View>
-                  </View>
 
-                  <View style={[styles.poolDivider, { backgroundColor: colors.border }]} />
-
-                  <View style={styles.poolStats}>
-                    <View style={styles.poolStat}>
-                      <Text style={[styles.poolStatVal, { color: colors.foreground }]}>
-                        {totalStaked >= 1e6 ? `${(totalStaked / 1e6).toFixed(2)}M` : totalStaked.toFixed(2)}
+                    {/* APY calculator preview */}
+                    <View style={[styles.calcPreview, { backgroundColor: colors.muted, borderColor: colors.border }]}>
+                      <Feather name="calculator" size={12} color={colors.mutedForeground} />
+                      <Text style={[styles.calcText, { color: colors.mutedForeground }]}>
+                        1,000 {pool.coinSymbol} → earn ~{((1000 * apy) / 100 / 12).toFixed(2)} {pool.coinSymbol}/mo
                       </Text>
-                      <Text style={[styles.poolStatLbl, { color: colors.mutedForeground }]}>Total Staked</Text>
                     </View>
-                    <View style={styles.poolStat}>
-                      <Text style={[styles.poolStatVal, { color: colors.foreground }]}>
-                        {parseFloat(p.minAmount).toFixed(2)}
-                      </Text>
-                      <Text style={[styles.poolStatLbl, { color: colors.mutedForeground }]}>Min Amount</Text>
-                    </View>
-                  </View>
 
-                  <TouchableOpacity
-                    style={[styles.stakeBtn, { backgroundColor: colors.primary }]}
-                    onPress={() => {
-                      if (!isAuthenticated) { router.push("/login"); return; }
-                      setModal(p);
-                      setStakeAmt("");
-                    }}
-                  >
-                    <Feather name="plus-circle" size={14} color="#fff" />
-                    <Text style={styles.stakeBtnLabel}>Stake {p.coinSymbol}</Text>
+                    <TouchableOpacity
+                      style={[styles.stakeBtn, { backgroundColor: coinColor }]}
+                      onPress={() => {
+                        if (!isAuthenticated) { router.push("/login"); return; }
+                        setModal(pool); setStakeAmt("");
+                      }}
+                    >
+                      <Feather name="plus" size={14} color="#fff" />
+                      <Text style={styles.stakeBtnLabel}>Stake {pool.coinSymbol}</Text>
+                    </TouchableOpacity>
                   </TouchableOpacity>
-                </View>
-              );
-            }}
-          />
-        )
-      ) : (
+                );
+              }}
+            />
+          )}
+        </>
+      )}
+
+      {tab === "mine" && (
         <FlatList
           data={myPositions ?? []}
           keyExtractor={(p) => p.id.toString()}
           contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: botPt + 20, flexGrow: 1 }}
           ListEmptyComponent={
             !isAuthenticated
-              ? <EmptyState icon="lock" title="Login required" subtitle="Sign in to view your positions" />
-              : <EmptyState icon="percent" title="No positions yet" subtitle="Start staking to earn passive income" />
+              ? <EmptyState icon="lock" title="Login required" />
+              : <EmptyState icon="percent" title="No positions yet" subtitle="Stake crypto to start earning" />
+          }
+          ListHeaderComponent={
+            (myPositions ?? []).length > 0 && isAuthenticated ? (
+              <View style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <LinearGradient colors={["#22c55e10", "transparent"]} style={StyleSheet.absoluteFillObject} />
+                <View style={styles.summaryRow}>
+                  {[
+                    { label: "Total Staked", value: `$${totalStakedAmt.toFixed(2)}`, color: colors.foreground },
+                    { label: "Total Earned", value: `+$${totalEarnings.toFixed(4)}`, color: colors.success },
+                  ].map((s) => (
+                    <View key={s.label} style={styles.summaryItem}>
+                      <Text style={[styles.summaryVal, { color: s.color }]}>{s.value}</Text>
+                      <Text style={[styles.summaryLbl, { color: colors.mutedForeground }]}>{s.label}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ) : null
           }
           renderItem={({ item: pos }) => {
+            const coinColor = COIN_COLORS[pos.pool?.coinSymbol ?? ""] ?? COIN_COLORS.DEFAULT;
             const earnings = parseFloat(pos.earnings || "0");
-            const bg = COIN_COLORS[pos.pool?.coinSymbol?.toUpperCase()] ?? COIN_COLORS.DEFAULT;
+            const amt = parseFloat(pos.amount || "0");
             return (
               <View style={[styles.posCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                <View style={styles.posCardRow}>
-                  <View style={[styles.poolIcon, { backgroundColor: bg + "22" }]}>
-                    <Text style={[styles.poolIconText, { color: bg }]}>{(pos.pool?.coinSymbol ?? "?").charAt(0)}</Text>
+                <LinearGradient colors={[coinColor + "08", "transparent"]} style={StyleSheet.absoluteFillObject} />
+                <View style={styles.posTop}>
+                  <View style={[styles.coinCircle, { backgroundColor: coinColor + "25" }]}>
+                    <Text style={[styles.coinText, { color: coinColor }]}>{(pos.pool?.coinSymbol ?? "?").slice(0, 3)}</Text>
                   </View>
-                  <View style={styles.poolInfo}>
+                  <View style={{ flex: 1 }}>
                     <Text style={[styles.poolName, { color: colors.foreground }]}>{pos.pool?.name ?? "Pool"}</Text>
-                    <Text style={[styles.poolStatLbl, { color: colors.mutedForeground }]}>
-                      Staked: {parseFloat(pos.amount).toFixed(4)} {pos.pool?.coinSymbol}
-                    </Text>
+                    <Text style={[styles.poolCoin, { color: colors.mutedForeground }]}>${amt.toFixed(4)} staked</Text>
                   </View>
                   <View style={{ alignItems: "flex-end" }}>
-                    <Text style={[styles.poolApyVal, { color: colors.success, fontSize: 14 }]}>
-                      +{earnings.toFixed(6)}
-                    </Text>
-                    <Text style={[styles.poolStatLbl, { color: colors.mutedForeground }]}>Earned</Text>
+                    <Text style={[styles.posEarnings, { color: colors.success }]}>+${earnings.toFixed(4)}</Text>
+                    <Text style={[styles.poolStatLbl, { color: colors.mutedForeground }]}>earned</Text>
                   </View>
+                </View>
+                <View style={styles.posMeta}>
+                  <View style={[styles.statusBadge, { backgroundColor: pos.status === "active" ? "#22c55e20" : colors.muted }]}>
+                    <View style={[styles.statusDot, { backgroundColor: pos.status === "active" ? colors.success : colors.mutedForeground }]} />
+                    <Text style={[styles.statusText, { color: pos.status === "active" ? colors.success : colors.mutedForeground }]}>
+                      {pos.status}
+                    </Text>
+                  </View>
+                  <Text style={[styles.poolStatLbl, { color: colors.mutedForeground }]}>
+                    Since {new Date(pos.startDate).toLocaleDateString("en-IN")}
+                  </Text>
                 </View>
               </View>
             );
@@ -262,44 +324,66 @@ export default function EarnScreen() {
         />
       )}
 
-      {/* Stake modal */}
+      {/* Stake Modal */}
       <Modal visible={!!modal} transparent animationType="slide" onRequestClose={() => setModal(null)}>
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModal(null)}>
-          <View style={[styles.modalSheet, { backgroundColor: colors.card }]}>
-            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
-              <Text style={[styles.modalTitle, { color: colors.foreground }]}>
-                Stake {modal?.coinSymbol}
-              </Text>
+        <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={() => setModal(null)}>
+          <View style={[styles.sheet, { backgroundColor: colors.card }]}>
+            <View style={[styles.sheetHeader, { borderBottomColor: colors.border }]}>
+              <Text style={[styles.sheetTitle, { color: colors.foreground }]}>Stake {modal?.coinSymbol}</Text>
               <TouchableOpacity onPress={() => setModal(null)}>
                 <Feather name="x" size={20} color={colors.mutedForeground} />
               </TouchableOpacity>
             </View>
             {modal && (
-              <View style={{ padding: 20, gap: 16 }}>
-                <View style={[styles.modalInfoRow, { backgroundColor: colors.muted, borderColor: colors.border }]}>
-                  <Text style={[styles.modalInfoLabel, { color: colors.mutedForeground }]}>APY</Text>
-                  <Text style={[styles.modalInfoVal, { color: colors.success }]}>{parseFloat(modal.apy).toFixed(1)}%</Text>
+              <View style={{ padding: 20, gap: 14 }}>
+                {/* Plan summary */}
+                <View style={{ gap: 8 }}>
+                  {[
+                    { label: "APY", value: `${parseFloat(modal.apy).toFixed(1)}%`, color: getApyColor(parseFloat(modal.apy)) },
+                    { label: "Duration", value: modal.duration === 0 ? "Flexible (no lockup)" : `${modal.duration} days` },
+                    { label: "Min Stake", value: `${parseFloat(modal.minAmount).toFixed(0)} ${modal.coinSymbol}` },
+                  ].map((r) => (
+                    <View key={r.label} style={[styles.infoRow, { backgroundColor: colors.muted }]}>
+                      <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>{r.label}</Text>
+                      <Text style={[styles.infoVal, { color: (r as any).color ?? colors.foreground }]}>{r.value}</Text>
+                    </View>
+                  ))}
                 </View>
-                <View style={[styles.amtRow, { backgroundColor: colors.muted, borderColor: colors.border }]}>
-                  <TextInput
-                    style={[styles.amtInput, { color: colors.foreground }]}
-                    value={stakeAmt}
-                    onChangeText={setStakeAmt}
-                    placeholder="Enter amount"
-                    placeholderTextColor={colors.mutedForeground}
-                    keyboardType="decimal-pad"
-                  />
-                  <Text style={[styles.amtUnit, { color: colors.primary }]}>{modal.coinSymbol}</Text>
+
+                {/* Amount input */}
+                <View>
+                  <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>Amount to Stake</Text>
+                  <View style={[styles.amtWrap, { backgroundColor: colors.muted, borderColor: colors.border }]}>
+                    <TextInput
+                      style={[styles.amtInput, { color: colors.foreground }]}
+                      value={stakeAmt}
+                      onChangeText={setStakeAmt}
+                      placeholder={`Min ${parseFloat(modal.minAmount).toFixed(0)}`}
+                      placeholderTextColor={colors.mutedForeground}
+                      keyboardType="decimal-pad"
+                      autoFocus
+                    />
+                    <TouchableOpacity onPress={() => setStakeAmt(modal.maxAmount)}>
+                      <Text style={[styles.maxBtn, { color: colors.primary }]}>MAX</Text>
+                    </TouchableOpacity>
+                    <Text style={[styles.amtUnit, { color: colors.primary }]}>{modal.coinSymbol}</Text>
+                  </View>
                 </View>
-                <Text style={[styles.modalHint, { color: colors.mutedForeground }]}>
-                  Min: {parseFloat(modal.minAmount).toFixed(2)} {modal.coinSymbol}
-                  {!modal.flexible && ` • Lock: ${modal.duration} days`}
-                </Text>
-                {stakeMutation.isError && (
-                  <Text style={{ color: colors.destructive, fontSize: 12 }}>
-                    {(stakeMutation.error as Error).message}
-                  </Text>
+
+                {/* Projected earnings */}
+                {stakeAmt && parseFloat(stakeAmt) > 0 && (
+                  <View style={[styles.projectedCard, { backgroundColor: colors.success + "12", borderColor: colors.success + "30" }]}>
+                    <Feather name="trending-up" size={14} color={colors.success} />
+                    <Text style={[styles.projectedText, { color: colors.success }]}>
+                      Projected earnings: ~{((parseFloat(stakeAmt) * parseFloat(modal.apy)) / 100 / 365 * (modal.duration || 365)).toFixed(4)} {modal.coinSymbol}
+                    </Text>
+                  </View>
                 )}
+
+                {stakeMutation.isError && (
+                  <Text style={{ color: colors.destructive, fontSize: 12 }}>{(stakeMutation.error as Error).message}</Text>
+                )}
+
                 <TouchableOpacity
                   style={[styles.stakeBtn, { backgroundColor: colors.primary }]}
                   onPress={() => {
@@ -310,8 +394,10 @@ export default function EarnScreen() {
                 >
                   {stakeMutation.isPending
                     ? <ActivityIndicator color="#fff" size="small" />
-                    : <Text style={styles.stakeBtnLabel}>Confirm Stake</Text>
-                  }
+                    : <>
+                        <Feather name="lock" size={14} color="#fff" />
+                        <Text style={styles.stakeBtnLabel}>Confirm Stake</Text>
+                      </>}
                 </TouchableOpacity>
               </View>
             )}
@@ -327,49 +413,63 @@ const styles = StyleSheet.create({
   header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingBottom: 14, borderBottomWidth: StyleSheet.hairlineWidth, gap: 8 },
   backBtn: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
   title: { flex: 1, fontSize: 18, fontWeight: "700", textAlign: "center" },
-  hero: { flexDirection: "row", alignItems: "center", margin: 16, padding: 18, borderRadius: 16, borderWidth: 1, gap: 16 },
+  hero: { flexDirection: "row", alignItems: "center", margin: 16, padding: 18, borderRadius: 16, gap: 16 },
   heroTitle: { color: "#f8fafc", fontSize: 16, fontWeight: "800" },
   heroSub: { color: "#6b7a9e", fontSize: 12, marginTop: 4, lineHeight: 16 },
+  earnStats: { flexDirection: "row", gap: 8, marginTop: 8 },
+  earnChip: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: "rgba(255,255,255,0.07)" },
+  earnChipText: { fontSize: 11, fontWeight: "700" },
   heroIcon: { width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center" },
-  summaryRow: { flexDirection: "row", marginHorizontal: 16, borderRadius: 12, borderWidth: 1, overflow: "hidden", marginBottom: 4 },
-  summaryItem: { flex: 1, alignItems: "center", paddingVertical: 10 },
-  summaryVal: { fontSize: 15, fontWeight: "700" },
-  summaryLbl: { fontSize: 11, marginTop: 2 },
-  summarySep: { width: StyleSheet.hairlineWidth },
   tabRow: { flexDirection: "row", borderBottomWidth: StyleSheet.hairlineWidth },
-  tabBtn: { flex: 1, paddingVertical: 12, alignItems: "center", borderBottomWidth: 2, borderBottomColor: "transparent" },
-  tabLabel: { fontSize: 14, fontWeight: "700" },
+  tabBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 11, gap: 5, borderBottomWidth: 2, borderBottomColor: "transparent" },
+  tabLabel: { fontSize: 13, fontWeight: "700" },
+  filterChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1 },
+  filterChipText: { fontSize: 13, fontWeight: "600" },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   poolCard: { borderRadius: 14, borderWidth: 1, overflow: "hidden" },
   poolTop: { flexDirection: "row", alignItems: "center", padding: 14, gap: 12 },
-  poolIcon: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
-  poolIconText: { fontSize: 20, fontWeight: "800" },
-  poolInfo: { flex: 1 },
+  coinCircle: { width: 46, height: 46, borderRadius: 23, alignItems: "center", justifyContent: "center" },
+  coinText: { fontSize: 13, fontWeight: "800" },
+  poolNameRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   poolName: { fontSize: 15, fontWeight: "700" },
-  poolBadges: { flexDirection: "row", gap: 6, marginTop: 3 },
-  badge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
-  badgeText: { fontSize: 11, fontWeight: "700" },
-  poolApy: { alignItems: "center" },
-  poolApyVal: { fontSize: 18, fontWeight: "900" },
-  poolApyLbl: { fontSize: 10, marginTop: 1 },
-  poolDivider: { height: StyleSheet.hairlineWidth },
-  poolStats: { flexDirection: "row", paddingHorizontal: 14, paddingVertical: 10, gap: 24 },
-  poolStat: {},
+  flexBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  poolCoin: { fontSize: 12, marginTop: 2 },
+  apyWrap: { alignItems: "center" },
+  apyVal: { fontSize: 22, fontWeight: "900" },
+  apyLbl: { fontSize: 11, marginTop: 1 },
+  poolSep: { height: StyleSheet.hairlineWidth, marginHorizontal: 14 },
+  poolStats: { flexDirection: "row", paddingHorizontal: 14, paddingVertical: 10 },
+  poolStat: { flex: 1, alignItems: "center" },
   poolStatVal: { fontSize: 13, fontWeight: "700" },
-  poolStatLbl: { fontSize: 11, marginTop: 1 },
-  stakeBtn: { margin: 14, marginTop: 10, height: 44, borderRadius: 10, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
+  poolStatLbl: { fontSize: 10, marginTop: 2 },
+  calcPreview: { flexDirection: "row", alignItems: "center", gap: 8, marginHorizontal: 14, marginBottom: 12, padding: 10, borderRadius: 8, borderWidth: 1 },
+  calcText: { fontSize: 12 },
+  stakeBtn: { margin: 14, marginTop: 0, height: 44, borderRadius: 10, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
   stakeBtnLabel: { color: "#fff", fontSize: 14, fontWeight: "800" },
-  posCard: { borderRadius: 12, borderWidth: 1, padding: 14 },
-  posCardRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
-  modalSheet: { borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingTop: 8 },
-  modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1 },
-  modalTitle: { fontSize: 16, fontWeight: "700" },
-  modalInfoRow: { flexDirection: "row", justifyContent: "space-between", padding: 12, borderRadius: 8, borderWidth: 1 },
-  modalInfoLabel: { fontSize: 14 },
-  modalInfoVal: { fontSize: 14, fontWeight: "700" },
-  amtRow: { flexDirection: "row", alignItems: "center", borderRadius: 10, borderWidth: 1, paddingHorizontal: 14, height: 48, gap: 8 },
+  summaryCard: { borderRadius: 14, borderWidth: 1, padding: 16, marginBottom: 12, overflow: "hidden" },
+  summaryRow: { flexDirection: "row" },
+  summaryItem: { flex: 1, alignItems: "center" },
+  summaryVal: { fontSize: 18, fontWeight: "800" },
+  summaryLbl: { fontSize: 12, marginTop: 3 },
+  posCard: { borderRadius: 12, borderWidth: 1, padding: 14, overflow: "hidden" },
+  posTop: { flexDirection: "row", alignItems: "center", gap: 12 },
+  posEarnings: { fontSize: 15, fontWeight: "800" },
+  posMeta: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 10 },
+  statusBadge: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  statusDot: { width: 6, height: 6, borderRadius: 3 },
+  statusText: { fontSize: 12, fontWeight: "600", textTransform: "capitalize" },
+  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "flex-end" },
+  sheet: { borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingTop: 8 },
+  sheetHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1 },
+  sheetTitle: { fontSize: 16, fontWeight: "700" },
+  infoRow: { flexDirection: "row", justifyContent: "space-between", padding: 12, borderRadius: 8 },
+  infoLabel: { fontSize: 14 },
+  infoVal: { fontSize: 14, fontWeight: "700" },
+  fieldLabel: { fontSize: 12, marginBottom: 6 },
+  amtWrap: { flexDirection: "row", alignItems: "center", borderRadius: 10, borderWidth: 1, paddingHorizontal: 14, height: 48, gap: 8 },
   amtInput: { flex: 1, fontSize: 18, fontWeight: "700" },
+  maxBtn: { fontSize: 12, fontWeight: "800" },
   amtUnit: { fontSize: 14, fontWeight: "700" },
-  modalHint: { fontSize: 12, textAlign: "center" },
+  projectedCard: { flexDirection: "row", alignItems: "center", gap: 8, padding: 10, borderRadius: 8, borderWidth: 1 },
+  projectedText: { fontSize: 13, fontWeight: "600" },
 });

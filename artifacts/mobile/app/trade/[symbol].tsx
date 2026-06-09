@@ -3,6 +3,7 @@ import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Platform,
   ScrollView,
   StyleSheet,
@@ -17,6 +18,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePrices } from "@/hooks/usePrices";
+import { useFavorites } from "@/hooks/useFavorites";
 import { apiFetch, apiPost } from "@/hooks/useApi";
 import { AnimatedPrice } from "@/components/AnimatedPrice";
 import { CandleChart } from "@/components/CandleChart";
@@ -27,13 +29,15 @@ interface OrderBook { bids: OrderBookEntry[]; asks: OrderBookEntry[] }
 interface OpenOrder { id: number; side: string; type: string; amount: number; price?: number; filled: number; status: string }
 interface Trade { id: number; price: number; qty: number; side: string; time: string }
 
-type OrderType = "limit" | "market";
+type OrderType = "limit" | "market" | "stop";
 type Side = "buy" | "sell";
 type TabKey = "orderbook" | "trades" | "myorders";
 
 const COIN_COLORS: Record<string, string> = {
   BTC: "#f7931a", ETH: "#627eea", BNB: "#f3ba2f", SOL: "#9945ff",
-  XRP: "#346aa9", DEFAULT: "#6b7a9e",
+  XRP: "#346aa9", ADA: "#3cc8c8", MATIC: "#8247e5", AVAX: "#e84142",
+  DOGE: "#c2a633", NEAR: "#00c08b", LINK: "#2a5ada", DOT: "#e6007a",
+  DEFAULT: "#6b7a9e",
 };
 
 export default function TradeSymbolScreen() {
@@ -44,6 +48,7 @@ export default function TradeSymbolScreen() {
   const qc = useQueryClient();
   const { isAuthenticated } = useAuth();
   const { priceMap } = usePrices();
+  const { isFav, toggle } = useFavorites();
 
   const base = symbol?.replace(/USDT$|INR$/, "") ?? "BTC";
   const quote = symbol?.includes("INR") ? "INR" : "USDT";
@@ -52,12 +57,15 @@ export default function TradeSymbolScreen() {
   const change24h = tick?.change24h ?? 0;
   const high24h = price * (1 + Math.abs(change24h) / 100 + 0.005);
   const low24h = price * (1 - Math.abs(change24h) / 100 - 0.003);
-  const coinBg = COIN_COLORS[base.toUpperCase()] ?? COIN_COLORS.DEFAULT;
+  const vol24h = tick?.volume24h ?? 0;
+  const coinColor = COIN_COLORS[base.toUpperCase()] ?? COIN_COLORS.DEFAULT;
+  const favKey = base.toUpperCase();
 
   const [side, setSide] = useState<Side>("buy");
   const [orderType, setOrderType] = useState<OrderType>("limit");
   const [amount, setAmount] = useState("");
   const [limitPrice, setLimitPrice] = useState("");
+  const [stopPrice, setStopPrice] = useState("");
   const [pct, setPct] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>("orderbook");
 
@@ -110,48 +118,63 @@ export default function TradeSymbolScreen() {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const body: Record<string, unknown> = { pair: `${base}/${quote}`, side, type: orderType, amount: qty };
     if (orderType === "limit") body.price = parseFloat(limitPrice);
+    if (orderType === "stop") { body.price = parseFloat(limitPrice); body.stopPrice = parseFloat(stopPrice); }
     placeMutation.mutate(body);
   };
 
-  const asks = (bookData?.asks ?? []).slice(0, 10);
-  const bids = (bookData?.bids ?? []).slice(0, 10);
+  const asks = (bookData?.asks ?? []).slice(0, 12);
+  const bids = (bookData?.bids ?? []).slice(0, 12);
   const maxAskTotal = Math.max(...asks.map((e) => e.total ?? e.price * e.qty), 1);
   const maxBidTotal = Math.max(...bids.map((e) => e.total ?? e.price * e.qty), 1);
+
+  const execPrice = orderType === "market" ? price : (parseFloat(limitPrice) || price);
+  const totalEst = amount && price > 0 ? parseFloat(amount) * execPrice : 0;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPt, backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn}>
           <Feather name="arrow-left" size={22} color={colors.foreground} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <View style={[styles.coinDot, { backgroundColor: coinBg + "30" }]}>
-            <Text style={[styles.coinDotText, { color: coinBg }]}>{base.charAt(0)}</Text>
+          <View style={[styles.coinBadge, { backgroundColor: coinColor + "25" }]}>
+            <Text style={[styles.coinBadgeText, { color: coinColor }]}>{base.slice(0, 3)}</Text>
           </View>
           <View>
-            <Text style={[styles.headerSymbol, { color: colors.foreground }]}>{base}/{quote}</Text>
-            <PriceChange value={change24h} fontSize={11} />
+            <Text style={[styles.pairLabel, { color: colors.foreground }]}>{base}/{quote}</Text>
+            <View style={styles.liveRow}>
+              <View style={[styles.liveDot, { backgroundColor: "#22c55e" }]} />
+              <PriceChange value={change24h} fontSize={11} />
+            </View>
           </View>
         </View>
-        <View style={styles.headerStats}>
-          <AnimatedPrice
-            price={price}
-            format={(p) => `${quote === "INR" ? "₹" : "$"}${p.toLocaleString("en-US", { maximumFractionDigits: p < 1 ? 6 : 2 })}`}
-            style={{ color: change24h >= 0 ? colors.success : colors.destructive, fontSize: 18, fontWeight: "900" }}
-          />
-        </View>
-        <TouchableOpacity onPress={() => router.push("/orders")} style={styles.backBtn}>
+        <AnimatedPrice
+          price={price}
+          format={(p) => `${quote === "INR" ? "₹" : "$"}${p.toLocaleString("en-US", { maximumFractionDigits: p < 1 ? 6 : 2 })}`}
+          style={{ color: change24h >= 0 ? colors.success : colors.destructive, fontSize: 16, fontWeight: "900" }}
+        />
+        <TouchableOpacity
+          style={styles.iconBtn}
+          onPress={() => {
+            if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            toggle(favKey);
+          }}
+        >
+          <Feather name="star" size={20} color={isFav(favKey) ? "#f59e0b" : colors.mutedForeground} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push("/orders")} style={styles.iconBtn}>
           <Feather name="list" size={20} color={colors.mutedForeground} />
         </TouchableOpacity>
       </View>
 
-      {/* 24h stats */}
-      <View style={[styles.statsRow, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+      {/* 24h stats bar */}
+      <View style={[styles.statsBar, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         {[
           { label: "24h High", value: `${quote === "INR" ? "₹" : "$"}${high24h.toLocaleString("en-US", { maximumFractionDigits: 2 })}`, color: colors.success },
           { label: "24h Low", value: `${quote === "INR" ? "₹" : "$"}${low24h.toLocaleString("en-US", { maximumFractionDigits: 2 })}`, color: colors.destructive },
-          { label: "24h Vol", value: tick?.volume24h ? `${(tick.volume24h / 1e6).toFixed(1)}M` : "—", color: colors.foreground },
+          { label: "Vol(24h)", value: vol24h > 0 ? `${(vol24h / 1e6).toFixed(1)}M` : "—", color: colors.foreground },
+          { label: "Mkt Cap", value: `$${((price * 21e6) / 1e9).toFixed(0)}B`, color: colors.mutedForeground },
         ].map((s) => (
           <View key={s.label} style={styles.statItem}>
             <Text style={[styles.statVal, { color: s.color }]}>{s.value}</Text>
@@ -161,16 +184,16 @@ export default function TradeSymbolScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: botPt + 20 }}>
-        {/* Candlestick chart */}
-        <View style={[styles.chartCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <CandleChart symbol={base} height={200} />
+        {/* Chart */}
+        <View style={[styles.chartCard, { borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth }]}>
+          <CandleChart symbol={base} height={210} />
         </View>
 
-        {/* Order book + order form side by side */}
-        <View style={styles.tradeSection}>
-          {/* Left: Order book */}
-          <View style={styles.bookPanel}>
-            {/* Tabs */}
+        {/* Order book + form */}
+        <View style={styles.tradeRow}>
+          {/* Left: order book panel */}
+          <View style={[styles.bookPanel, { borderRightColor: colors.border, borderRightWidth: StyleSheet.hairlineWidth }]}>
+            {/* Book tabs */}
             <View style={[styles.bookTabs, { borderBottomColor: colors.border }]}>
               {(["orderbook", "trades", "myorders"] as TabKey[]).map((t) => (
                 <TouchableOpacity
@@ -187,27 +210,27 @@ export default function TradeSymbolScreen() {
 
             {activeTab === "orderbook" && (
               <View>
-                <View style={styles.bookColHeader}>
+                <View style={styles.bookColHdr}>
                   <Text style={[styles.bookColLabel, { color: colors.mutedForeground }]}>Price</Text>
-                  <Text style={[styles.bookColLabel, { color: colors.mutedForeground, textAlign: "right" }]}>Amount</Text>
+                  <Text style={[styles.bookColLabel, { color: colors.mutedForeground, textAlign: "right" }]}>Qty</Text>
                 </View>
                 {[...asks].reverse().map((a, i) => (
                   <TouchableOpacity key={i} style={styles.bookRow} onPress={() => setLimitPrice(a.price.toFixed(a.price < 1 ? 4 : 2))}>
-                    <View style={[styles.depthBg, { width: `${Math.min(100, ((a.total ?? a.price * a.qty) / maxAskTotal) * 100)}%`, backgroundColor: "#e8151512" }]} />
+                    <View style={[styles.depthBar, { width: `${Math.min(100, ((a.total ?? a.price * a.qty) / maxAskTotal) * 100)}%`, backgroundColor: "#e8151510" }]} />
                     <Text style={[styles.bookPrice, { color: colors.destructive }]}>{a.price.toFixed(a.price < 1 ? 4 : 2)}</Text>
                     <Text style={[styles.bookQty, { color: colors.foreground }]}>{a.qty.toFixed(3)}</Text>
                   </TouchableOpacity>
                 ))}
-                <View style={[styles.midRow, { borderColor: colors.border }]}>
+                <View style={[styles.midPrice, { borderColor: colors.border }]}>
                   <AnimatedPrice
                     price={price}
                     format={(p) => p.toFixed(p < 1 ? 6 : 2)}
-                    style={{ color: change24h >= 0 ? colors.success : colors.destructive, fontSize: 14, fontWeight: "800" }}
+                    style={{ color: change24h >= 0 ? colors.success : colors.destructive, fontSize: 13, fontWeight: "800" }}
                   />
                 </View>
                 {bids.map((b, i) => (
                   <TouchableOpacity key={i} style={styles.bookRow} onPress={() => setLimitPrice(b.price.toFixed(b.price < 1 ? 4 : 2))}>
-                    <View style={[styles.depthBg, { width: `${Math.min(100, ((b.total ?? b.price * b.qty) / maxBidTotal) * 100)}%`, backgroundColor: "#22c55e12" }]} />
+                    <View style={[styles.depthBar, { width: `${Math.min(100, ((b.total ?? b.price * b.qty) / maxBidTotal) * 100)}%`, backgroundColor: "#22c55e10" }]} />
                     <Text style={[styles.bookPrice, { color: colors.success }]}>{b.price.toFixed(b.price < 1 ? 4 : 2)}</Text>
                     <Text style={[styles.bookQty, { color: colors.foreground }]}>{b.qty.toFixed(3)}</Text>
                   </TouchableOpacity>
@@ -217,11 +240,11 @@ export default function TradeSymbolScreen() {
 
             {activeTab === "trades" && (
               <View>
-                <View style={styles.bookColHeader}>
+                <View style={styles.bookColHdr}>
                   <Text style={[styles.bookColLabel, { color: colors.mutedForeground }]}>Price</Text>
                   <Text style={[styles.bookColLabel, { color: colors.mutedForeground, textAlign: "right" }]}>Qty</Text>
                 </View>
-                {(recentTrades ?? []).slice(0, 20).map((t, i) => (
+                {(recentTrades ?? []).slice(0, 22).map((t, i) => (
                   <View key={i} style={styles.bookRow}>
                     <Text style={[styles.bookPrice, { color: t.side === "buy" ? colors.success : colors.destructive }]}>
                       {t.price.toFixed(2)}
@@ -236,6 +259,7 @@ export default function TradeSymbolScreen() {
               <View>
                 {!isAuthenticated ? (
                   <TouchableOpacity style={styles.loginPrompt} onPress={() => router.push("/login")}>
+                    <Feather name="lock" size={14} color={colors.primary} />
                     <Text style={[styles.loginPromptText, { color: colors.primary }]}>Login to see orders</Text>
                   </TouchableOpacity>
                 ) : (openOrders ?? []).length === 0 ? (
@@ -243,16 +267,16 @@ export default function TradeSymbolScreen() {
                 ) : (
                   (openOrders ?? []).map((o) => (
                     <View key={o.id} style={[styles.myOrderRow, { borderBottomColor: colors.border }]}>
-                      <View>
+                      <View style={{ flex: 1 }}>
                         <Text style={[styles.myOrderSide, { color: o.side === "buy" ? colors.success : colors.destructive }]}>
-                          {o.side.toUpperCase()}
+                          {o.side.toUpperCase()} {o.type}
                         </Text>
                         <Text style={[styles.myOrderDetail, { color: colors.mutedForeground }]}>
                           {o.amount.toFixed(3)} @ {o.price?.toFixed(2) ?? "mkt"}
                         </Text>
                       </View>
-                      <TouchableOpacity onPress={() => cancelMutation.mutate(o.id)}>
-                        <Text style={[styles.cancelText, { color: colors.destructive }]}>✕</Text>
+                      <TouchableOpacity onPress={() => cancelMutation.mutate(o.id)} style={styles.cancelBtn}>
+                        <Feather name="x" size={14} color={colors.destructive} />
                       </TouchableOpacity>
                     </View>
                   ))
@@ -266,13 +290,13 @@ export default function TradeSymbolScreen() {
             {/* Side toggle */}
             <View style={[styles.sideToggle, { backgroundColor: colors.muted }]}>
               <TouchableOpacity
-                style={[styles.sideBtn, side === "buy" && { backgroundColor: "#22c55e" }]}
+                style={[styles.sideBtn, side === "buy" && { backgroundColor: colors.success }]}
                 onPress={() => setSide("buy")}
               >
                 <Text style={[styles.sideBtnLabel, { color: side === "buy" ? "#fff" : colors.mutedForeground }]}>Buy</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.sideBtn, side === "sell" && { backgroundColor: "#e81515" }]}
+                style={[styles.sideBtn, side === "sell" && { backgroundColor: colors.destructive }]}
                 onPress={() => setSide("sell")}
               >
                 <Text style={[styles.sideBtnLabel, { color: side === "sell" ? "#fff" : colors.mutedForeground }]}>Sell</Text>
@@ -280,22 +304,38 @@ export default function TradeSymbolScreen() {
             </View>
 
             {/* Order type */}
-            <View style={styles.typeRow}>
-              {(["limit", "market"] as OrderType[]).map((t) => (
+            <View style={[styles.typeRow, { backgroundColor: colors.muted }]}>
+              {(["limit", "market", "stop"] as OrderType[]).map((t) => (
                 <TouchableOpacity
                   key={t}
-                  style={[styles.typeBtn, { borderColor: orderType === t ? colors.primary : colors.border }]}
+                  style={[styles.typeBtn, orderType === t && { backgroundColor: colors.card }]}
                   onPress={() => setOrderType(t)}
                 >
-                  <Text style={[styles.typeBtnLabel, { color: orderType === t ? colors.primary : colors.mutedForeground }]}>
+                  <Text style={[styles.typeBtnLabel, { color: orderType === t ? colors.foreground : colors.mutedForeground }]}>
                     {t.charAt(0).toUpperCase() + t.slice(1)}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            {/* Price input */}
-            {orderType === "limit" && (
+            {/* Stop price (only for stop orders) */}
+            {orderType === "stop" && (
+              <View style={[styles.inputRow, { backgroundColor: colors.muted, borderColor: colors.border }]}>
+                <Text style={[styles.inputLbl, { color: colors.mutedForeground }]}>Stop</Text>
+                <TextInput
+                  style={[styles.orderInput, { color: colors.foreground }]}
+                  value={stopPrice}
+                  onChangeText={setStopPrice}
+                  keyboardType="decimal-pad"
+                  placeholder={price.toFixed(2)}
+                  placeholderTextColor={colors.mutedForeground}
+                />
+                <Text style={[styles.inputUnit, { color: colors.mutedForeground }]}>{quote}</Text>
+              </View>
+            )}
+
+            {/* Limit price */}
+            {(orderType === "limit" || orderType === "stop") && (
               <View style={[styles.inputRow, { backgroundColor: colors.muted, borderColor: colors.border }]}>
                 <Text style={[styles.inputLbl, { color: colors.mutedForeground }]}>Px</Text>
                 <TextInput
@@ -337,34 +377,34 @@ export default function TradeSymbolScreen() {
               ))}
             </View>
 
-            {/* Total estimate */}
-            {amount && price > 0 && (
+            {/* Total */}
+            {totalEst > 0 && (
               <Text style={[styles.totalEst, { color: colors.mutedForeground }]}>
-                ≈ {quote === "INR" ? "₹" : "$"}{(parseFloat(amount) * (orderType === "limit" ? parseFloat(limitPrice) || price : price)).toLocaleString("en-US", { maximumFractionDigits: 2 })}
+                ≈ {quote === "INR" ? "₹" : "$"}{totalEst.toLocaleString("en-US", { maximumFractionDigits: 2 })}
               </Text>
             )}
 
             {/* Place button */}
             <TouchableOpacity
-              style={[styles.placeBtn, { backgroundColor: side === "buy" ? "#22c55e" : "#e81515" }, placeMutation.isPending && { opacity: 0.6 }]}
+              style={[styles.placeBtn, { backgroundColor: side === "buy" ? colors.success : colors.destructive }, placeMutation.isPending && { opacity: 0.6 }]}
               onPress={handlePlace}
               disabled={placeMutation.isPending}
               activeOpacity={0.85}
             >
-              <Text style={styles.placeBtnLabel}>
-                {placeMutation.isPending ? "…" : `${side === "buy" ? "Buy" : "Sell"} ${base}`}
-              </Text>
+              {placeMutation.isPending
+                ? <ActivityIndicator color="#fff" size="small" />
+                : <Text style={styles.placeBtnLabel}>{side === "buy" ? "Buy" : "Sell"} {base}</Text>}
             </TouchableOpacity>
 
             {placeMutation.isSuccess && (
-              <View style={[styles.feedbackMsg, { backgroundColor: "#22c55e20" }]}>
-                <Feather name="check-circle" size={12} color="#22c55e" />
+              <View style={[styles.feedback, { backgroundColor: "#22c55e18" }]}>
+                <Feather name="check-circle" size={11} color="#22c55e" />
                 <Text style={[styles.feedbackText, { color: "#22c55e" }]}>Order placed!</Text>
               </View>
             )}
             {placeMutation.isError && (
-              <View style={[styles.feedbackMsg, { backgroundColor: "#e8151520" }]}>
-                <Feather name="alert-circle" size={12} color="#e81515" />
+              <View style={[styles.feedback, { backgroundColor: "#e8151518" }]}>
+                <Feather name="alert-circle" size={11} color="#e81515" />
                 <Text style={[styles.feedbackText, { color: "#e81515" }]} numberOfLines={2}>
                   {(placeMutation.error as Error).message}
                 </Text>
@@ -379,79 +419,55 @@ export default function TradeSymbolScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 8,
-    paddingBottom: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: 6,
-  },
-  backBtn: { width: 38, height: 38, alignItems: "center", justifyContent: "center" },
+  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 8, paddingBottom: 10, borderBottomWidth: StyleSheet.hairlineWidth, gap: 4 },
+  iconBtn: { width: 36, height: 36, alignItems: "center", justifyContent: "center" },
   headerCenter: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8 },
-  coinDot: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
-  coinDotText: { fontSize: 14, fontWeight: "800" },
-  headerSymbol: { fontSize: 15, fontWeight: "700" },
-  headerStats: {},
-  statsRow: {
-    flexDirection: "row",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: 8,
-  },
+  coinBadge: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center" },
+  coinBadgeText: { fontSize: 12, fontWeight: "800" },
+  pairLabel: { fontSize: 14, fontWeight: "800" },
+  liveRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 1 },
+  liveDot: { width: 5, height: 5, borderRadius: 3 },
+  statsBar: { flexDirection: "row", paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth, gap: 4 },
   statItem: { flex: 1 },
-  statVal: { fontSize: 12, fontWeight: "700" },
-  statLbl: { fontSize: 10, marginTop: 1 },
-  chartCard: {
-    marginHorizontal: 0,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: "transparent",
-  },
-  tradeSection: { flexDirection: "row", gap: 0 },
-  bookPanel: { flex: 1, borderRightWidth: StyleSheet.hairlineWidth },
+  statVal: { fontSize: 11, fontWeight: "700" },
+  statLbl: { fontSize: 9, marginTop: 1 },
+  chartCard: {},
+  tradeRow: { flexDirection: "row" },
+  bookPanel: { flex: 1 },
   bookTabs: { flexDirection: "row", borderBottomWidth: StyleSheet.hairlineWidth },
   bookTab: { flex: 1, paddingVertical: 8, alignItems: "center", borderBottomWidth: 2, borderBottomColor: "transparent" },
   bookTabLabel: { fontSize: 11, fontWeight: "700" },
-  bookColHeader: { flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 8, paddingVertical: 4 },
+  bookColHdr: { flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 8, paddingVertical: 4 },
   bookColLabel: { fontSize: 9, fontWeight: "600", textTransform: "uppercase" },
   bookRow: { flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 8, paddingVertical: 2.5, position: "relative" },
-  depthBg: { position: "absolute", right: 0, top: 0, bottom: 0 },
+  depthBar: { position: "absolute", right: 0, top: 0, bottom: 0 },
   bookPrice: { fontSize: 11, fontWeight: "600", zIndex: 1 },
   bookQty: { fontSize: 11, zIndex: 1 },
-  midRow: { flexDirection: "row", justifyContent: "center", alignItems: "center", paddingVertical: 5, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth, marginVertical: 2 },
+  midPrice: { flexDirection: "row", justifyContent: "center", paddingVertical: 5, borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth, marginVertical: 2 },
   myOrderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 8, paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth },
   myOrderSide: { fontSize: 11, fontWeight: "700" },
   myOrderDetail: { fontSize: 10, marginTop: 1 },
-  cancelText: { fontSize: 14, fontWeight: "700", padding: 4 },
-  loginPrompt: { padding: 12, alignItems: "center" },
+  cancelBtn: { width: 28, height: 28, alignItems: "center", justifyContent: "center" },
+  loginPrompt: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, padding: 16 },
   loginPromptText: { fontSize: 12, fontWeight: "600" },
   emptyText: { padding: 16, fontSize: 12, textAlign: "center" },
-  formPanel: { width: 150, padding: 8, gap: 6 },
+  formPanel: { width: 152, padding: 8, gap: 6 },
   sideToggle: { flexDirection: "row", borderRadius: 7, padding: 2, gap: 2 },
   sideBtn: { flex: 1, paddingVertical: 7, borderRadius: 5, alignItems: "center" },
   sideBtnLabel: { fontSize: 12, fontWeight: "800" },
-  typeRow: { flexDirection: "row", gap: 4 },
-  typeBtn: { flex: 1, paddingVertical: 5, borderRadius: 5, borderWidth: 1, alignItems: "center" },
-  typeBtnLabel: { fontSize: 10, fontWeight: "700" },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 7,
-    borderWidth: 1,
-    paddingHorizontal: 6,
-    height: 36,
-    gap: 4,
-  },
-  inputLbl: { fontSize: 9, fontWeight: "700", width: 18 },
+  typeRow: { flexDirection: "row", borderRadius: 7, padding: 2, gap: 2 },
+  typeBtn: { flex: 1, paddingVertical: 5, borderRadius: 5, alignItems: "center" },
+  typeBtnLabel: { fontSize: 9, fontWeight: "700" },
+  inputRow: { flexDirection: "row", alignItems: "center", borderRadius: 7, borderWidth: 1, paddingHorizontal: 6, height: 36, gap: 4 },
+  inputLbl: { fontSize: 9, fontWeight: "700", width: 22 },
   orderInput: { flex: 1, fontSize: 12 },
-  inputUnit: { fontSize: 9, fontWeight: "700", width: 28, textAlign: "right" },
+  inputUnit: { fontSize: 9, fontWeight: "700", width: 30, textAlign: "right" },
   pctRow: { flexDirection: "row", gap: 3 },
   pctBtn: { flex: 1, paddingVertical: 3, borderRadius: 4, borderWidth: 1, alignItems: "center" },
   pctLabel: { fontSize: 9, fontWeight: "700" },
   totalEst: { fontSize: 10, textAlign: "center" },
-  placeBtn: { height: 40, borderRadius: 8, alignItems: "center", justifyContent: "center" },
+  placeBtn: { height: 42, borderRadius: 8, alignItems: "center", justifyContent: "center" },
   placeBtnLabel: { color: "#fff", fontSize: 12, fontWeight: "900" },
-  feedbackMsg: { flexDirection: "row", alignItems: "center", padding: 6, borderRadius: 5, gap: 4 },
+  feedback: { flexDirection: "row", alignItems: "center", padding: 6, borderRadius: 5, gap: 4 },
   feedbackText: { fontSize: 10, fontWeight: "600", flex: 1 },
 });
