@@ -344,7 +344,8 @@ ok "Source code synced to $APP_DIR"
 cd "$APP_DIR"
 
 # pnpm install — run BEFORE sourcing .env so NODE_ENV=production doesn't skip devDependencies
-(HOME=/root NODE_ENV=development pnpm install --no-frozen-lockfile > /tmp/zbx_pnpm.log 2>&1) &
+# --shamefully-hoist: flattens node_modules so tsc/vite/esbuild are accessible in PATH
+(HOME=/root NODE_ENV=development pnpm install --no-frozen-lockfile --shamefully-hoist > /tmp/zbx_pnpm.log 2>&1) &
 spinner $! "Installing pnpm dependencies..."
 [[ -f /tmp/zbx_pnpm.log ]] && grep -i "error\|ERR" /tmp/zbx_pnpm.log | head -5 || true
 ok "pnpm dependencies installed"

@@ -1,0 +1,68 @@
+ STEP 5/8 — Build
+└─────────────────────────────────────────────────┘
+  ✔  Source code synced to /opt/cryptox
+  ✔  pnpm dependencies installed
+ubuntu@ip-172-31-11-99:~/zebvix$ # Koi bhi step fail ho toh:
+cat /tmp/zbx_libs.log
+cat /tmp/zbx_api.log
+cat /tmp/zbx_portal.log
+cat /tmp/zbx_admin.log
+cat /tmp/zbx_go.log
+deploy/zebvix-setup.sh: line 359: /opt/cryptox/node_modules/.bin/tsc: No such file or directory
+
+> @workspace/api-server@0.0.0 build /opt/cryptox/artifacts/api-server
+> node ./build.mjs
+
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'esbuild' imported from /opt/cryptox/artifacts/api-server/build.mjs
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:768:81)
+    at moduleResolve (node:internal/modules/esm/resolve:859:18)
+    at defaultResolve (node:internal/modules/esm/resolve:992:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:691:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:708:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:740:52)
+    at #resolve (node:internal/modules/esm/loader:673:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:593:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:163:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v24.16.0
+/opt/cryptox/artifacts/api-server:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/api-server@0.0.0 build: `node ./build.mjs`
+Exit status 1
+ WARN   Local package.json exists, but node_modules missing, did you mean to install?
+
+> @workspace/user-portal@0.0.0 build /opt/cryptox/artifacts/user-portal
+> vite build --config vite.config.ts
+
+sh: 1: vite: not found
+/opt/cryptox/artifacts/user-portal:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/user-portal@0.0.0 build: `vite build --config vite.config.ts`
+spawn ENOENT
+ WARN   Local package.json exists, but node_modules missing, did you mean to install?
+
+> @workspace/admin@0.0.0 build /opt/cryptox/artifacts/admin
+> vite build --config vite.config.ts
+
+sh: 1: vite: not found
+/opt/cryptox/artifacts/admin:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/admin@0.0.0 build: `vite build --config vite.config.ts`
+spawn ENOENT
+ WARN   Local package.json exists, but node_modules missing, did you mean to install?
+go: downloading github.com/gorilla/websocket v1.5.1
+go: downloading golang.org/x/net v0.17.0
+ubuntu@ip-172-31-11-99:~/zebvix$
+
+
+
+
+
+
+
+
+
