@@ -450,12 +450,87 @@ fi
 # ─────────────────────────────────────────────────────────────────
 step "STEP 7/8 — Services (Nginx + PM2)"
 
-# ── Generate domain-specific nginx config ─────────────────────────
+# ── Generate HTTP-only nginx config first (SSL added by certbot later) ──
 NGINX_CONF="/etc/nginx/sites-available/cryptox"
-sed "s/zebvix\.com/${DOMAIN}/g" "$APP_DIR/deploy/nginx.conf" > "$NGINX_CONF"
+cat > "$NGINX_CONF" << NGINXEOF
+# Zebvix — Nginx Config (HTTP-only, certbot will add SSL)
+map \$http_upgrade \$connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+upstream cryptox_api { server 127.0.0.1:8080; keepalive 32; }
+upstream cryptox_go  { server 127.0.0.1:23004; keepalive 16; }
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${DOMAIN} www.${DOMAIN};
+
+    client_max_body_size 20M;
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml image/svg+xml;
+
+    add_header X-Frame-Options           "SAMEORIGIN"   always;
+    add_header X-Content-Type-Options    "nosniff"      always;
+    add_header Referrer-Policy           "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy        "payment=(), geolocation=(), camera=(), microphone=()" always;
+
+    location /.well-known/acme-challenge/ { root /var/www/certbot; }
+
+    location = / { return 301 /user/; }
+
+    location /user/ {
+        alias /opt/cryptox/dist/user/;
+        try_files \$uri \$uri/ /user/index.html;
+        expires 1d;
+    }
+    location /admin/ {
+        alias /opt/cryptox/dist/admin/;
+        try_files \$uri \$uri/ /admin/index.html;
+        expires 1h;
+        add_header Cache-Control "no-cache";
+    }
+    location /api/ {
+        proxy_pass         http://cryptox_api;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              \$host;
+        proxy_set_header   X-Real-IP         \$remote_addr;
+        proxy_set_header   X-Forwarded-For   \$proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto \$scheme;
+        proxy_set_header   Upgrade           \$http_upgrade;
+        proxy_set_header   Connection        \$connection_upgrade;
+        proxy_read_timeout 60s;
+    }
+    location /api/ws {
+        proxy_pass         http://cryptox_api;
+        proxy_http_version 1.1;
+        proxy_set_header   Upgrade    \$http_upgrade;
+        proxy_set_header   Connection "Upgrade";
+        proxy_set_header   Host       \$host;
+        proxy_read_timeout 86400s;
+    }
+    location /internal/ { return 403; }
+    location /go-service/ {
+        proxy_pass         http://cryptox_go;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              \$host;
+        proxy_set_header   X-Real-IP         \$remote_addr;
+        proxy_set_header   X-Forwarded-For   \$proxy_add_x_forwarded_for;
+        proxy_set_header   Upgrade           \$http_upgrade;
+        proxy_set_header   Connection        \$connection_upgrade;
+    }
+    location /uploads/ { alias /opt/cryptox/uploads/; expires 7d; }
+    location = /favicon.ico { alias /opt/cryptox/dist/user/favicon.ico; access_log off; }
+    location = /robots.txt  { alias /opt/cryptox/dist/user/robots.txt; access_log off; }
+}
+NGINXEOF
+
 ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/cryptox
 rm -f /etc/nginx/sites-enabled/default
-nginx -t > /dev/null 2>&1 && systemctl enable nginx > /dev/null && systemctl reload nginx
+mkdir -p /var/www/certbot
+nginx -t 2>&1 || err "Nginx config test failed — check above"
+systemctl enable nginx > /dev/null
+systemctl reload nginx
 ok "Nginx configured for domain: $DOMAIN"
 
 # ── Log rotation ──────────────────────────────────────────────────
