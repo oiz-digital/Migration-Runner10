@@ -1,0 +1,48 @@
+ubuntu@ip-172-31-11-99:~/zebvix$ sudo PM2_HOME=/opt/cryptox/.pm2 pm2 logs cryptox-api --lines 30 --nostream
+[TAILING] Tailing last 30 lines for [cryptox-api] process (change the value with --lines option)
+/var/log/cryptox/api-out.log last 30 lines:
+/var/log/cryptox/api-error.log last 30 lines:
+0|cryptox- | 2026-06-09 11:54:57 +00:00:     at ModuleJob.run (node:internal/modules/esm/module_job:439:25)
+0|cryptox- | 2026-06-09 11:54:57 +00:00:     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+0|cryptox- | 2026-06-09 11:54:57 +00:00:     at async node:internal/modules/esm/loader:633:26
+0|cryptox- | 2026-06-09 11:55:03 +00:00: Error: DATABASE_URL must be set. Did you forget to provision a database?
+0|cryptox- | 2026-06-09 11:55:03 +00:00:     at ../../lib/db/src/index.ts (/opt/cryptox/lib/db/src/index.ts:8:9)
+0|cryptox- | 2026-06-09 11:55:03 +00:00:     at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)
+0|cryptox- | 2026-06-09 11:55:03 +00:00:     at src/lib/price-service.ts (/opt/cryptox/artifacts/api-server/src/lib/price-service.ts:1:1)
+0|cryptox- | 2026-06-09 11:55:03 +00:00:     at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)
+0|cryptox- | 2026-06-09 11:55:03 +00:00:     at <anonymous> (/opt/cryptox/artifacts/api-server/src/index.ts:8:1)
+0|cryptox- | 2026-06-09 11:55:03 +00:00:     at ModuleJob.run (node:internal/modules/esm/module_job:439:25)
+0|cryptox- | 2026-06-09 11:55:03 +00:00:     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+0|cryptox- | 2026-06-09 11:55:03 +00:00:     at async node:internal/modules/esm/loader:633:26
+0|cryptox- | 2026-06-09 11:55:09 +00:00: Error: DATABASE_URL must be set. Did you forget to provision a database?
+0|cryptox- | 2026-06-09 11:55:09 +00:00:     at ../../lib/db/src/index.ts (/opt/cryptox/lib/db/src/index.ts:8:9)
+0|cryptox- | 2026-06-09 11:55:09 +00:00:     at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)
+0|cryptox- | 2026-06-09 11:55:09 +00:00:     at src/lib/price-service.ts (/opt/cryptox/artifacts/api-server/src/lib/price-service.ts:1:1)
+0|cryptox- | 2026-06-09 11:55:09 +00:00:     at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)
+0|cryptox- | 2026-06-09 11:55:09 +00:00:     at <anonymous> (/opt/cryptox/artifacts/api-server/src/index.ts:8:1)
+0|cryptox- | 2026-06-09 11:55:09 +00:00:     at ModuleJob.run (node:internal/modules/esm/module_job:439:25)
+0|cryptox- | 2026-06-09 11:55:09 +00:00:     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+0|cryptox- | 2026-06-09 11:55:09 +00:00:     at async node:internal/modules/esm/loader:633:26
+0|cryptox- | 2026-06-09 11:55:15 +00:00: Error: DATABASE_URL must be set. Did you forget to provision a database?
+0|cryptox- | 2026-06-09 11:55:15 +00:00:     at ../../lib/db/src/index.ts (/opt/cryptox/lib/db/src/index.ts:8:9)
+0|cryptox- | 2026-06-09 11:55:15 +00:00:     at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)
+0|cryptox- | 2026-06-09 11:55:15 +00:00:     at src/lib/price-service.ts (/opt/cryptox/artifacts/api-server/src/lib/price-service.ts:1:1)
+0|cryptox- | 2026-06-09 11:55:15 +00:00:     at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)
+0|cryptox- | 2026-06-09 11:55:15 +00:00:     at <anonymous> (/opt/cryptox/artifacts/api-server/src/index.ts:8:1)
+0|cryptox- | 2026-06-09 11:55:15 +00:00:     at ModuleJob.run (node:internal/modules/esm/module_job:439:25)
+0|cryptox- | 2026-06-09 11:55:15 +00:00:     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+0|cryptox- | 2026-06-09 11:55:15 +00:00:     at async node:internal/modules/esm/loader:633:26
+
+ubuntu@ip-172-31-11-99:~/zebvix$
+
+
+
+
+
+
+
+
+
+
+
+

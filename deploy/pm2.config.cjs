@@ -6,7 +6,32 @@
  *   pm2 startup  (auto-start on reboot)
  */
 
+const fs   = require("fs");
+const path = require("path");
+
 const APP_DIR = "/opt/cryptox";
+
+// Parse .env file manually — PM2 env_file support is unreliable across versions
+function loadEnv(filePath) {
+  try {
+    return fs.readFileSync(filePath, "utf8")
+      .split("\n")
+      .reduce((acc, line) => {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#")) return acc;
+        const idx = trimmed.indexOf("=");
+        if (idx === -1) return acc;
+        const key = trimmed.slice(0, idx).trim();
+        const val = trimmed.slice(idx + 1).trim().replace(/^["']|["']$/g, "");
+        acc[key] = val;
+        return acc;
+      }, {});
+  } catch {
+    return {};
+  }
+}
+
+const dotenv = loadEnv(path.join(APP_DIR, ".env"));
 
 module.exports = {
   apps: [
@@ -17,20 +42,20 @@ module.exports = {
       interpreter: "node",
       interpreter_args: "--enable-source-maps",
       cwd: APP_DIR,
-      instances: 1,           // single instance — Redis leader election manages clustering
+      instances: 1,
       exec_mode: "fork",
       autorestart: true,
       watch: false,
       max_memory_restart: "1G",
       restart_delay: 3000,
       env: {
+        ...dotenv,
         NODE_ENV: "production",
         PORT: "8080",
       },
-      env_file: `${APP_DIR}/.env`,
-      log_file: "/var/log/cryptox/api.log",
-      error_file: "/var/log/cryptox/api-error.log",
-      out_file: "/var/log/cryptox/api-out.log",
+      log_file:    "/var/log/cryptox/api.log",
+      error_file:  "/var/log/cryptox/api-error.log",
+      out_file:    "/var/log/cryptox/api-out.log",
       log_date_format: "YYYY-MM-DD HH:mm:ss Z",
       merge_logs: true,
     },
@@ -38,7 +63,7 @@ module.exports = {
       // ── Go Order Matching Engine ──────────────────────────────
       name: "cryptox-go",
       script: `${APP_DIR}/artifacts/go-service/server`,
-      interpreter: "none",    // binary — no interpreter needed
+      interpreter: "none",
       cwd: `${APP_DIR}/artifacts/go-service`,
       instances: 1,
       exec_mode: "fork",
@@ -47,17 +72,15 @@ module.exports = {
       max_memory_restart: "512M",
       restart_delay: 2000,
       env: {
+        ...dotenv,
         PORT: "23004",
         BASE_PATH: "/go-service/",
         GIN_MODE: "release",
-        // Bind to loopback only — Nginx proxies /go-service/ externally.
-        // /internal/* endpoints are then unreachable from outside the host.
         BIND_ADDR: "127.0.0.1",
       },
-      env_file: `${APP_DIR}/.env`,
-      log_file: "/var/log/cryptox/go.log",
-      error_file: "/var/log/cryptox/go-error.log",
-      out_file: "/var/log/cryptox/go-out.log",
+      log_file:    "/var/log/cryptox/go.log",
+      error_file:  "/var/log/cryptox/go-error.log",
+      out_file:    "/var/log/cryptox/go-out.log",
       log_date_format: "YYYY-MM-DD HH:mm:ss Z",
       merge_logs: true,
     },
