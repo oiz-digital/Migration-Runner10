@@ -89,13 +89,13 @@ export default function ProDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <PremiumStatCard
           title="Total equity"
-          value={`$${equity.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+          value={`₹${equity.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`}
           icon={Wallet}
           accent
         />
         <PremiumStatCard
           title="24h P&L"
-          value={`${pnl24 >= 0 ? "+" : ""}$${pnl24.toFixed(2)} · ${pnlPct.toFixed(2)}%`}
+          value={`${pnl24 >= 0 ? "+" : ""}₹${pnl24.toFixed(2)} · ${pnlPct.toFixed(2)}%`}
           icon={pnl24 >= 0 ? TrendingUp : TrendingUp}
           accent={pnl24 > 0}
         />

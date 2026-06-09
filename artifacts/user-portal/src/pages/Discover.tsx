@@ -24,17 +24,17 @@ type Item = {
 const fmtUsd = (v: string | number) => {
   const n = typeof v === "string" ? Number(v) : v;
   if (!Number.isFinite(n) || n === 0) return "—";
-  if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
-  if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
-  if (n >= 1e3) return `$${(n / 1e3).toFixed(2)}K`;
-  return `$${n.toFixed(2)}`;
+  if (n >= 1e9) return `₹${(n / 1e9).toFixed(2)}B`;
+  if (n >= 1e6) return `₹${(n / 1e6).toFixed(2)}M`;
+  if (n >= 1e3) return `₹${(n / 1e3).toFixed(2)}K`;
+  return `₹${n.toFixed(2)}`;
 };
 const fmtPrice = (v: string | number) => {
   const n = typeof v === "string" ? Number(v) : v;
   if (!Number.isFinite(n) || n === 0) return "—";
-  if (n < 0.0001) return `$${n.toExponential(2)}`;
-  if (n < 1) return `$${n.toFixed(6)}`;
-  return `$${n.toFixed(2)}`;
+  if (n < 0.0001) return `₹${n.toExponential(2)}`;
+  if (n < 1) return `₹${n.toFixed(6)}`;
+  return `₹${n.toFixed(2)}`;
 };
 const ageLabel = (d: number) => d === 0 ? "today" : d === 1 ? "1d" : d < 30 ? `${d}d` : d < 365 ? `${Math.floor(d / 30)}mo` : `${Math.floor(d / 365)}y`;
 

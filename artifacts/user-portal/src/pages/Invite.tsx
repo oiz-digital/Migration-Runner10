@@ -211,7 +211,7 @@ export default function Invite() {
           <StatCard
             icon={<TrendingUp className="h-5 w-5" />}
             label="Total earned"
-            value={`$${earnings.toFixed(2)}`}
+            value={`₹${earnings.toFixed(2)}`}
             sub="Lifetime commission"
             color="amber"
             testId="stat-earned"

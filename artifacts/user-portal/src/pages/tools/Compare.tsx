@@ -10,12 +10,20 @@ function fmt(n: number, dp = 2) {
   if (!Number.isFinite(n)) return "—";
   return n.toLocaleString("en-IN", { minimumFractionDigits: dp, maximumFractionDigits: dp });
 }
+function currencySymbol(pair: string): string {
+  const quote = pair.split("/")[1] || "";
+  if (quote === "INR") return "₹";
+  if (quote === "USDT" || quote === "USDC" || quote === "USD") return "$";
+  if (quote === "BTC") return "₿";
+  if (quote === "ETH") return "Ξ";
+  return quote ? `${quote} ` : "₹";
+}
 function fmtCompact(n: number) {
   if (!Number.isFinite(n) || n === 0) return "—";
-  if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
-  if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
-  if (n >= 1e3) return `$${(n / 1e3).toFixed(2)}K`;
-  return `$${n.toFixed(2)}`;
+  if (n >= 1e9) return `₹${(n / 1e9).toFixed(2)}B`;
+  if (n >= 1e6) return `₹${(n / 1e6).toFixed(2)}M`;
+  if (n >= 1e3) return `₹${(n / 1e3).toFixed(2)}K`;
+  return `₹${n.toFixed(2)}`;
 }
 function dpFor(n: number) {
   if (n >= 1000) return 2;
@@ -62,8 +70,8 @@ export default function ComparePage() {
     return [
       {
         label: "Last Price",
-        a: `$${fmt(a.lastPrice, dpFor(a.lastPrice))}`,
-        b: `$${fmt(b.lastPrice, dpFor(b.lastPrice))}`,
+        a: `${currencySymbol(aSym)}${fmt(a.lastPrice, dpFor(a.lastPrice))}`,
+        b: `${currencySymbol(bSym)}${fmt(b.lastPrice, dpFor(b.lastPrice))}`,
         winner: null,
       },
       {
@@ -76,18 +84,18 @@ export default function ComparePage() {
       },
       {
         label: "24h High",
-        a: `$${fmt(a.high, dpFor(a.high))}`,
-        b: `$${fmt(b.high, dpFor(b.high))}`,
+        a: `${currencySymbol(aSym)}${fmt(a.high, dpFor(a.high))}`,
+        b: `${currencySymbol(bSym)}${fmt(b.high, dpFor(b.high))}`,
         winner: null,
       },
       {
         label: "24h Low",
-        a: `$${fmt(a.low, dpFor(a.low))}`,
-        b: `$${fmt(b.low, dpFor(b.low))}`,
+        a: `${currencySymbol(aSym)}${fmt(a.low, dpFor(a.low))}`,
+        b: `${currencySymbol(bSym)}${fmt(b.low, dpFor(b.low))}`,
         winner: null,
       },
       {
-        label: "24h Volume (USD)",
+        label: "24h Volume",
         a: fmtCompact(aVolUsd),
         b: fmtCompact(bVolUsd),
         winner: aVolUsd > bVolUsd ? "a" : aVolUsd < bVolUsd ? "b" : null,

@@ -236,10 +236,10 @@ function ChainRow({
         {row.call ? row.call.theta.toFixed(2) : "—"}
       </td>
       <td className="px-2 py-2 text-right tabular-nums text-xs text-muted-foreground hidden xl:table-cell">
-        {row.call ? `$${fmtUsd(row.call.intrinsic)}` : "—"}
+        {row.call ? `₹${fmtUsd(row.call.intrinsic)}` : "—"}
       </td>
       <td className={cn("px-2 py-2 text-right tabular-nums font-semibold text-sm", itm_call ? "text-emerald-300" : "text-emerald-400/80")}>
-        {row.call ? `$${fmtUsd(row.call.mark)}` : "—"}
+        {row.call ? `₹${fmtUsd(row.call.mark)}` : "—"}
       </td>
       <td className="px-1.5 py-2 text-center">
         {row.call ? (
@@ -266,7 +266,7 @@ function ChainRow({
         atm ? "text-amber-400" : "text-foreground",
       )}>
         {atm && <span className="text-[9px] text-amber-400/70 block">ATM</span>}
-        ${fmtUsd(row.strike, 0)}
+        ₹{fmtUsd(row.strike, 0)}
       </td>
 
       {/* PUT side */}
@@ -289,10 +289,10 @@ function ChainRow({
         ) : null}
       </td>
       <td className={cn("px-2 py-2 text-left tabular-nums font-semibold text-sm", itm_put ? "text-rose-300" : "text-rose-400/80")}>
-        {row.put ? `$${fmtUsd(row.put.mark)}` : "—"}
+        {row.put ? `₹${fmtUsd(row.put.mark)}` : "—"}
       </td>
       <td className="px-2 py-2 text-left tabular-nums text-xs text-muted-foreground hidden xl:table-cell">
-        {row.put ? `$${fmtUsd(row.put.intrinsic)}` : "—"}
+        {row.put ? `₹${fmtUsd(row.put.intrinsic)}` : "—"}
       </td>
       <td className="px-2 py-2 text-left tabular-nums text-xs text-muted-foreground hidden xl:table-cell">
         {row.put ? row.put.theta.toFixed(2) : "—"}
@@ -452,11 +452,11 @@ export default function OptionsPage() {
 
             {/* Live stats strip */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 lg:min-w-[36rem]">
-              <StatTile label={`${underlying} Spot`} value={spot > 0 ? `$${fmtUsd(spot, 0)}` : "—"} icon={TrendingUp} tone="amber" />
-              <StatTile label="Open Positions" value={String(positions.length)} sub={`$${fmtUsd(portfolio.totalMargin, 0)} margin`} icon={Shield} />
+              <StatTile label={`${underlying} Spot`} value={spot > 0 ? `₹${fmtUsd(spot, 0)}` : "—"} icon={TrendingUp} tone="amber" />
+              <StatTile label="Open Positions" value={String(positions.length)} sub={`₹${fmtUsd(portfolio.totalMargin, 0)} margin`} icon={Shield} />
               <StatTile
                 label="Unrealized PnL"
-                value={`${portfolio.totalPnl >= 0 ? "+" : ""}$${fmtUsd(portfolio.totalPnl)}`}
+                value={`${portfolio.totalPnl >= 0 ? "+" : ""}₹${fmtUsd(portfolio.totalPnl)}`}
                 icon={Activity}
                 tone={portfolio.totalPnl >= 0 ? "success" : "danger"}
               />

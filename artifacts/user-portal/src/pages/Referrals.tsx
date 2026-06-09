@@ -116,7 +116,7 @@ export default function Referrals() {
         />
         <PremiumStatCard
           title="Total Earned"
-          value={data ? `$${data.totalBonusUsdt.toFixed(4)}` : "—"}
+          value={data ? `${data.totalBonusUsdt.toFixed(4)} USDT` : "—"}
           icon={DollarSign}
           loading={dataQ.isLoading}
           hint="USDT lifetime earnings"

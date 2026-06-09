@@ -137,7 +137,7 @@ function fmtDate(iso: string) {
 }
 
 function fmtUSD(n: number, dp = 2) {
-  return "$" + n.toLocaleString("en-US", { minimumFractionDigits: dp, maximumFractionDigits: dp });
+  return n.toLocaleString("en-US", { minimumFractionDigits: dp, maximumFractionDigits: dp }) + " USDT";
 }
 
 function useCountUp(target: number, duration = 800) {
@@ -354,24 +354,21 @@ export default function AITrading() {
           </div>
           <PremiumStatCard
             title="Total Invested"
-            value={counterInvested.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            prefix="$"
+            value={counterInvested.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " USDT"}
             icon={DollarSign}
             loading={subsQ.isLoading}
             hint="USDT across active bots"
           />
           <PremiumStatCard
             title="Total Earned"
-            value={counterEarned.toLocaleString("en-US", { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
-            prefix="$"
+            value={counterEarned.toLocaleString("en-US", { minimumFractionDigits: 4, maximumFractionDigits: 4 }) + " USDT"}
             icon={TrendingUp}
             loading={subsQ.isLoading}
             hint="All-time bot earnings credited"
           />
           <PremiumStatCard
             title="Unrealized P&L"
-            value={(unrealizedPnl >= 0 ? "+" : "") + unrealizedPnl.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            prefix="$"
+            value={(unrealizedPnl >= 0 ? "+" : "") + unrealizedPnl.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " USDT"}
             icon={Sparkles}
             loading={subsQ.isLoading}
             hint="Current portfolio vs invested"
@@ -594,9 +591,9 @@ export default function AITrading() {
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.4} />
                       <XAxis dataKey="date" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
                       <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false}
-                        tickFormatter={v => `$${v.toFixed(2)}`} width={58} />
+                        tickFormatter={v => `${v.toFixed(2)} U`} width={62} />
                       <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 10, fontSize: 12 }}
-                        formatter={(v: any) => [`$${Number(v).toFixed(6)} USDT`, "Cumulative"]} />
+                        formatter={(v: any) => [`${Number(v).toFixed(6)} USDT`, "Cumulative"]} />
                       <Area type="monotone" dataKey="cumAmount" stroke="#10b981" strokeWidth={2}
                         fill="url(#cumGrad)" dot={false} />
                     </AreaChart>
@@ -643,9 +640,9 @@ export default function AITrading() {
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.4} vertical={false} />
                       <XAxis dataKey="date" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
                       <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false}
-                        tickFormatter={v => `$${v.toFixed(4)}`} width={60} />
+                        tickFormatter={v => `${v.toFixed(4)} U`} width={64} />
                       <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 10, fontSize: 12 }}
-                        formatter={(v: any) => [`${Number(v) >= 0 ? "+" : ""}$${Number(v).toFixed(6)} USDT`, Number(v) >= 0 ? "Profit" : "Loss"]} />
+                        formatter={(v: any) => [`${Number(v) >= 0 ? "+" : ""}${Number(v).toFixed(6)} USDT`, Number(v) >= 0 ? "Profit" : "Loss"]} />
                       <Bar dataKey="amount" name="Daily P&L" radius={[4, 4, 0, 0]}>
                         {dailyEarnings.map((d, i) => (
                           <Cell key={i} fill={d.amount >= 0 ? "#10b981" : "#f43f5e"} />
@@ -866,10 +863,10 @@ function AiInvoiceDialog({ subId, onClose }: { subId: number | null; onClose: ()
                 <span>Description</span><span className="text-right">USDT</span><span className="text-right">INR</span>
               </div>
               {[
-                { label: "Principal invested (Buy)", usdt: `$${inv.totals.principalUsdt.toFixed(4)}`, inr: fmtInr(inv.totals.principalInr), cls: "" },
-                { label: profitPositive ? "Gross profit" : "Gross loss", usdt: `${profitPositive ? "+" : ""}$${inv.totals.grossProfitUsdt.toFixed(4)}`, inr: fmtInr(inv.totals.grossProfitInr), cls: profitPositive ? "text-emerald-400" : "text-rose-400" },
-                { label: `TDS (${inv.charges.tdsRatePct}% on profit)`, usdt: `-$${inv.totals.tdsUsdt.toFixed(4)}`, inr: `-${fmtInr(inv.totals.tdsInr)}`, cls: "text-muted-foreground" },
-                { label: "Net profit / loss", usdt: `${profitPositive ? "+" : ""}$${inv.totals.netProfitUsdt.toFixed(4)}`, inr: fmtInr(inv.totals.netProfitInr), cls: profitPositive ? "text-emerald-400 font-bold" : "text-rose-400 font-bold" },
+                { label: "Principal invested (Buy)", usdt: `${inv.totals.principalUsdt.toFixed(4)}`, inr: fmtInr(inv.totals.principalInr), cls: "" },
+                { label: profitPositive ? "Gross profit" : "Gross loss", usdt: `${profitPositive ? "+" : ""}${inv.totals.grossProfitUsdt.toFixed(4)}`, inr: fmtInr(inv.totals.grossProfitInr), cls: profitPositive ? "text-emerald-400" : "text-rose-400" },
+                { label: `TDS (${inv.charges.tdsRatePct}% on profit)`, usdt: `-${inv.totals.tdsUsdt.toFixed(4)}`, inr: `-${fmtInr(inv.totals.tdsInr)}`, cls: "text-muted-foreground" },
+                { label: "Net profit / loss", usdt: `${profitPositive ? "+" : ""}${inv.totals.netProfitUsdt.toFixed(4)}`, inr: fmtInr(inv.totals.netProfitInr), cls: profitPositive ? "text-emerald-400 font-bold" : "text-rose-400 font-bold" },
               ].map(r => (
                 <div key={r.label} className="grid grid-cols-[1fr_auto_auto] gap-x-4 px-4 py-2.5 border-t border-border/40 text-xs items-center">
                   <span className="text-muted-foreground">{r.label}</span>
@@ -879,7 +876,7 @@ function AiInvoiceDialog({ subId, onClose }: { subId: number | null; onClose: ()
               ))}
               <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 px-4 py-3 border-t-2 border-border bg-muted/30 text-sm items-center">
                 <span className="font-semibold">{inv.totals.principalReturned ? "Total payout" : "Net P&L so far"}</span>
-                <span className="text-right font-mono font-bold">${inv.totals.payoutUsdt.toFixed(4)}</span>
+                <span className="text-right font-mono font-bold">{inv.totals.payoutUsdt.toFixed(4)}</span>
                 <span className="text-right font-mono font-bold flex items-center justify-end gap-0.5"><IndianRupee className="w-3 h-3" />{inv.totals.payoutInr.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             </div>
@@ -1265,7 +1262,7 @@ function SubscribeDialog({ plan, open, onClose, onSuccess }: {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
                 style={currency === c ? { background: risk.color } : {}}>
-                {c === "INR" ? "₹ INR" : "$ USDT"}
+                {c === "INR" ? "₹ INR" : "USDT"}
               </button>
             ))}
           </div>
@@ -1274,7 +1271,7 @@ function SubscribeDialog({ plan, open, onClose, onSuccess }: {
           <div>
             <Label className="text-sm text-muted-foreground mb-1.5 block">
               Investment Amount ({currency})
-              <span className="ml-2 text-xs">Min: {currency === "USDT" ? `$${plan.minInvestment.toLocaleString()}` : `₹${(plan.minInvestment * rate).toLocaleString()}`}</span>
+              <span className="ml-2 text-xs">Min: {currency === "USDT" ? `${plan.minInvestment.toLocaleString()} USDT` : `₹${(plan.minInvestment * rate).toLocaleString()}`}</span>
             </Label>
             <Input
               type="number"
@@ -1370,7 +1367,7 @@ function SubscribeDialog({ plan, open, onClose, onSuccess }: {
                         <Area type="monotone" dataKey="v" stroke={risk.color} strokeWidth={2}
                           fill="url(#dlGrad)" dot={false} />
                         <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 11 }}
-                          formatter={(v: any) => [`$${Number(v).toFixed(2)}`, "Value"]} />
+                          formatter={(v: any) => [`${Number(v).toFixed(2)} USDT`, "Value"]} />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>

@@ -56,13 +56,13 @@ export default function PortfolioPro() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <PremiumStatCard
           title="Total equity"
-          value={summary ? `$${summary.totalEquityUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : "—"}
+          value={summary ? `₹${summary.totalEquityUsd.toLocaleString("en-IN", { maximumFractionDigits: 2 })}` : "—"}
           icon={Wallet}
           accent
         />
         <PremiumStatCard
           title="24h P&L"
-          value={summary ? `${summary.pnl24hUsd >= 0 ? "+" : ""}$${summary.pnl24hUsd.toFixed(2)}` : "—"}
+          value={summary ? `${summary.pnl24hUsd >= 0 ? "+" : ""}₹${summary.pnl24hUsd.toFixed(2)}` : "—"}
           icon={summary && summary.pnl24hUsd >= 0 ? TrendingUp : TrendingDown}
           accent={summary ? summary.pnl24hUsd > 0 : false}
         />
@@ -126,7 +126,7 @@ export default function PortfolioPro() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
                             <span className="font-bold text-sm">{a.symbol} <span className="text-muted-foreground font-normal text-xs">{a.name}</span></span>
-                            <span className="font-mono font-bold text-sm">${a.valueUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                            <span className="font-mono font-bold text-sm">₹{a.valueUsd.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</span>
                           </div>
                           <div className="flex items-center justify-between gap-2 mt-1">
                             <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
@@ -299,15 +299,15 @@ function TaxReportPanel() {
           </div>
           <div className="rounded-lg border border-rose-500/20 bg-rose-500/5 p-3">
             <div className="text-[10px] uppercase tracking-wider text-rose-400">Total tax liability</div>
-            <div className="font-mono font-bold text-lg text-rose-400 mt-1">${data.tax.totalTaxLiabilityUsd.toFixed(2)}</div>
+            <div className="font-mono font-bold text-lg text-rose-400 mt-1">₹{data.tax.totalTaxLiabilityUsd.toFixed(2)}</div>
             <div className="text-[10px] text-muted-foreground mt-1">30% flat on profits</div>
           </div>
         </div>
         <div className="mt-4 grid sm:grid-cols-4 gap-2 text-xs font-mono">
-          <Stat label="Buys" value={`${data.totals.buyCount} × $${data.totals.totalBuyUsd.toFixed(0)}`} />
-          <Stat label="Sells" value={`${data.totals.sellCount} × $${data.totals.totalSellUsd.toFixed(0)}`} />
-          <Stat label="Fees" value={`$${data.totals.totalFeesUsd.toFixed(2)}`} />
-          <Stat label="Gross PnL" value={`${data.totals.grossPnl >= 0 ? "+" : ""}$${data.totals.grossPnl.toFixed(2)}`} good={data.totals.grossPnl >= 0} />
+          <Stat label="Buys" value={`${data.totals.buyCount} × ₹${data.totals.totalBuyUsd.toFixed(0)}`} />
+          <Stat label="Sells" value={`${data.totals.sellCount} × ₹${data.totals.totalSellUsd.toFixed(0)}`} />
+          <Stat label="Fees" value={`₹${data.totals.totalFeesUsd.toFixed(2)}`} />
+          <Stat label="Gross PnL" value={`${data.totals.grossPnl >= 0 ? "+" : ""}₹${data.totals.grossPnl.toFixed(2)}`} good={data.totals.grossPnl >= 0} />
         </div>
         <p className="mt-4 text-[11px] text-muted-foreground italic">{data.note}</p>
       </SectionCard>

@@ -92,7 +92,7 @@ const FILTER_TYPES = [
 
 function fmt(n: number, coin: string) {
   if (coin === "INR") return `₹${Math.abs(n).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
-  if (["USDT", "USDC"].includes(coin)) return `$${Math.abs(n).toLocaleString("en-US", { maximumFractionDigits: 4 })}`;
+  if (["USDT", "USDC"].includes(coin)) return `${coin} ${Math.abs(n).toLocaleString("en-US", { maximumFractionDigits: 4 })}`;
   return `${Math.abs(n).toLocaleString("en-US", { maximumFractionDigits: 6 })} ${coin}`;
 }
 
@@ -114,28 +114,28 @@ function SummaryCards({ data }: { data: SummaryResponse }) {
       {[
         {
           label: "AI Trade Earnings",
-          value: `$${data.totalAiEarningsUsdt.toLocaleString("en-US", { maximumFractionDigits: 4 })}`,
+          value: `USDT ${data.totalAiEarningsUsdt.toLocaleString("en-US", { maximumFractionDigits: 4 })}`,
           sub: `${data.aiEarningsCount} credits`,
           icon: <Bot className="h-4 w-4 text-violet-400" />,
           accent: "border-violet-400/20 bg-violet-500/5",
         },
         {
           label: "Total Credited",
-          value: `$${data.totalCredited.toLocaleString("en-US", { maximumFractionDigits: 2 })}`,
+          value: `₹${data.totalCredited.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`,
           sub: "All inflows",
           icon: <ArrowDownLeft className="h-4 w-4 text-emerald-400" />,
           accent: "border-emerald-400/20 bg-emerald-500/5",
         },
         {
           label: "Total Debited",
-          value: `$${data.totalDebited.toLocaleString("en-US", { maximumFractionDigits: 2 })}`,
+          value: `₹${data.totalDebited.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`,
           sub: "All outflows",
           icon: <ArrowUpRight className="h-4 w-4 text-rose-400" />,
           accent: "border-rose-400/20 bg-rose-500/5",
         },
         {
           label: "Net Balance",
-          value: `$${(data.totalCredited - data.totalDebited).toLocaleString("en-US", { maximumFractionDigits: 2 })}`,
+          value: `₹${(data.totalCredited - data.totalDebited).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`,
           sub: "Credited − Debited",
           icon: <Coins className="h-4 w-4 text-amber-400" />,
           accent: "border-amber-400/20 bg-amber-500/5",

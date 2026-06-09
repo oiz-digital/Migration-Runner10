@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Calculator as CalcIcon, ArrowDownUp, TrendingUp, TrendingDown, Info, RotateCcw, DollarSign, Percent } from "lucide-react";
+import { Calculator as CalcIcon, ArrowDownUp, TrendingUp, TrendingDown, Info, RotateCcw, IndianRupee, Percent } from "lucide-react";
 import { PageHeader } from "@/components/premium/PageHeader";
 import { SectionCard } from "@/components/premium/SectionCard";
 import { PremiumStatCard } from "@/components/premium/PremiumStatCard";
@@ -17,6 +17,15 @@ const FEE_RATE = 0.001;
 function fmt(n: number, dp = 2) {
   if (!Number.isFinite(n)) return "—";
   return n.toLocaleString("en-IN", { minimumFractionDigits: dp, maximumFractionDigits: dp });
+}
+
+function currencySymbol(pair: string): string {
+  const quote = pair.split("/")[1] || "";
+  if (quote === "INR") return "₹";
+  if (quote === "USDT" || quote === "USDC" || quote === "USD") return "$";
+  if (quote === "BTC") return "₿";
+  if (quote === "ETH") return "Ξ";
+  return quote ? `${quote} ` : "₹";
 }
 
 export default function CalculatorPage() {
@@ -51,6 +60,7 @@ export default function CalculatorPage() {
   }, [pair, tickers, entry]);
 
   const live = pair ? tickers[pair]?.lastPrice ?? 0 : 0;
+  const sym = currencySymbol(pair);
 
   const calc = useMemo(() => {
     const e = parseFloat(entry);
@@ -122,7 +132,7 @@ export default function CalculatorPage() {
                 <SelectContent className="max-h-72">
                   {symbols.map((s) => (
                     <SelectItem key={s} value={s}>
-                      {s} <span className="text-muted-foreground ml-1">${fmt(tickers[s]?.lastPrice ?? 0, 2)}</span>
+                      {s} <span className="text-muted-foreground ml-1">{currencySymbol(s)}{fmt(tickers[s]?.lastPrice ?? 0, 2)}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -133,7 +143,7 @@ export default function CalculatorPage() {
                   onClick={useLivePrice}
                   className="text-[11px] text-amber-400 hover:underline mt-1"
                 >
-                  Use live price (${fmt(live, live < 1 ? 6 : 2)})
+                  Use live price ({sym}{fmt(live, live < 1 ? 6 : 2)})
                 </button>
               )}
             </div>
@@ -167,7 +177,7 @@ export default function CalculatorPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Entry Price ($)</Label>
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Entry Price ({sym})</Label>
               <Input
                 type="number"
                 inputMode="decimal"
@@ -178,7 +188,7 @@ export default function CalculatorPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Exit Price ($)</Label>
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Exit Price ({sym})</Label>
               <Input
                 type="number"
                 inputMode="decimal"
@@ -189,7 +199,7 @@ export default function CalculatorPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Margin / Capital ($)</Label>
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Margin / Capital ({sym})</Label>
               <Input
                 type="number"
                 inputMode="decimal"
@@ -244,9 +254,9 @@ export default function CalculatorPage() {
               <div className="grid grid-cols-1 gap-3">
                 <PremiumStatCard
                   title="Net P&L (after fees)"
-                  value={`${calc.netPnl >= 0 ? "+" : ""}$${fmt(calc.netPnl, 2)}`}
-                  icon={DollarSign}
-                  hint={`Gross: ${calc.pnl >= 0 ? "+" : ""}$${fmt(calc.pnl, 2)}`}
+                  value={`${calc.netPnl >= 0 ? "+" : ""}${sym}${fmt(calc.netPnl, 2)}`}
+                  icon={IndianRupee}
+                  hint={`Gross: ${calc.pnl >= 0 ? "+" : ""}${sym}${fmt(calc.pnl, 2)}`}
                   accent={calc.netPnl >= 0}
                 />
                 <PremiumStatCard
@@ -258,13 +268,13 @@ export default function CalculatorPage() {
                 />
               </div>
               <div className="border-t border-border pt-3 space-y-2 text-sm">
-                <Row label="Position Size" value={`$${fmt(calc.positionValue, 2)}`} />
+                <Row label="Position Size" value={`${sym}${fmt(calc.positionValue, 2)}`} />
                 <Row label="Quantity" value={fmt(calc.qty, calc.qty < 1 ? 6 : 4)} />
-                <Row label="Estimated Fees" value={`$${fmt(calc.fees, 2)}`} />
+                <Row label="Estimated Fees" value={`${sym}${fmt(calc.fees, 2)}`} />
                 {calc.liq && (
                   <Row
                     label="Liquidation Price"
-                    value={`$${fmt(calc.liq, calc.liq < 1 ? 6 : 2)}`}
+                    value={`${sym}${fmt(calc.liq, calc.liq < 1 ? 6 : 2)}`}
                     danger
                   />
                 )}

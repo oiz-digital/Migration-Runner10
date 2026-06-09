@@ -495,7 +495,7 @@ export default function Markets() {
               <StatTile
                 icon={<Activity className="h-4 w-4" />}
                 label="24h Volume"
-                value={loading ? "—" : fmtCompact(stats.totalQuoteVol, "$")}
+                value={loading ? "—" : fmtCompact(stats.totalQuoteVol, "₹")}
               />
               <StatTile
                 icon={<TrendingUp className="h-4 w-4 text-success" />}

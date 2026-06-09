@@ -167,7 +167,7 @@ export default function Portfolio() {
   const pnlPositive = pnl >= 0;
 
   const fmtUsd = (n: number) =>
-    hidden ? "•••••" : "$" + (Number(n) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    hidden ? "•••••" : "₹" + (Number(n) || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fmtInr = (n: number) =>
     hidden ? "•••••" : "₹" + (Number(n) || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fmtCoin = (n: number, sym: string) =>
@@ -252,7 +252,7 @@ export default function Portfolio() {
         <PremiumStatCard
           title="Total (USD)"
           value={hidden ? "•••••" : (Number(totalUsd) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          prefix="$"
+          prefix="$ "
           icon={TrendingUp}
           loading={walletQ.isLoading}
           hint={
@@ -262,6 +262,7 @@ export default function Portfolio() {
               : `-${fmtUsd(Math.abs(pnl))} (${pnlPct.toFixed(2)}%) 24h`
           }
         />
+
         <PremiumStatCard
           title="Active Assets"
           value={hidden ? "•••" : nonZeroCount}
@@ -271,8 +272,8 @@ export default function Portfolio() {
         />
         <PremiumStatCard
           title="24h PnL"
-          value={hidden ? "•••••" : (pnlPositive ? "+" : "") + fmtUsd(pnl).replace("$", "")}
-          prefix="$"
+          value={hidden ? "•••••" : (pnlPositive ? "+" : "") + fmtUsd(pnl).replace("₹", "")}
+          prefix="₹"
           icon={pnlPositive ? TrendingUp : TrendingDown}
           loading={pnlQ.isLoading}
           hint={`${pnlPct.toFixed(2)}% change from yesterday`}
@@ -323,7 +324,7 @@ export default function Portfolio() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.4} />
                 <XAxis dataKey="date" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} tickFormatter={v => `$${(v/1000).toFixed(0)}k`} width={45} />
+                <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} width={45} />
                 <RTooltip content={<CustomTooltip />} />
                 <Area type="monotone" dataKey="usd" stroke="#f59e0b" strokeWidth={2} fill="url(#portfolioGrad)" dot={false} />
               </AreaChart>
@@ -379,7 +380,7 @@ export default function Portfolio() {
               <BarChart data={barData} margin={{ top: 5, right: 10, left: 5, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.4} vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} tickFormatter={v => `$${(v/1000).toFixed(0)}k`} width={40} />
+                <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} width={40} />
                 <RTooltip content={<CustomTooltip />} />
                 <Bar dataKey="value" name="Value" radius={[4, 4, 0, 0]}>
                   {barData.map((_, i) => (
@@ -440,7 +441,7 @@ export default function Portfolio() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={byCoin.slice(0, 10).map(r => ({ name: r.currency, value: Math.round(r.usd * 100) / 100 }))} layout="vertical" margin={{ left: 10, right: 20, top: 5, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.4} horizontal={false} />
-                <XAxis type="number" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} tickFormatter={v => `$${(v/1000).toFixed(0)}k`} />
+                <XAxis type="number" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
                 <YAxis type="category" dataKey="name" width={48} tick={{ fontSize: 11, fill: "hsl(var(--foreground))", fontWeight: 600 }} tickLine={false} axisLine={false} />
                 <RTooltip content={<CustomTooltip />} />
                 <Bar dataKey="value" name="USD Value" radius={[0, 4, 4, 0]}>

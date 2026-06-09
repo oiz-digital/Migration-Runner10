@@ -79,18 +79,18 @@ export default function Bots() {
         <PremiumStatCard title="Active bots" value={String(runningCount)} icon={BotIcon} accent />
         <PremiumStatCard
           title="Total invested"
-          value={`$${totalInvested.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+          value={`₹${totalInvested.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`}
           icon={DollarSign}
         />
         <PremiumStatCard
           title="Realized PnL"
-          value={`${totalRealized >= 0 ? "+" : ""}$${totalRealized.toFixed(2)}`}
+          value={`${totalRealized >= 0 ? "+" : ""}₹${totalRealized.toFixed(2)}`}
           icon={TrendingUp}
           accent={totalRealized > 0}
         />
         <PremiumStatCard
           title="Unrealized PnL"
-          value={`${totalUnrealized >= 0 ? "+" : ""}$${totalUnrealized.toFixed(2)}`}
+          value={`${totalUnrealized >= 0 ? "+" : ""}₹${totalUnrealized.toFixed(2)}`}
           icon={Activity}
           accent={totalUnrealized > 0}
         />
