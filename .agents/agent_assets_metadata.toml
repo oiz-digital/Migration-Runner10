@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "hWH_gym6eGL5V5DvKmRQE"
+uri = "file://artifacts/mobile/assets/images/icon.png"
+type = "image"
+title = "zebvix_mobile_icon"
