@@ -12,13 +12,9 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useQuery } from "@tanstack/react-query";
 
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/contexts/AuthContext";
-import { apiFetch } from "@/hooks/useApi";
-
-interface ProfileStats { totalTrades?: number; totalVolume?: number; referralCount?: number }
 
 const KYC_LABELS = ["Unverified", "Level 1 — PAN", "Level 2 — Aadhaar", "Level 3 — EDD"];
 const KYC_COLORS = ["#F6465D", "#f59e0b", "#0ECB81", "#0ECB81"];
@@ -32,6 +28,8 @@ interface SettingItem {
   badgeColor?: string;
   onPress: () => void;
   danger?: boolean;
+  iconColor?: string;
+  highlight?: boolean;
 }
 
 export default function ProfileScreen() {
@@ -58,8 +56,41 @@ export default function ProfileScreen() {
     }
   };
 
+  const nav = (path: string) => () => router.push(path as any);
+
   const SECTIONS: { title: string; items: SettingItem[] }[] = isAuthenticated
     ? [
+        {
+          title: "Trading",
+          items: [
+            { icon: "repeat", label: "Spot Trade", iconColor: "#eb9100", onPress: nav("/trade") },
+            { icon: "trending-up", label: "Futures", iconColor: "#9945ff", onPress: nav("/futures") },
+            { icon: "activity", label: "Options", iconColor: "#627eea", onPress: nav("/options") },
+            { icon: "cpu", label: "AI Trading", iconColor: "#0ECB81", onPress: nav("/ai-trading") },
+            { icon: "grid", label: "Trading Bots", iconColor: "#eb9100", onPress: nav("/bots") },
+            { icon: "copy", label: "Copy Trading", iconColor: "#e84142", onPress: nav("/copy-trading") },
+          ],
+        },
+        {
+          title: "Finance",
+          items: [
+            { icon: "credit-card", label: "Wallet", iconColor: "#0ECB81", onPress: nav("/wallet") },
+            { icon: "percent", label: "Earn & Staking", iconColor: "#f59e0b", onPress: nav("/earn") },
+            { icon: "users", label: "P2P Trading", iconColor: "#346aa9", onPress: nav("/p2p") },
+            { icon: "arrow-right-circle", label: "Convert", iconColor: "#9945ff", onPress: nav("/convert") },
+            { icon: "flag", label: "INR Payments", iconColor: "#ff9933", onPress: nav("/inr-payments") },
+            { icon: "file-text", label: "Ledger", iconColor: "#627eea", onPress: nav("/ledger") },
+          ],
+        },
+        {
+          title: "Portfolio",
+          items: [
+            { icon: "pie-chart", label: "Portfolio", iconColor: "#00c08b", onPress: nav("/portfolio") },
+            { icon: "list", label: "Orders History", iconColor: "#6b7a9e", onPress: nav("/orders") },
+            { icon: "bell", label: "Price Alerts", iconColor: "#F6465D", onPress: nav("/price-alerts") },
+            { icon: "globe", label: "Discover Tokens", iconColor: "#627eea", onPress: nav("/discover") },
+          ],
+        },
         {
           title: "Account",
           items: [
@@ -69,45 +100,37 @@ export default function ProfileScreen() {
               value: kycLabel,
               badge: kycLevel === 0 ? "Required" : "Verified",
               badgeColor: kycColor,
-              onPress: () => router.push("/kyc" as any),
+              iconColor: kycColor,
+              onPress: nav("/kyc"),
             },
             {
               icon: "lock",
-              label: "Security",
+              label: "Security & 2FA",
               value: user?.twoFaEnabled ? "2FA On" : "2FA Off",
               badge: user?.twoFaEnabled ? undefined : "Enable",
               badgeColor: "#f59e0b",
-              onPress: () => {},
+              iconColor: user?.twoFaEnabled ? "#0ECB81" : "#f59e0b",
+              onPress: nav("/settings"),
             },
             {
-              icon: "smartphone",
-              label: "Linked Devices",
-              onPress: () => {},
+              icon: "gift",
+              label: "Referral Program",
+              value: `${user?.referralCount ?? 0} invited`,
+              iconColor: "#9945ff",
+              onPress: nav("/invite"),
             },
+            { icon: "settings", label: "Settings", iconColor: "#6b7a9e", onPress: nav("/settings") },
           ],
         },
         {
-          title: "Finance",
+          title: "Support & Legal",
           items: [
-            { icon: "credit-card", label: "Payment Methods", onPress: () => {} },
-            { icon: "clock", label: "Transaction History", onPress: () => router.push("/orders") },
-            { icon: "users", label: "Referral Program", value: `${user?.referralCount ?? 0} invited`, onPress: () => {} },
-          ],
-        },
-        {
-          title: "Preferences",
-          items: [
-            { icon: "bell", label: "Notifications", onPress: () => router.push("/notifications" as any) },
-            { icon: "globe", label: "Language", value: "English", onPress: () => {} },
-            { icon: "moon", label: "Appearance", value: "Dark", onPress: () => {} },
-          ],
-        },
-        {
-          title: "Legal",
-          items: [
-            { icon: "file-text", label: "Terms of Service", onPress: () => {} },
-            { icon: "shield", label: "Privacy Policy", onPress: () => {} },
-            { icon: "help-circle", label: "Support", onPress: () => {} },
+            { icon: "help-circle", label: "Help & Support", iconColor: "#627eea", onPress: nav("/support") },
+            { icon: "bell", label: "Notifications", iconColor: "#0ECB81", onPress: nav("/notifications") },
+            { icon: "file-text", label: "Terms of Service", iconColor: "#6b7a9e", onPress: nav("/legal/terms") },
+            { icon: "eye", label: "Privacy Policy", iconColor: "#6b7a9e", onPress: nav("/legal/privacy") },
+            { icon: "alert-triangle", label: "Risk Disclosure", iconColor: "#f59e0b", onPress: nav("/legal/risk") },
+            { icon: "tag", label: "Fee Schedule", iconColor: "#0ECB81", onPress: nav("/legal/fees") },
             { icon: "log-out", label: "Logout", onPress: handleLogout, danger: true },
           ],
         },
@@ -116,16 +139,24 @@ export default function ProfileScreen() {
         {
           title: "Get Started",
           items: [
-            { icon: "log-in", label: "Login to your account", onPress: () => router.push("/login") },
-            { icon: "user-plus", label: "Create Account", onPress: () => router.push("/register") },
+            { icon: "log-in", label: "Login to your account", iconColor: colors.primary, onPress: nav("/login") },
+            { icon: "user-plus", label: "Create Account", iconColor: "#0ECB81", onPress: nav("/register") },
+          ],
+        },
+        {
+          title: "Explore",
+          items: [
+            { icon: "bar-chart-2", label: "Markets", iconColor: colors.primary, onPress: nav("/markets") },
+            { icon: "globe", label: "Discover Tokens", iconColor: "#627eea", onPress: nav("/discover") },
           ],
         },
         {
           title: "Info",
           items: [
-            { icon: "help-circle", label: "Help & Support", onPress: () => {} },
-            { icon: "file-text", label: "Terms of Service", onPress: () => {} },
-            { icon: "shield", label: "Privacy Policy", onPress: () => {} },
+            { icon: "help-circle", label: "Help & Support", iconColor: "#627eea", onPress: nav("/support") },
+            { icon: "file-text", label: "Terms of Service", iconColor: "#6b7a9e", onPress: nav("/legal/terms") },
+            { icon: "eye", label: "Privacy Policy", iconColor: "#6b7a9e", onPress: nav("/legal/privacy") },
+            { icon: "tag", label: "Fee Schedule", iconColor: "#0ECB81", onPress: nav("/legal/fees") },
           ],
         },
       ];
@@ -147,7 +178,6 @@ export default function ProfileScreen() {
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         style={[styles.banner, { borderBottomColor: colors.border }]}
       >
-        {/* Avatar */}
         <View style={styles.avatarSection}>
           <View style={[styles.avatarRing, { borderColor: colors.primary + "60" }]}>
             <LinearGradient
@@ -174,7 +204,7 @@ export default function ProfileScreen() {
               <Text style={[styles.userEmail, { color: colors.mutedForeground }]}>Login to access all features</Text>
               <TouchableOpacity
                 style={[styles.loginCta, { backgroundColor: colors.primary }]}
-                onPress={() => router.push("/login")}
+                onPress={nav("/login")}
               >
                 <Text style={styles.loginCtaLabel}>Login / Sign Up</Text>
               </TouchableOpacity>
@@ -182,7 +212,6 @@ export default function ProfileScreen() {
           )}
         </View>
 
-        {/* Stats row */}
         {isAuthenticated && (
           <View style={[styles.statsRow, { borderTopColor: colors.border + "80" }]}>
             {[
@@ -202,21 +231,28 @@ export default function ProfileScreen() {
 
       {/* Security score */}
       {isAuthenticated && (
-        <View style={[styles.secCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <TouchableOpacity
+          style={[styles.secCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+          onPress={nav("/settings")}
+          activeOpacity={0.8}
+        >
           <View style={styles.secTop}>
             <View style={styles.secLeft}>
               <Feather name="shield" size={16} color={secColor} />
               <Text style={[styles.secTitle, { color: colors.foreground }]}>Security Score</Text>
             </View>
-            <Text style={[styles.secScore, { color: secColor }]}>{securityScore}/100</Text>
+            <View style={styles.secRight}>
+              <Text style={[styles.secScore, { color: secColor }]}>{securityScore}/100</Text>
+              <Feather name="chevron-right" size={14} color={colors.mutedForeground} />
+            </View>
           </View>
           <View style={[styles.secTrack, { backgroundColor: colors.muted }]}>
-            <View style={[styles.secFill, { width: `${securityScore}%`, backgroundColor: secColor }]} />
+            <View style={[styles.secFill, { width: `${securityScore}%` as any, backgroundColor: secColor }]} />
           </View>
           <Text style={[styles.secHint, { color: colors.mutedForeground }]}>
             {securityScore < 80 ? "Enable 2FA and complete KYC to improve your score" : "Your account is well secured"}
           </Text>
-        </View>
+        </TouchableOpacity>
       )}
 
       {/* Settings sections */}
@@ -224,32 +260,35 @@ export default function ProfileScreen() {
         <View key={section.title} style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>{section.title.toUpperCase()}</Text>
           <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            {section.items.map((item, i) => (
-              <React.Fragment key={item.label}>
-                <TouchableOpacity style={styles.settingRow} onPress={item.onPress} activeOpacity={0.7}>
-                  <View style={[styles.settingIcon, { backgroundColor: (item.danger ? "#F6465D" : colors.primary) + "18" }]}>
-                    <Feather name={item.icon} size={17} color={item.danger ? "#F6465D" : colors.primary} />
-                  </View>
-                  <Text style={[styles.settingLabel, { color: item.danger ? "#F6465D" : colors.foreground }]} numberOfLines={1}>
-                    {item.label}
-                  </Text>
-                  <View style={styles.settingRight}>
-                    {item.badge && (
-                      <View style={[styles.badge, { backgroundColor: (item.badgeColor ?? colors.primary) + "22" }]}>
-                        <Text style={[styles.badgeLabel, { color: item.badgeColor ?? colors.primary }]}>{item.badge}</Text>
-                      </View>
-                    )}
-                    {item.value && !item.badge && (
-                      <Text style={[styles.settingValue, { color: colors.mutedForeground }]} numberOfLines={1}>{item.value}</Text>
-                    )}
-                    {!item.danger && <Feather name="chevron-right" size={16} color={colors.mutedForeground} />}
-                  </View>
-                </TouchableOpacity>
-                {i < section.items.length - 1 && (
-                  <View style={[styles.divider, { backgroundColor: colors.border }]} />
-                )}
-              </React.Fragment>
-            ))}
+            {section.items.map((item, i) => {
+              const iconC = item.danger ? "#F6465D" : (item.iconColor ?? colors.primary);
+              return (
+                <React.Fragment key={item.label}>
+                  <TouchableOpacity style={styles.settingRow} onPress={item.onPress} activeOpacity={0.7}>
+                    <View style={[styles.settingIcon, { backgroundColor: iconC + "18" }]}>
+                      <Feather name={item.icon} size={17} color={iconC} />
+                    </View>
+                    <Text style={[styles.settingLabel, { color: item.danger ? "#F6465D" : colors.foreground }]} numberOfLines={1}>
+                      {item.label}
+                    </Text>
+                    <View style={styles.settingRight}>
+                      {item.badge && (
+                        <View style={[styles.badge, { backgroundColor: (item.badgeColor ?? colors.primary) + "22" }]}>
+                          <Text style={[styles.badgeLabel, { color: item.badgeColor ?? colors.primary }]}>{item.badge}</Text>
+                        </View>
+                      )}
+                      {item.value && !item.badge && (
+                        <Text style={[styles.settingValue, { color: colors.mutedForeground }]} numberOfLines={1}>{item.value}</Text>
+                      )}
+                      {!item.danger && <Feather name="chevron-right" size={16} color={colors.mutedForeground} />}
+                    </View>
+                  </TouchableOpacity>
+                  {i < section.items.length - 1 && (
+                    <View style={[styles.divider, { backgroundColor: colors.border }]} />
+                  )}
+                </React.Fragment>
+              );
+            })}
           </View>
         </View>
       ))}
@@ -281,6 +320,7 @@ const styles = StyleSheet.create({
   secCard: { marginHorizontal: 16, marginTop: 14, borderRadius: 14, borderWidth: 1, padding: 14, gap: 8 },
   secTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   secLeft: { flexDirection: "row", alignItems: "center", gap: 6 },
+  secRight: { flexDirection: "row", alignItems: "center", gap: 4 },
   secTitle: { fontSize: 14, fontWeight: "700" },
   secScore: { fontSize: 16, fontWeight: "800" },
   secTrack: { height: 6, borderRadius: 3 },

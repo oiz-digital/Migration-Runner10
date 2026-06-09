@@ -46,6 +46,16 @@ function RootLayoutNav() {
       <Stack.Screen name="copy-trading/index" />
       <Stack.Screen name="portfolio/index" />
       <Stack.Screen name="notifications/index" />
+      <Stack.Screen name="settings/index" />
+      <Stack.Screen name="invite/index" />
+      <Stack.Screen name="ledger/index" />
+      <Stack.Screen name="price-alerts/index" />
+      <Stack.Screen name="support/index" />
+      <Stack.Screen name="options/index" />
+      <Stack.Screen name="bots/index" />
+      <Stack.Screen name="inr-payments/index" />
+      <Stack.Screen name="discover/index" />
+      <Stack.Screen name="legal/[page]" />
     </Stack>
   );
 }

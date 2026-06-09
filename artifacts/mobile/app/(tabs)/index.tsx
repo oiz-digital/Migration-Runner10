@@ -53,12 +53,16 @@ const BANNERS = [
 const QUICK_ACTIONS = [
   { label:"Spot", icon:"repeat" as const, route:"/trade", color:"#eb9100" },
   { label:"Futures", icon:"trending-up" as const, route:"/futures", color:"#9945ff" },
+  { label:"Options", icon:"activity" as const, route:"/options", color:"#627eea" },
   { label:"Convert", icon:"arrow-right-circle" as const, route:"/convert", color:"#0ECB81" },
   { label:"P2P", icon:"users" as const, route:"/p2p", color:"#346aa9" },
   { label:"Earn", icon:"percent" as const, route:"/earn", color:"#f59e0b" },
-  { label:"Copy", icon:"copy" as const, route:"/copy-trading", color:"#e84142" },
   { label:"AI Trade", icon:"cpu" as const, route:"/ai-trading", color:"#627eea" },
+  { label:"Bots", icon:"grid" as const, route:"/bots", color:"#eb9100" },
+  { label:"Copy", icon:"copy" as const, route:"/copy-trading", color:"#e84142" },
   { label:"Portfolio", icon:"pie-chart" as const, route:"/portfolio", color:"#00c08b" },
+  { label:"INR Pay", icon:"flag" as const, route:"/inr-payments", color:"#ff9933" },
+  { label:"Discover", icon:"globe" as const, route:"/discover", color:"#9945ff" },
 ];
 
 const COIN_COLORS: Record<string,string> = {
