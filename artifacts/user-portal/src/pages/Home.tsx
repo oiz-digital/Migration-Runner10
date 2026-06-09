@@ -2177,17 +2177,17 @@ const { result } = await res.json();
 
         {/* Code card */}
         <Reveal delay={120}>
-        <Card className="relative overflow-hidden border-border/60 bg-card shadow-2xl">
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/60 bg-card/50">
+        <Card className="relative overflow-hidden border-border/60 bg-zinc-950 shadow-2xl">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10 bg-white/5">
             <div className="flex items-center gap-2">
               <span className="h-2.5 w-2.5 rounded-full bg-rose-500/70" />
               <span className="h-2.5 w-2.5 rounded-full bg-amber-500/70" />
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/70" />
-              <span className="ml-3 text-xs text-muted-foreground font-mono">chain-id.js</span>
+              <span className="ml-3 text-xs text-zinc-400 font-mono">chain-id.js</span>
             </div>
             <button
               onClick={copy}
-              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-amber-400 transition-colors"
             >
               {copied ? (
                 <>
@@ -2471,7 +2471,7 @@ function AiTradingBanner() {
                   <div className="bg-muted/30 rounded-lg p-3 border border-border/50">
                     <div className="text-[10px] text-muted-foreground mb-1">Confidence</div>
                     <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                      <div className="flex-1 h-1.5 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
                         <div className="h-full w-[81%] rounded-full bg-emerald-500" />
                       </div>
                       <span className="text-xs font-bold">81%</span>
