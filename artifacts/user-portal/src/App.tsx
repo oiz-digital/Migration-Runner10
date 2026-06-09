@@ -128,6 +128,14 @@ function App() {
                 </Route>
 
                 <Route path="/about" component={About} />
+                {/* Canonical short routes (used by footer + all links) */}
+                <Route path="/terms" component={Terms} />
+                <Route path="/privacy" component={Privacy} />
+                <Route path="/aml" component={Aml} />
+                <Route path="/cookies" component={Cookies} />
+                <Route path="/risk" component={Risk} />
+                <Route path="/api-docs" component={ApiDocs} />
+                {/* Legacy /legal/* redirects — kept for SEO / bookmarks */}
                 <Route path="/legal/terms" component={Terms} />
                 <Route path="/legal/privacy" component={Privacy} />
                 <Route path="/legal/aml" component={Aml} />
