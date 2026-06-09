@@ -46,7 +46,6 @@ router.get("/ledger", requireAuth, async (req, res): Promise<void> => {
 
     db.select({ id: coinsTable.id, symbol: coinsTable.symbol }).from(coinsTable),
 
-    // Aggregated summary: total credited / debited per type
     db.select({
       type: walletLedgerTable.type,
       totalAmount: sql<string>`SUM(${walletLedgerTable.amount})`,
@@ -89,22 +88,58 @@ router.get("/ledger", requireAuth, async (req, res): Promise<void> => {
 router.get("/ledger/summary", requireAuth, async (req, res): Promise<void> => {
   const userId = req.user!.id;
 
-  const [aiEarnings, totalIn, totalOut] = await Promise.all([
+  // Resolve coin IDs for INR and USDT
+  const coinRows = await db
+    .select({ id: coinsTable.id, symbol: coinsTable.symbol })
+    .from(coinsTable)
+    .where(sql`${coinsTable.symbol} IN ('INR', 'USDT')`);
+
+  const inrCoinId  = coinRows.find(c => c.symbol === "INR")?.id  ?? -1;
+  const usdtCoinId = coinRows.find(c => c.symbol === "USDT")?.id ?? -1;
+
+  const [aiEarnings, inrCredited, inrDebited, usdtCredited, usdtDebited] = await Promise.all([
+    // AI earnings (USDT coin only)
     db.select({ total: sql<string>`COALESCE(SUM(${walletLedgerTable.amount}), 0)`, cnt: count() })
       .from(walletLedgerTable)
-      .where(and(eq(walletLedgerTable.userId, userId), eq(walletLedgerTable.type, "ai_earning"))),
+      .where(and(
+        eq(walletLedgerTable.userId, userId),
+        eq(walletLedgerTable.type, "ai_earning"),
+        eq(walletLedgerTable.coinId, usdtCoinId),
+      )),
 
+    // INR inflows (positive amounts, INR coin only)
     db.select({ total: sql<string>`COALESCE(SUM(${walletLedgerTable.amount}), 0)` })
       .from(walletLedgerTable)
       .where(and(
         eq(walletLedgerTable.userId, userId),
+        eq(walletLedgerTable.coinId, inrCoinId),
         sql`${walletLedgerTable.amount} > 0`,
       )),
 
+    // INR outflows (negative amounts, INR coin only)
     db.select({ total: sql<string>`COALESCE(SUM(${walletLedgerTable.amount}), 0)` })
       .from(walletLedgerTable)
       .where(and(
         eq(walletLedgerTable.userId, userId),
+        eq(walletLedgerTable.coinId, inrCoinId),
+        sql`${walletLedgerTable.amount} < 0`,
+      )),
+
+    // USDT inflows (positive amounts, USDT coin only)
+    db.select({ total: sql<string>`COALESCE(SUM(${walletLedgerTable.amount}), 0)` })
+      .from(walletLedgerTable)
+      .where(and(
+        eq(walletLedgerTable.userId, userId),
+        eq(walletLedgerTable.coinId, usdtCoinId),
+        sql`${walletLedgerTable.amount} > 0`,
+      )),
+
+    // USDT outflows (negative amounts, USDT coin only)
+    db.select({ total: sql<string>`COALESCE(SUM(${walletLedgerTable.amount}), 0)` })
+      .from(walletLedgerTable)
+      .where(and(
+        eq(walletLedgerTable.userId, userId),
+        eq(walletLedgerTable.coinId, usdtCoinId),
         sql`${walletLedgerTable.amount} < 0`,
       )),
   ]);
@@ -112,8 +147,12 @@ router.get("/ledger/summary", requireAuth, async (req, res): Promise<void> => {
   res.json({
     totalAiEarningsUsdt: parseFloat(aiEarnings[0]?.total ?? "0"),
     aiEarningsCount:     aiEarnings[0]?.cnt ?? 0,
-    totalCredited:       parseFloat(totalIn[0]?.total  ?? "0"),
-    totalDebited:        Math.abs(parseFloat(totalOut[0]?.total ?? "0")),
+    // INR-only totals (accurate ₹ figures)
+    totalCreditedInr:    parseFloat(inrCredited[0]?.total  ?? "0"),
+    totalDebitedInr:     Math.abs(parseFloat(inrDebited[0]?.total ?? "0")),
+    // USDT totals
+    totalCreditedUsdt:   parseFloat(usdtCredited[0]?.total  ?? "0"),
+    totalDebitedUsdt:    Math.abs(parseFloat(usdtDebited[0]?.total ?? "0")),
   });
 });
 

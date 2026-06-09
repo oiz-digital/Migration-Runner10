@@ -6,10 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   ArrowDownLeft, ArrowUpRight, Bot, ArrowLeftRight, Coins, TrendingUp,
   TrendingDown, Zap, Gift, ShieldCheck, RefreshCw, ChevronLeft, ChevronRight,
-  BookOpen, Info,
+  BookOpen, Info, X,
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -41,8 +42,10 @@ type LedgerResponse = {
 type SummaryResponse = {
   totalAiEarningsUsdt: number;
   aiEarningsCount: number;
-  totalCredited: number;
-  totalDebited: number;
+  totalCreditedInr: number;
+  totalDebitedInr: number;
+  totalCreditedUsdt: number;
+  totalDebitedUsdt: number;
 };
 
 /* ── Helpers ───────────────────────────────────────────────────────────── */
@@ -92,7 +95,7 @@ const FILTER_TYPES = [
 
 function fmt(n: number, coin: string) {
   if (coin === "INR") return `₹${Math.abs(n).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
-  if (["USDT", "USDC"].includes(coin)) return `${coin} ${Math.abs(n).toLocaleString("en-US", { maximumFractionDigits: 4 })}`;
+  if (["USDT", "USDC"].includes(coin)) return `${Math.abs(n).toLocaleString("en-US", { maximumFractionDigits: 4 })} ${coin}`;
   return `${Math.abs(n).toLocaleString("en-US", { maximumFractionDigits: 6 })} ${coin}`;
 }
 
@@ -109,47 +112,70 @@ const LIMIT = 20;
 
 /* ── Summary cards ─────────────────────────────────────────────────────── */
 function SummaryCards({ data }: { data: SummaryResponse }) {
+  const netInr = data.totalCreditedInr - data.totalDebitedInr;
+  const netUsdt = data.totalCreditedUsdt - data.totalDebitedUsdt;
+
+  const fmtInr = (v: number) =>
+    `₹${Math.abs(v).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+  const fmtUsdt = (v: number) =>
+    `${Math.abs(v).toLocaleString("en-US", { maximumFractionDigits: 4 })} USDT`;
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-      {[
-        {
-          label: "AI Trade Earnings",
-          value: `USDT ${data.totalAiEarningsUsdt.toLocaleString("en-US", { maximumFractionDigits: 4 })}`,
-          sub: `${data.aiEarningsCount} credits`,
-          icon: <Bot className="h-4 w-4 text-violet-400" />,
-          accent: "border-violet-400/20 bg-violet-500/5",
-        },
-        {
-          label: "Total Credited",
-          value: `₹${data.totalCredited.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`,
-          sub: "All inflows",
-          icon: <ArrowDownLeft className="h-4 w-4 text-emerald-400" />,
-          accent: "border-emerald-400/20 bg-emerald-500/5",
-        },
-        {
-          label: "Total Debited",
-          value: `₹${data.totalDebited.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`,
-          sub: "All outflows",
-          icon: <ArrowUpRight className="h-4 w-4 text-rose-400" />,
-          accent: "border-rose-400/20 bg-rose-500/5",
-        },
-        {
-          label: "Net Balance",
-          value: `₹${(data.totalCredited - data.totalDebited).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`,
-          sub: "Credited − Debited",
-          icon: <Coins className="h-4 w-4 text-amber-400" />,
-          accent: "border-amber-400/20 bg-amber-500/5",
-        },
-      ].map((c) => (
-        <div key={c.label} className={`rounded-xl border p-4 ${c.accent}`}>
-          <div className="flex items-center gap-2 mb-1">
-            {c.icon}
-            <span className="text-xs text-muted-foreground">{c.label}</span>
-          </div>
-          <div className="text-xl font-bold tabular-nums">{c.value}</div>
-          <div className="text-xs text-muted-foreground mt-0.5">{c.sub}</div>
+      {/* AI Trade Earnings */}
+      <div className="rounded-xl border border-violet-400/20 bg-violet-500/5 p-4">
+        <div className="flex items-center gap-2 mb-1">
+          <Bot className="h-4 w-4 text-violet-400" />
+          <span className="text-xs text-muted-foreground">AI Earnings</span>
         </div>
-      ))}
+        <div className="text-xl font-bold tabular-nums">
+          {fmtUsdt(data.totalAiEarningsUsdt)}
+        </div>
+        <div className="text-xs text-muted-foreground mt-0.5">{data.aiEarningsCount} credits</div>
+      </div>
+
+      {/* INR Credited */}
+      <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/5 p-4">
+        <div className="flex items-center gap-2 mb-1">
+          <ArrowDownLeft className="h-4 w-4 text-emerald-400" />
+          <span className="text-xs text-muted-foreground">₹ Credited</span>
+        </div>
+        <div className="text-xl font-bold tabular-nums text-emerald-400">
+          {fmtInr(data.totalCreditedInr)}
+        </div>
+        <div className="text-xs text-muted-foreground mt-0.5">INR inflows</div>
+      </div>
+
+      {/* INR Debited */}
+      <div className="rounded-xl border border-rose-400/20 bg-rose-500/5 p-4">
+        <div className="flex items-center gap-2 mb-1">
+          <ArrowUpRight className="h-4 w-4 text-rose-400" />
+          <span className="text-xs text-muted-foreground">₹ Debited</span>
+        </div>
+        <div className="text-xl font-bold tabular-nums text-rose-400">
+          {fmtInr(data.totalDebitedInr)}
+        </div>
+        <div className="text-xs text-muted-foreground mt-0.5">INR outflows</div>
+      </div>
+
+      {/* Net */}
+      <div className="rounded-xl border border-amber-400/20 bg-amber-500/5 p-4">
+        <div className="flex items-center gap-2 mb-1">
+          <Coins className="h-4 w-4 text-amber-400" />
+          <span className="text-xs text-muted-foreground">Net Balance</span>
+        </div>
+        <div className={`text-xl font-bold tabular-nums ${netInr >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+          {netInr >= 0 ? "+" : "−"}{fmtInr(netInr)}
+        </div>
+        <div className="text-xs text-muted-foreground mt-0.5">
+          {netUsdt !== 0 && (
+            <span className={netUsdt >= 0 ? "text-emerald-400/70" : "text-rose-400/70"}>
+              {netUsdt >= 0 ? "+" : "−"}{fmtUsdt(netUsdt)} USDT
+            </span>
+          )}
+          {netUsdt === 0 && "Credited − Debited"}
+        </div>
+      </div>
     </div>
   );
 }
@@ -162,6 +188,8 @@ export default function LedgerPage() {
   const [coinFilter, setCoinFilter] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+
+  const hasFilters = !!(typeFilter || coinFilter || fromDate || toDate);
 
   const params = new URLSearchParams({
     limit: String(LIMIT),
@@ -219,41 +247,64 @@ export default function LedgerPage() {
       {summaryQ.data && <SummaryCards data={summaryQ.data} />}
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        <Select value={typeFilter || "all"} onValueChange={(v) => { setTypeFilter(v === "all" ? "" : v); setPage(0); }}>
-          <SelectTrigger className="w-44 h-8 text-xs">
-            <SelectValue placeholder="All types" />
-          </SelectTrigger>
-          <SelectContent>
-            {FILTER_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-          </SelectContent>
-        </Select>
+      <div className="rounded-xl border border-border bg-card p-3 mb-4">
+        <div className="flex flex-wrap gap-3 items-end">
+          {/* Type filter */}
+          <div className="flex flex-col gap-1">
+            <Label className="text-[11px] text-muted-foreground uppercase tracking-wide">Transaction type</Label>
+            <Select value={typeFilter || "all"} onValueChange={(v) => { setTypeFilter(v === "all" ? "" : v); setPage(0); }}>
+              <SelectTrigger className="w-44 h-8 text-xs">
+                <SelectValue placeholder="All types" />
+              </SelectTrigger>
+              <SelectContent>
+                {FILTER_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <Input
-          placeholder="Coin (e.g. USDT)"
-          value={coinFilter}
-          onChange={(e) => { setCoinFilter(e.target.value); setPage(0); }}
-          className="w-32 h-8 text-xs"
-        />
+          {/* Coin filter */}
+          <div className="flex flex-col gap-1">
+            <Label className="text-[11px] text-muted-foreground uppercase tracking-wide">Coin</Label>
+            <Input
+              placeholder="e.g. USDT, INR, BTC"
+              value={coinFilter}
+              onChange={(e) => { setCoinFilter(e.target.value); setPage(0); }}
+              className="w-36 h-8 text-xs"
+            />
+          </div>
 
-        <Input
-          type="date"
-          value={fromDate}
-          onChange={(e) => { setFromDate(e.target.value); setPage(0); }}
-          className="w-36 h-8 text-xs"
-        />
-        <Input
-          type="date"
-          value={toDate}
-          onChange={(e) => { setToDate(e.target.value); setPage(0); }}
-          className="w-36 h-8 text-xs"
-        />
+          {/* Date range */}
+          <div className="flex flex-col gap-1">
+            <Label className="text-[11px] text-muted-foreground uppercase tracking-wide">From date</Label>
+            <Input
+              type="date"
+              value={fromDate}
+              onChange={(e) => { setFromDate(e.target.value); setPage(0); }}
+              className="w-36 h-8 text-xs"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label className="text-[11px] text-muted-foreground uppercase tracking-wide">To date</Label>
+            <Input
+              type="date"
+              value={toDate}
+              onChange={(e) => { setToDate(e.target.value); setPage(0); }}
+              className="w-36 h-8 text-xs"
+            />
+          </div>
 
-        {(typeFilter || coinFilter || fromDate || toDate) && (
-          <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => { setTypeFilter(""); setCoinFilter(""); setFromDate(""); setToDate(""); setPage(0); }}>
-            Clear filters
-          </Button>
-        )}
+          {/* Clear */}
+          {hasFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-xs gap-1.5 self-end"
+              onClick={() => { setTypeFilter(""); setCoinFilter(""); setFromDate(""); setToDate(""); setPage(0); }}
+            >
+              <X className="h-3 w-3" /> Clear filters
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Table */}
@@ -266,8 +317,8 @@ export default function LedgerPage() {
                 <th className="px-4 py-3 text-left">Coin</th>
                 <th className="px-4 py-3 text-left">Wallet</th>
                 <th className="px-4 py-3 text-right">Amount</th>
-                <th className="px-4 py-3 text-right">Balance Before</th>
-                <th className="px-4 py-3 text-right">Balance After</th>
+                <th className="px-4 py-3 text-right">Before</th>
+                <th className="px-4 py-3 text-right">After</th>
                 <th className="px-4 py-3 text-left">Note</th>
                 <th className="px-4 py-3 text-right">Time</th>
               </tr>
@@ -286,8 +337,18 @@ export default function LedgerPage() {
                   <td colSpan={8} className="py-16 text-center">
                     <Info className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
                     <div className="text-muted-foreground text-sm">
-                      {typeFilter || coinFilter ? "No matching entries found" : "No ledger entries yet — fund movements will appear here"}
+                      {hasFilters ? "No matching entries found" : "No ledger entries yet — fund movements will appear here"}
                     </div>
+                    {hasFilters && (
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="mt-2 text-xs"
+                        onClick={() => { setTypeFilter(""); setCoinFilter(""); setFromDate(""); setToDate(""); setPage(0); }}
+                      >
+                        Clear filters
+                      </Button>
+                    )}
                   </td>
                 </tr>
               ) : (
