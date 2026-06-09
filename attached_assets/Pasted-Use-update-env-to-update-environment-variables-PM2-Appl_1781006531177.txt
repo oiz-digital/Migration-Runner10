@@ -1,0 +1,55 @@
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [cryptox-api](ids: [ 0 ])
+[PM2] [cryptox-api](0) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 0  │ cryptox-api        │ fork     │ 86   │ online    │ 0%       │ 12.6mb   │
+│ 1  │ cryptox-go         │ fork     │ 0    │ online    │ 0%       │ 6.6mb    │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 0  │ cryptox-api        │ fork     │ 87   │ online    │ 0%       │ 180.4mb  │
+│ 1  │ cryptox-go         │ fork     │ 0    │ online    │ 0%       │ 6.6mb    │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[TAILING] Tailing last 20 lines for [cryptox-api] process (change the value with --lines option)
+/var/log/cryptox/api-error.log last 20 lines:
+0|cryptox- | 2026-06-09 11:56:16 +00:00:     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+0|cryptox- | 2026-06-09 11:56:16 +00:00:     at async node:internal/modules/esm/loader:633:26
+0|cryptox- | 2026-06-09 11:56:22 +00:00: Error: DATABASE_URL must be set. Did you forget to provision a database?
+0|cryptox- | 2026-06-09 11:56:22 +00:00:     at ../../lib/db/src/index.ts (/opt/cryptox/lib/db/src/index.ts:8:9)
+0|cryptox- | 2026-06-09 11:56:22 +00:00:     at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)
+0|cryptox- | 2026-06-09 11:56:22 +00:00:     at src/lib/price-service.ts (/opt/cryptox/artifacts/api-server/src/lib/price-service.ts:1:1)
+0|cryptox- | 2026-06-09 11:56:22 +00:00:     at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)
+0|cryptox- | 2026-06-09 11:56:22 +00:00:     at <anonymous> (/opt/cryptox/artifacts/api-server/src/index.ts:8:1)
+0|cryptox- | 2026-06-09 11:56:22 +00:00:     at ModuleJob.run (node:internal/modules/esm/module_job:439:25)
+0|cryptox- | 2026-06-09 11:56:22 +00:00:     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+0|cryptox- | 2026-06-09 11:56:22 +00:00:     at async node:internal/modules/esm/loader:633:26
+0|cryptox- | 2026-06-09 11:56:28 +00:00: Error: DATABASE_URL must be set. Did you forget to provision a database?
+0|cryptox- | 2026-06-09 11:56:28 +00:00:     at ../../lib/db/src/index.ts (/opt/cryptox/lib/db/src/index.ts:8:9)
+0|cryptox- | 2026-06-09 11:56:28 +00:00:     at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)
+0|cryptox- | 2026-06-09 11:56:28 +00:00:     at src/lib/price-service.ts (/opt/cryptox/artifacts/api-server/src/lib/price-service.ts:1:1)
+0|cryptox- | 2026-06-09 11:56:28 +00:00:     at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)
+0|cryptox- | 2026-06-09 11:56:28 +00:00:     at <anonymous> (/opt/cryptox/artifacts/api-server/src/index.ts:8:1)
+0|cryptox- | 2026-06-09 11:56:28 +00:00:     at ModuleJob.run (node:internal/modules/esm/module_job:439:25)
+0|cryptox- | 2026-06-09 11:56:28 +00:00:     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+0|cryptox- | 2026-06-09 11:56:28 +00:00:     at async node:internal/modules/esm/loader:633:26
+
+/var/log/cryptox/api-out.log last 20 lines:
+0|cryptox- | index.mjs:22:56)\n    at src/app.ts (/opt/cryptox/artifacts/api-server/src/app.ts:10:1)\n    at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)","msg":"fatal: bootstrap failed"}
+0|cryptox- | 2026-06-09 12:01:57 +00:00: {"level":40,"time":1781006517708,"pid":35020,"hostname":"ip-172-31-11-99","msg":"INTERNAL_SECRET is not set — Go service /internal/* endpoints have no shared-secret protection. Set INTERNAL_SECRET in your .env (use: openssl rand -hex 32) before going live."}
+0|cryptox- | 2026-06-09 12:01:57 +00:00: {"level":40,"time":1781006517708,"pid":35020,"hostname":"ip-172-31-11-99","msg":"CORS_ORIGINS is not set — app.ts will refuse to start in production without it."}
+0|cryptox- | 2026-06-09 12:01:57 +00:00: {"level":40,"time":1781006517709,"pid":35020,"hostname":"ip-172-31-11-99","REDIS_BIN":"/nix/store/pnc74r60iz1g5bpqv4qh76a8cc3g0n97-redis-7.2.10/bin/redis-server","msg":"redis-server binary not found, skipping spawn (will try connecting anyway)"}
+0|cryptox- | 2026-06-09 12:01:57 +00:00: {"level":30,"time":1781006517717,"pid":35020,"hostname":"ip-172-31-11-99","host":"127.0.0.1","port":6379,"msg":"Redis connected"}
+0|cryptox- | 2026-06-09 12:01:57 +00:00: {"level":30,"time":1781006517718,"pid":35020,"hostname":"ip-172-31-11-99","instanceId":"daafe45c-7804-4444-9e59-6b859056be18","isLeader":false,"heartbeatMs":5000,"msg":"[leader] election started"}
+0|cryptox- | 2026-06-09 12:01:57 +00:00: {"level":30,"time":1781006517719,"pid":35020,"hostname":"ip-172-31-11-99","channel":"prices.tick","msg":"[ws-fanout] subscribed for cross-instance price ticks"}
+0|cryptox- | 2026-06-09 12:01:57 +00:00: {"level":50,"time":1781006517962,"pid":35020,"hostname":"ip-172-31-11-99","err":"Error: AI_INTEGRATIONS_ANTHROPIC_BASE_URL must be set. Did you forget to provision the Anthropic AI integration?\n    at ../../lib/integrations-anthropic-ai/src/client.ts (/opt/cryptox/lib/integrations-anthropic-ai/src/client.ts:4:9)\n    at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)\n    at ../../lib/integrations-anthropic-ai/src/index.ts (/opt/cryptox/lib/integrations-anthropic-ai/src/index.ts:1:1)\n    at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)\n    at src/routes/ai-chat.ts (/opt/cryptox/artifacts/api-server/src/routes/ai-chat.ts:9:1)\n    at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)\n    at src/routes/index.ts (/opt/cryptox/artifacts/api-server/src/routes/index.ts:63:1)\n    at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)\n    at src/app.ts (/opt/cryptox/artifacts/api-server/src/app.ts:10:1)\n    at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)","msg":"fatal: bootstrap failed"}
+0|cryptox- | 2026-06-09 12:02:01 +00:00: {"level":40,"time":1781006521429,"pid":35038,"hostname":"ip-172-31-11-99","msg":"INTERNAL_SECRET is not set — Go service /internal/* endpoints have no shared-secret protection. Set INTERNAL_SECRET in your .env (use: openssl rand -hex 32) before going live."}
+0|cryptox- | 2026-06-09 12:02:01 +00:00: {"level":40,"time":1781006521430,"pid":35038,"hostname":"ip-172-31-11-99","msg":"CORS_ORIGINS is not set — app.ts will refuse to start in production without it."}
+0|cryptox- | 2026-06-09 12:02:01 +00:00: {"level":40,"time":1781006521430,"pid":35038,"hostname":"ip-172-31-11-99","REDIS_BIN":"/nix/store/pnc74r60iz1g5bpqv4qh76a8cc3g0n97-redis-7.2.10/bin/redis-server","msg":"redis-server binary not found, skipping spawn (will try connecting anyway)"}
+0|cryptox- | 2026-06-09 12:02:01 +00:00: {"level":30,"time":1781006521446,"pid":35038,"hostname":"ip-172-31-11-99","host":"127.0.0.1","port":6379,"msg":"Redis connected"}
+0|cryptox- | 2026-06-09 12:02:01 +00:00: {"level":30,"time":1781006521447,"pid":35038,"hostname":"ip-172-31-11-99","instanceId":"88ca681d-b5d6-4163-85c2-1eb30ccff737","isLeader":false,"heartbeatMs":5000,"msg":"[leader] election started"}
+0|cryptox- | 2026-06-09 12:02:01 +00:00: {"level":30,"time":1781006521449,"pid":35038,"hostname":"ip-172-31-11-99","channel":"prices.tick","msg":"[ws-fanout] subscribed for cross-instance price ticks"}
+
+ubuntu@ip-172-31-11-99:~/zebvix$
