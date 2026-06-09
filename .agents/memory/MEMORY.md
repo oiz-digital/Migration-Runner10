@@ -5,3 +5,4 @@
 - [Currency symbol fix](currency-symbols.md) — INR shows ₹, USDT/USD shows $, others show quote suffix; fixed in Trade.tsx, Futures.tsx, Predictions.tsx.
 - [AI trading earnings](ai-trading-earnings.md) — serialize bot P&L from persisted `totalEarned` (engine is source of truth), never re-project from elapsed time; no-expire = `expiresAt` null.
 - [Print-to-popup XSS](print-popup-xss.md) — client print/PDF features that build HTML + `window.open`/`document.write` must HTML-escape every dynamic value (same-origin DOM XSS).
+- [Mobile app design](mobile-design.md) — SparkLine/AnimatedPrice/CandleChart use react-native-svg + Reanimated; deterministic spark data from `genSparkData(price, change24h, symbol)` with seeded RNG avoids re-render flicker; klines API at `/api/klines?symbol=BTCUSDT&interval=1h&limit=60`.

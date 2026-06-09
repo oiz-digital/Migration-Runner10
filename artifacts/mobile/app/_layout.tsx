@@ -22,23 +22,30 @@ setBaseUrl(`https://${process.env.EXPO_PUBLIC_DOMAIN}`);
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
+  defaultOptions: {
+    queries: { retry: 1, staleTime: 30_000, refetchOnWindowFocus: false },
+    mutations: { retry: 0 },
+  },
 });
 
 function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="login" options={{ headerShown: false, presentation: "modal" }} />
-      <Stack.Screen name="register" options={{ headerShown: false, presentation: "modal" }} />
-      <Stack.Screen name="trade/[symbol]" options={{ headerShown: false }} />
-      <Stack.Screen name="futures/index" options={{ headerShown: false }} />
-      <Stack.Screen name="earn/index" options={{ headerShown: false }} />
-      <Stack.Screen name="ai-trading/index" options={{ headerShown: false }} />
-      <Stack.Screen name="p2p/index" options={{ headerShown: false }} />
-      <Stack.Screen name="orders" options={{ headerShown: false }} />
-      <Stack.Screen name="kyc/index" options={{ headerShown: false }} />
-      <Stack.Screen name="wallet/[symbol]" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="login" options={{ presentation: "modal" }} />
+      <Stack.Screen name="register" options={{ presentation: "modal" }} />
+      <Stack.Screen name="trade/[symbol]" />
+      <Stack.Screen name="futures/index" />
+      <Stack.Screen name="earn/index" />
+      <Stack.Screen name="ai-trading/index" />
+      <Stack.Screen name="p2p/index" />
+      <Stack.Screen name="orders" />
+      <Stack.Screen name="kyc/index" />
+      <Stack.Screen name="wallet/[symbol]" />
+      <Stack.Screen name="convert/index" />
+      <Stack.Screen name="copy-trading/index" />
+      <Stack.Screen name="portfolio/index" />
+      <Stack.Screen name="notifications/index" />
     </Stack>
   );
 }
@@ -52,9 +59,7 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
-    }
+    if (fontsLoaded || fontError) SplashScreen.hideAsync();
   }, [fontsLoaded, fontError]);
 
   if (!fontsLoaded && !fontError) return null;

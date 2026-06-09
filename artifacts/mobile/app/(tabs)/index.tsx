@@ -1,7 +1,8 @@
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
   FlatList,
   Platform,
@@ -17,27 +18,39 @@ import { useQuery } from "@tanstack/react-query";
 
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/contexts/AuthContext";
-import { usePrices, PriceTick } from "@/hooks/usePrices";
+import { usePrices } from "@/hooks/usePrices";
 import { apiFetch } from "@/hooks/useApi";
-import { CoinRow } from "@/components/CoinRow";
-import { PriceChange } from "@/components/PriceChange";
+import { CoinRowWithSpark } from "@/components/CoinRowWithSpark";
+import { StatsBar } from "@/components/StatsBar";
+import { AnimatedPrice } from "@/components/AnimatedPrice";
 
-interface WalletItem {
-  symbol: string;
-  balance: string;
-  locked: string;
-  priceInr?: number;
-  priceUsdt?: number;
-}
+interface WalletItem { symbol: string; balance: string; locked: string }
 interface WalletResponse { wallets: WalletItem[] }
 
+function genSparkData(price: number, change24h: number, symbol: string, n = 24): number[] {
+  let seed = symbol.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  const rng = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  const start = price / (1 + change24h / 100);
+  const pts: number[] = [];
+  for (let i = 0; i < n; i++) {
+    const t = i / (n - 1);
+    const trend = start * (change24h / 100) * t;
+    const noise = (rng() - 0.5) * start * 0.012;
+    pts.push(Math.max(start + trend + noise, 1e-8));
+  }
+  pts[n - 1] = price;
+  return pts;
+}
+
 const QUICK_ACTIONS = [
-  { label: "Spot", icon: "repeat" as const, route: "/trade" },
-  { label: "Futures", icon: "trending-up" as const, route: "/futures" },
-  { label: "P2P", icon: "users" as const, route: "/p2p" },
-  { label: "Earn", icon: "percent" as const, route: "/earn" },
-  { label: "AI Trade", icon: "cpu" as const, route: "/ai-trading" },
-  { label: "Orders", icon: "list" as const, route: "/orders" },
+  { label: "Spot", icon: "repeat" as const, route: "/trade", color: "#eb9100" },
+  { label: "Futures", icon: "trending-up" as const, route: "/futures", color: "#9945ff" },
+  { label: "Convert", icon: "arrow-right-circle" as const, route: "/convert", color: "#22c55e" },
+  { label: "P2P", icon: "users" as const, route: "/p2p", color: "#346aa9" },
+  { label: "Earn", icon: "percent" as const, route: "/earn", color: "#f59e0b" },
+  { label: "Copy", icon: "copy" as const, route: "/copy-trading", color: "#e84142" },
+  { label: "AI Trade", icon: "cpu" as const, route: "/ai-trading", color: "#627eea" },
+  { label: "Portfolio", icon: "pie-chart" as const, route: "/portfolio", color: "#00c08b" },
 ];
 
 export default function HomeScreen() {
@@ -47,13 +60,14 @@ export default function HomeScreen() {
   const { user, isAuthenticated } = useAuth();
   const { ticks, priceMap, inrRate } = usePrices();
 
-  const { data: walletData, isLoading: walletLoading, refetch } = useQuery({
+  const { data: walletData, isLoading, refetch } = useQuery({
     queryKey: ["wallet"],
     queryFn: () => apiFetch<WalletResponse>("/api/finance/wallet"),
     enabled: isAuthenticated,
+    staleTime: 30_000,
   });
 
-  const totalInr = React.useMemo(() => {
+  const totalInr = useMemo(() => {
     if (!walletData?.wallets) return 0;
     return walletData.wallets.reduce((sum, w) => {
       const bal = parseFloat(w.balance) || 0;
@@ -64,13 +78,29 @@ export default function HomeScreen() {
     }, 0);
   }, [walletData, priceMap, inrRate]);
 
-  const topGainers = [...ticks]
-    .filter((t) => t.usdt > 0)
-    .sort((a, b) => b.change24h - a.change24h)
-    .slice(0, 8);
+  const btcDom = useMemo(() => {
+    const btc = priceMap["BTC"];
+    if (!btc) return 0;
+    const total = ticks.reduce((s, t) => s + (t.usdt ?? 0) * (t.volume24h ?? 0), 0);
+    const btcVol = (btc.usdt ?? 0) * (btc.volume24h ?? 0);
+    return total > 0 ? (btcVol / total) * 100 : 0;
+  }, [ticks, priceMap]);
+
+  const totalVol = useMemo(() =>
+    ticks.reduce((s, t) => s + (t.usdt ?? 0) * (t.volume24h ?? 0), 0),
+    [ticks]);
+
+  const topGainers = useMemo(() =>
+    [...ticks]
+      .filter((t) => t.usdt > 0 && t.symbol !== "USDT" && t.symbol !== "INR")
+      .sort((a, b) => b.change24h - a.change24h)
+      .slice(0, 10),
+    [ticks]);
+
+  const btc = priceMap["BTC"];
+  const eth = priceMap["ETH"];
 
   const onRefresh = useCallback(() => { void refetch(); }, [refetch]);
-
   const topPt = insets.top + (Platform.OS === "web" ? 67 : 0);
   const botPt = insets.bottom + (Platform.OS === "web" ? 34 : 0);
 
@@ -78,63 +108,124 @@ export default function HomeScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: topPt, paddingBottom: botPt + 80 }}
+        contentContainerStyle={{ paddingTop: topPt, paddingBottom: botPt + 90 }}
         refreshControl={
-          <RefreshControl
-            refreshing={walletLoading}
-            onRefresh={onRefresh}
-            tintColor={colors.primary}
-          />
+          <RefreshControl refreshing={isLoading} onRefresh={onRefresh} tintColor={colors.primary} />
         }
       >
         {/* Header */}
         <View style={styles.header}>
-          <View>
+          <View style={styles.headerLeft}>
             <Text style={[styles.greeting, { color: colors.mutedForeground }]}>
-              {user ? `Hello, ${user.name.split(" ")[0]}` : "Welcome back"}
+              {user ? `Good ${new Date().getHours() < 12 ? "morning" : new Date().getHours() < 17 ? "afternoon" : "evening"}, ${user.name.split(" ")[0]}` : "Good day, Trader"}
             </Text>
             <Text style={[styles.brand, { color: colors.foreground }]}>Zebvix</Text>
           </View>
-          <TouchableOpacity
-            style={[styles.notifBtn, { backgroundColor: colors.muted }]}
-            onPress={() => router.push(isAuthenticated ? "/orders" : "/login")}
-          >
-            <Feather name="bell" size={20} color={colors.foreground} />
-          </TouchableOpacity>
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              style={[styles.iconBtn, { backgroundColor: colors.muted }]}
+              onPress={() => router.push("/notifications" as any)}
+            >
+              <Feather name="bell" size={18} color={colors.foreground} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.iconBtn, { backgroundColor: colors.muted }]}
+              onPress={() => router.push(isAuthenticated ? "/(tabs)/profile" : "/login")}
+            >
+              <Feather name="user" size={18} color={colors.foreground} />
+            </TouchableOpacity>
+          </View>
         </View>
+
+        {/* Market ticker */}
+        {(btc || eth) && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tickerScroll} contentContainerStyle={styles.tickerContent}>
+            {[btc && { sym: "BTC", tick: btc }, eth && { sym: "ETH", tick: eth }]
+              .filter(Boolean)
+              .map((item: any) => (
+                <TouchableOpacity
+                  key={item.sym}
+                  style={[styles.tickerPill, { backgroundColor: colors.card, borderColor: colors.border }]}
+                  onPress={() => router.push(`/trade/${item.sym}USDT` as any)}
+                >
+                  <Text style={[styles.tickerSym, { color: colors.mutedForeground }]}>{item.sym}</Text>
+                  <AnimatedPrice
+                    price={item.tick.usdt}
+                    format={(p) => `$${p.toLocaleString("en-US", { maximumFractionDigits: p < 100 ? 2 : 0 })}`}
+                    style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }}
+                  />
+                  <Text style={[styles.tickerChange, { color: item.tick.change24h >= 0 ? colors.success : colors.destructive }]}>
+                    {item.tick.change24h >= 0 ? "+" : ""}{item.tick.change24h.toFixed(2)}%
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            {totalVol > 0 && (
+              <View style={[styles.tickerPill, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <Text style={[styles.tickerSym, { color: colors.mutedForeground }]}>24h Vol</Text>
+                <Text style={[styles.tickerVal, { color: colors.foreground }]}>
+                  ${(totalVol / 1e9).toFixed(1)}B
+                </Text>
+              </View>
+            )}
+          </ScrollView>
+        )}
 
         {/* Portfolio card */}
         <View style={styles.cardWrap}>
           <LinearGradient
-            colors={["#1a1200", "#0d1524"]}
+            colors={["#1f1100", "#0a0f1e"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={[styles.portfolioCard, { borderColor: colors.border }]}
+            style={[styles.portfolioCard, { borderColor: "#2a1f00" }]}
           >
-            <View style={styles.portfolioRow}>
+            <View style={styles.portTop}>
               <View>
-                <Text style={styles.portLabel}>Total Portfolio</Text>
-                <Text style={styles.portValue}>
-                  {isAuthenticated
-                    ? `₹${totalInr.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`
-                    : "—"}
-                </Text>
+                <Text style={styles.portLabel}>Total Portfolio Value</Text>
+                <AnimatedPrice
+                  price={isAuthenticated ? totalInr : 0}
+                  format={(p) => isAuthenticated ? `₹${p.toLocaleString("en-IN", { maximumFractionDigits: 0 })}` : "—"}
+                  style={styles.portValue}
+                />
+                {isAuthenticated && (
+                  <Text style={styles.portSub}>≈ ${(totalInr / inrRate).toLocaleString("en-US", { maximumFractionDigits: 0 })}</Text>
+                )}
               </View>
-              <TouchableOpacity
-                style={styles.depositBtn}
-                onPress={() => router.push(isAuthenticated ? "/wallet" : "/login")}
-              >
-                <Feather name="plus" size={16} color="#fff" />
-                <Text style={styles.depositLabel}>Deposit</Text>
+              <View style={styles.portActions}>
+                <TouchableOpacity
+                  style={styles.portBtn}
+                  onPress={() => router.push(isAuthenticated ? "/(tabs)/wallet" : "/login")}
+                >
+                  <Feather name="plus" size={14} color="#fff" />
+                  <Text style={styles.portBtnLabel}>Deposit</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.portBtn, styles.portBtnOutline]}
+                  onPress={() => router.push(isAuthenticated ? "/(tabs)/wallet" : "/login")}
+                >
+                  <Feather name="arrow-up" size={14} color="#eb9100" />
+                  <Text style={[styles.portBtnLabel, { color: "#eb9100" }]}>Withdraw</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            {!isAuthenticated && (
+              <TouchableOpacity style={styles.loginRow} onPress={() => router.push("/login")}>
+                <Feather name="lock" size={12} color="#6b7a9e" />
+                <Text style={styles.loginHint}>Login to view your balance</Text>
+                <Feather name="chevron-right" size={12} color="#6b7a9e" />
               </TouchableOpacity>
-            </View>
-            <View style={styles.portFooter}>
-              <Text style={styles.portSub}>
-                {isAuthenticated ? "Tap to view wallet" : "Login to view balance"}
-              </Text>
-            </View>
+            )}
           </LinearGradient>
         </View>
+
+        {/* Market stats */}
+        {ticks.length > 0 && (
+          <StatsBar stats={[
+            { label: "BTC Dom", value: `${btcDom.toFixed(1)}%`, valueColor: "#f7931a" },
+            { label: "Coins", value: `${ticks.filter(t => t.usdt > 0).length}` },
+            { label: "Gainers", value: `${ticks.filter(t => t.change24h > 0).length}`, valueColor: colors.success },
+            { label: "Losers", value: `${ticks.filter(t => t.change24h < 0).length}`, valueColor: colors.destructive },
+          ]} />
+        )}
 
         {/* Quick actions */}
         <View style={styles.actionsGrid}>
@@ -142,39 +233,44 @@ export default function HomeScreen() {
             <TouchableOpacity
               key={a.label}
               style={[styles.actionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-              onPress={() => router.push(a.route as any)}
+              onPress={() => {
+                if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push(a.route as any);
+              }}
               activeOpacity={0.75}
             >
-              <View style={[styles.actionIcon, { backgroundColor: colors.primary + "20" }]}>
-                <Feather name={a.icon} size={20} color={colors.primary} />
+              <View style={[styles.actionIcon, { backgroundColor: a.color + "20" }]}>
+                <Feather name={a.icon} size={18} color={a.color} />
               </View>
               <Text style={[styles.actionLabel, { color: colors.foreground }]}>{a.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* Top gainers */}
+        {/* Top Gainers */}
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Top Gainers</Text>
-          <TouchableOpacity onPress={() => router.push("/markets")}>
-            <Text style={[styles.seeAll, { color: colors.primary }]}>See All</Text>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>🔥 Top Gainers</Text>
+          <TouchableOpacity onPress={() => router.push("/(tabs)/markets")}>
+            <Text style={[styles.seeAll, { color: colors.primary }]}>View All →</Text>
           </TouchableOpacity>
         </View>
 
         <View style={[styles.listCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          {topGainers.map((t) => (
-            <CoinRow
+          {topGainers.map((t, i) => (
+            <CoinRowWithSpark
               key={t.symbol}
               symbol={t.symbol}
               price={t.usdt}
               change24h={t.change24h}
-              volume={t.volume24h}
+              volume={t.volume24h * t.usdt}
+              sparkData={genSparkData(t.usdt, t.change24h, t.symbol)}
+              rank={i + 1}
               onPress={() => router.push(`/trade/${t.symbol}USDT` as any)}
             />
           ))}
           {topGainers.length === 0 && (
             <View style={styles.loadingRow}>
-              <Text style={{ color: colors.mutedForeground }}>Loading market data...</Text>
+              <Text style={{ color: colors.mutedForeground }}>Connecting to live markets...</Text>
             </View>
           )}
         </View>
@@ -189,39 +285,52 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
   },
-  greeting: { fontSize: 13 },
-  brand: { fontSize: 22, fontWeight: "800", letterSpacing: -0.5 },
-  notifBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  headerLeft: {},
+  greeting: { fontSize: 12 },
+  brand: { fontSize: 24, fontWeight: "900", letterSpacing: -0.5 },
+  headerRight: { flexDirection: "row", gap: 8 },
+  iconBtn: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
+  tickerScroll: { marginBottom: 12 },
+  tickerContent: { paddingHorizontal: 16, gap: 8 },
+  tickerPill: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-  },
-  cardWrap: { paddingHorizontal: 16, marginBottom: 16 },
-  portfolioCard: {
-    borderRadius: 16,
-    padding: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
     borderWidth: 1,
+    gap: 6,
   },
-  portfolioRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  portLabel: { color: "#6b7a9e", fontSize: 13 },
-  portValue: { color: "#f8fafc", fontSize: 28, fontWeight: "800", marginTop: 4 },
-  depositBtn: {
+  tickerSym: { fontSize: 11, fontWeight: "600" },
+  tickerVal: { fontSize: 13, fontWeight: "700" },
+  tickerChange: { fontSize: 11, fontWeight: "700" },
+  cardWrap: { paddingHorizontal: 16, marginBottom: 12 },
+  portfolioCard: { borderRadius: 18, padding: 20, borderWidth: 1 },
+  portTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
+  portLabel: { color: "#6b7a9e", fontSize: 12 },
+  portValue: { color: "#f8fafc", fontSize: 26, fontWeight: "900", marginTop: 2 },
+  portSub: { color: "#6b7a9e", fontSize: 12, marginTop: 2 },
+  portActions: { gap: 8 },
+  portBtn: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#eb9100",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 16,
     gap: 4,
   },
-  depositLabel: { color: "#fff", fontWeight: "700", fontSize: 13 },
-  portFooter: { marginTop: 12 },
-  portSub: { color: "#6b7a9e", fontSize: 12 },
+  portBtnOutline: {
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: "#eb9100",
+  },
+  portBtnLabel: { color: "#fff", fontWeight: "700", fontSize: 12 },
+  loginRow: { flexDirection: "row", alignItems: "center", marginTop: 14, gap: 6 },
+  loginHint: { color: "#6b7a9e", fontSize: 12, flex: 1 },
   actionsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -230,22 +339,22 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionBtn: {
-    width: "30%",
+    width: "22%",
     flexGrow: 1,
     alignItems: "center",
-    padding: 12,
+    paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1,
     gap: 6,
   },
   actionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: "center",
     justifyContent: "center",
   },
-  actionLabel: { fontSize: 12, fontWeight: "600" },
+  actionLabel: { fontSize: 11, fontWeight: "600" },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -253,8 +362,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 8,
   },
-  sectionTitle: { fontSize: 17, fontWeight: "700" },
+  sectionTitle: { fontSize: 16, fontWeight: "700" },
   seeAll: { fontSize: 13, fontWeight: "600" },
-  listCard: { marginHorizontal: 16, borderRadius: 12, borderWidth: 1, overflow: "hidden" },
+  listCard: { marginHorizontal: 16, borderRadius: 14, borderWidth: 1, overflow: "hidden" },
   loadingRow: { padding: 24, alignItems: "center" },
 });
