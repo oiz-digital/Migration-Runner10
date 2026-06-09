@@ -344,11 +344,12 @@ ok "Source code synced to $APP_DIR"
 
 cd "$APP_DIR"
 
-# ── pnpm install (synchronous — shows live output) ────────────────
+# ── pnpm install (synchronous) ────────────────────────────────────
 info "Installing pnpm dependencies (may take 3-5 min)..."
 HOME=/root CI=true NODE_ENV=development \
-  pnpm install --no-frozen-lockfile --shamefully-hoist --yes \
-  2>&1 | tee /tmp/zbx_pnpm.log | grep --line-buffered -E "^\s*(warn|ERR|error|✔|added|packages)" || true
+  pnpm install --no-frozen-lockfile --shamefully-hoist \
+  > /tmp/zbx_pnpm.log 2>&1 \
+  || { tail -20 /tmp/zbx_pnpm.log; err "pnpm install failed — see above"; }
 ok "pnpm dependencies installed"
 
 # Fix ownership
