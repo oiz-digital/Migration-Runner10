@@ -15,6 +15,7 @@ import { Router, type IRouter } from "express";
 import { db, dashboardLayoutsTable, watchlistsTable } from "@workspace/db";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
+import { randomUUID } from "node:crypto";
 
 const router: IRouter = Router();
 
@@ -31,7 +32,7 @@ function sanitizeLayout(layout: unknown): Array<{ id: string; type: string; x: n
     const r = w as Record<string, unknown>;
     if (typeof r.type !== "string" || !ALLOWED_WIDGET_TYPES.has(r.type)) return null;
     return {
-      id: String(r.id ?? `w-${Math.random().toString(36).slice(2, 8)}`).slice(0, 50),
+      id: String(r.id ?? `w-${randomUUID().slice(0, 8)}`).slice(0, 50),
       type: r.type,
       x: Math.max(0, Math.min(11, Number(r.x ?? 0))),
       y: Math.max(0, Math.min(50, Number(r.y ?? 0))),

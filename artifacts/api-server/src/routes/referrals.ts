@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, referralsTable, usersTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
+import { randomBytes } from "node:crypto";
 
 const router: IRouter = Router();
 
@@ -14,7 +15,7 @@ const DEFAULT_COMMISSION_RATES = [
 ];
 
 function makeCode(name: string): string {
-  const suffix = Math.random().toString(36).slice(2, 7).toUpperCase();
+  const suffix = randomBytes(3).toString("hex").toUpperCase();
   return ((name || "USER").slice(0, 4).toUpperCase() + suffix).slice(0, 8);
 }
 

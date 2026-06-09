@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { randomBytes } from "node:crypto";
 import { eq, and, desc, sql } from "drizzle-orm";
 import {
   db,
@@ -301,7 +302,7 @@ router.post("/inr-withdrawals", requireAuth, async (req, res): Promise<void> => 
         })
         .where(eq(walletsTable.id, wallet.id));
 
-      const refId = `WINR-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+      const refId = `WINR-${Date.now().toString(36).toUpperCase()}-${randomBytes(3).toString("hex").toUpperCase()}`;
       const [wd] = await tx.insert(inrWithdrawalsTable).values({
         userId, bankId: Number(bankId),
         amount: String(amt), fee: String(fee), refId, status: "pending",
@@ -374,7 +375,7 @@ router.post("/crypto-withdrawals", requireAuth, async (req, res): Promise<void> 
         })
         .where(eq(walletsTable.id, wallet.id));
 
-      const refId = `WCRY-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+      const refId = `WCRY-${Date.now().toString(36).toUpperCase()}-${randomBytes(3).toString("hex").toUpperCase()}`;
       const [wd] = await tx.insert(cryptoWithdrawalsTable).values({
         userId, coinId: Number(coinId), networkId: Number(networkId),
         amount: String(amt), fee: String(fee + tds),
@@ -600,7 +601,7 @@ router.post("/inr-deposits", requireAuth, async (req, res): Promise<void> => {
   }
 
   const fee = +(Number(g.feeFlat) + (amt * Number(g.feePercent) / 100)).toFixed(2);
-  const refId = `DINR-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+  const refId = `DINR-${Date.now().toString(36).toUpperCase()}-${randomBytes(3).toString("hex").toUpperCase()}`;
 
   try {
     const [row] = await db.insert(inrDepositsTable).values({

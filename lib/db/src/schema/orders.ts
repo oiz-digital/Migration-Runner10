@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, numeric, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, numeric, varchar, index } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { ulid } from "ulid";
 
@@ -20,7 +20,13 @@ export const ordersTable = pgTable("orders", {
   botId: integer("bot_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
-});
+}, (t) => ({
+  userIdx:       index("orders_user_id_idx").on(t.userId),
+  pairIdx:       index("orders_pair_id_idx").on(t.pairId),
+  statusIdx:     index("orders_status_idx").on(t.status),
+  userStatusIdx: index("orders_user_status_idx").on(t.userId, t.status),
+  pairStatusIdx: index("orders_pair_status_idx").on(t.pairId, t.status),
+}));
 
 export type Order = typeof ordersTable.$inferSelect;
 
@@ -43,6 +49,11 @@ export const tradesTable = pgTable("trades", {
   // match for the trade tape / admin history without any duplicates.
   isTaker: integer("is_taker").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => ({
+  userIdx:      index("trades_user_id_idx").on(t.userId),
+  pairIdx:      index("trades_pair_id_idx").on(t.pairId),
+  orderIdx:     index("trades_order_id_idx").on(t.orderId),
+  createdAtIdx: index("trades_created_at_idx").on(t.createdAt),
+}));
 
 export type Trade = typeof tradesTable.$inferSelect;

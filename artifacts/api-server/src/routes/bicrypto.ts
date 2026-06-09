@@ -621,9 +621,9 @@ r.get("/settings", (_req, res) => {
       { key: "siteDescription", value: "Crypto Exchange" },
       { key: "logo", value: "/flutter/icons/Icon-192.png" },
       { key: "defaultCurrency", value: "USDT" },
-      { key: "kycEnabled", value: "false" },
-      { key: "p2pEnabled", value: "false" },
-      { key: "stakingEnabled", value: "false" },
+      { key: "kycEnabled", value: "true" },
+      { key: "p2pEnabled", value: "true" },
+      { key: "stakingEnabled", value: "true" },
       { key: "icoEnabled", value: "false" },
       { key: "ecommerceEnabled", value: "false" },
       { key: "blogEnabled", value: "false" },
@@ -1101,10 +1101,22 @@ r.get("/finance/transaction", bicryptoAuth, async (req: any, res): Promise<void>
     pagination: { totalItems, currentPage: page, perPage, totalPages },
   });
 });
-r.get("/finance/transaction/stats", bicryptoAuth, (_req, res) => res.json({
-  totalDeposits: 0, totalWithdrawals: 0, totalTrades: 0, totalFees: 0,
-  byCurrency: [], byMonth: [],
-}));
+r.get("/finance/transaction/stats", bicryptoAuth, async (req: any, res): Promise<void> => {
+  const userId: number = req.bcUser.id;
+  const [depInr]  = await db.select({ n: sql<string>`count(*)` }).from(inrDepositsTable).where(eq(inrDepositsTable.userId, userId));
+  const [depCry]  = await db.select({ n: sql<string>`count(*)` }).from(cryptoDepositsTable).where(eq(cryptoDepositsTable.userId, userId));
+  const [wdInr]   = await db.select({ n: sql<string>`count(*)` }).from(inrWithdrawalsTable).where(eq(inrWithdrawalsTable.userId, userId));
+  const [wdCry]   = await db.select({ n: sql<string>`count(*)` }).from(cryptoWithdrawalsTable).where(eq(cryptoWithdrawalsTable.userId, userId));
+  const [trd]     = await db.select({ n: sql<string>`count(*)` }).from(tradesTable).where(eq(tradesTable.userId, userId));
+  res.json({
+    totalDeposits:    Number(depInr?.n ?? 0) + Number(depCry?.n ?? 0),
+    totalWithdrawals: Number(wdInr?.n ?? 0)  + Number(wdCry?.n ?? 0),
+    totalTrades:      Number(trd?.n ?? 0),
+    totalFees: 0,
+    byCurrency: [],
+    byMonth: [],
+  });
+});
 r.get("/finance/transaction/:id", bicryptoAuth, (req, res) =>
   res.status(404).json({ message: `Transaction ${req.params.id} not found` }));
 
