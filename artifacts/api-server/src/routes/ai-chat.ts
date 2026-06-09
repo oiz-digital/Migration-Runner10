@@ -6,7 +6,7 @@
 import { Router, type Request, type Response } from "express";
 import { requireAuth } from "../middlewares/auth";
 import { logger } from "../lib/logger";
-import { anthropic } from "@workspace/integrations-anthropic-ai";
+import { requireAnthropic } from "@workspace/integrations-anthropic-ai";
 import { z } from "zod/v4";
 
 const router = Router();
@@ -54,7 +54,7 @@ router.post("/ai/chat", requireAuth, async (req: Request, res: Response): Promis
   const { messages } = parsed.data;
 
   try {
-    const response = await anthropic.messages.create({
+    const response = await requireAnthropic().messages.create({
       model: "claude-haiku-4-5",
       max_tokens: 600,
       system: SYSTEM_PROMPT,
