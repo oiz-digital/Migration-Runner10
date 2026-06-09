@@ -32,7 +32,8 @@ type ProfileResp = {
   metadata?: Record<string, unknown>;
 };
 
-type WalletItem = { type: string; currency: string; balance: number; inOrder: number };
+type WalletItem = { type: string; currency: string; balance: number; inOrder: number; usdValue?: number };
+type WalletResp = { items: WalletItem[]; totals: { usd: number; inr: number }; inrRate: number };
 type ReferStats = { referralCode: string; referredCount: number; referredKycCount: number; estimatedEarnings: number; recent: Array<{ id: number; name: string; kycLevel: number; createdAt: string }> };
 
 const KYC_BENEFITS = [
@@ -57,7 +58,7 @@ export default function Profile() {
     queryFn: () => get<ProfileResp>("/user/profile"),
   });
 
-  const walletQ = useQuery<{ items: WalletItem[] }>({
+  const walletQ = useQuery<WalletResp>({
     queryKey: ["/finance/wallet?perPage=200"],
     queryFn: () => get("/finance/wallet?perPage=200"),
   });
@@ -97,19 +98,9 @@ export default function Profile() {
   const profile = profileQ.data;
   const memberSince = (profileQ.data as any)?.createdAt ?? (profileQ.data as any)?.metadata?.createdAt ?? null;
 
-  // Total equity (rough USD): sum of spot+futures balances using cached coin price; INR /83
-  const totalEquityUsd = (() => {
-    const items = walletQ.data?.items ?? [];
-    if (!items.length) return 0;
-    let total = 0;
-    for (const w of items) {
-      const bal = Number(w.balance) + Number(w.inOrder);
-      if (w.currency === "USDT" || w.currency === "USD") { total += bal; continue; }
-      if (w.currency === "INR") { total += bal / 83; continue; }
-      // Best-effort: assume coins worth less than this without price feed; skip.
-    }
-    return Math.round(total * 100) / 100;
-  })();
+  // Total equity in INR: use the server's pre-computed totals (covers all coins: USDT, USDC, BTC, ETH, etc.)
+  const totalEquityInr = walletQ.data?.totals?.inr ?? 0;
+  const inrRate = walletQ.data?.inrRate ?? 84;
 
   const kycLevel = (authUser?.kycLevel ?? profile?.kyc?.level ?? 0) as number;
   const currentBenefit = KYC_BENEFITS.find((b) => b.level === kycLevel) ?? KYC_BENEFITS[0];
@@ -266,7 +257,7 @@ export default function Profile() {
         <StatCard
           icon={<WalletIcon className="h-4 w-4" />}
           label="Total Equity"
-          value={fmtUsd(totalEquityUsd)}
+          value={totalEquityInr > 0 ? `₹${totalEquityInr.toLocaleString("en-IN", { maximumFractionDigits: 2 })}` : walletQ.isLoading ? "…" : "₹0.00"}
           tone="amber"
           testId="stat-equity"
         />
@@ -295,7 +286,7 @@ export default function Profile() {
       </div>
 
       {/* ──────── VIP Tier ──────── */}
-      <VipTierCard fees={feesQ.data} loading={feesQ.isLoading} />
+      <VipTierCard fees={feesQ.data} loading={feesQ.isLoading} inrRate={inrRate} />
 
       {/* ──────── Login Preferences ──────── */}
       <LoginPrefsCard sec={securityQ.data} onSaved={() => securityQ.refetch()} />
@@ -409,6 +400,7 @@ export default function Profile() {
 function VipTierCard({
   fees,
   loading,
+  inrRate = 84,
 }: {
   fees?: {
     volume30dUsdt: number;
@@ -417,6 +409,7 @@ function VipTierCard({
     nextTier: { level: number; name: string; minVolume: number; convertFee: number } | null;
   };
   loading: boolean;
+  inrRate?: number;
 }) {
   if (loading) {
     return (
@@ -448,7 +441,7 @@ function VipTierCard({
           </div>
           <div>
             <div className="text-3xl font-extrabold tracking-tight" data-testid="vip-tier-name">{t.name}</div>
-            <div className="text-xs text-muted-foreground mt-0.5">Level {t.level} · {fmtUsd(vol)} traded last 30d</div>
+            <div className="text-xs text-muted-foreground mt-0.5">Level {t.level} · ₹{(vol * inrRate).toLocaleString("en-IN", { maximumFractionDigits: 0 })} traded last 30d</div>
           </div>
           {next ? (
             <div className="space-y-1.5">
@@ -460,7 +453,7 @@ function VipTierCard({
                 <div className="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-[width]" style={{ width: `${pct}%` }} />
               </div>
               <div className="text-[11px] text-muted-foreground">
-                {fmtUsd(toNext)} more volume → save {((t.convertFee - next.convertFee)).toFixed(3)}% on every convert
+                ₹{(toNext * inrRate).toLocaleString("en-IN", { maximumFractionDigits: 0 })} more volume → save {((t.convertFee - next.convertFee)).toFixed(3)}% on every convert
               </div>
             </div>
           ) : (
