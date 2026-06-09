@@ -1,0 +1,72 @@
+Admin Account
+
+  ?  Admin email: [admin@zebvix.com]
+
+  ?  Admin password (min 8 chars):
+
+  ?  Admin display name: [Admin]
+
+
+  ────────────────────────────────────────
+  Configuration Summary
+  ────────────────────────────────────────
+  App name   : Zebvix
+  Domain     : zebvix.com
+  App dir    : /opt/cryptox
+  DB name    : zebvixdb
+  DB user    : zebvix
+  DB port    : 5432
+  Admin email: admin@zebvix.com
+  Admin name : Admin
+  Mode       : FRESH INSTALL
+  ────────────────────────────────────────
+
+  ?  Proceed with these settings? [Y/n]
+y
+
+┌─────────────────────────────────────────────────┐
+│ STEP 2/8 — System Dependencies
+└─────────────────────────────────────────────────┘
+  ✔  System packages installed
+  ✔  Node.js v24.16.0
+
+changed 1 package in 609ms
+
+1 package is looking for funding
+  run `npm fund` for details
+  ✔  pnpm 9.15.9
+  ✔  Go go1.22.4
+
+changed 90 packages in 1s
+
+8 packages are looking for funding
+  run `npm fund` for details
+  ✔  PM2 7.0.1
+  ✔  System user 'cryptox' and directories ready
+  ✔  UFW firewall: SSH + HTTP/HTTPS allowed
+  ✔  fail2ban active
+
+┌─────────────────────────────────────────────────┐
+│ STEP 3/8 — Database
+└─────────────────────────────────────────────────┘
+  ✔  PostgreSQL user 'zebvix' ready
+  ✔  Database 'zebvixdb' created and owned by 'zebvix'
+
+┌─────────────────────────────────────────────────┐
+│ STEP 4/8 — Environment
+└─────────────────────────────────────────────────┘
+  ✔  .env created at /opt/cryptox/.env
+
+┌─────────────────────────────────────────────────┐
+│ STEP 5/8 — Build
+└─────────────────────────────────────────────────┘
+  ✔  Source code synced to /opt/cryptox
+  ✔  pnpm dependencies installed
+  ✔  Libraries built
+  ✔  API server → artifacts/api-server/dist/
+  ✔  User portal → artifacts/user-portal/dist/
+  ✔  Admin panel → artifacts/admin/dist/
+  ✔  Go engine → artifacts/go-service/server
+rsync: [sender] change_dir "/opt/cryptox/artifacts/user-portal/dist" failed: No such file or directory (2)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1356) [sender=3.4.1]
+ubuntu@ip-172-31-11-99:~/zebvix$

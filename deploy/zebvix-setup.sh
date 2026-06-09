@@ -43,6 +43,7 @@ spinner() {
     sleep 0.1; i=$((i + 1))
   done
   printf "\r%-60s\r" " "
+  wait "$pid"
 }
 
 # ── Banner ────────────────────────────────────────────────────────
@@ -360,14 +361,14 @@ spinner $! "Building API server (esbuild)..."
 ok "API server → artifacts/api-server/dist/"
 
 # User portal
-(sudo -u "$APP_USER" BASE_PATH=/user/ pnpm --filter @workspace/user-portal run build > /tmp/zbx_portal.log 2>&1) &
+(sudo -u "$APP_USER" PORT=3000 BASE_PATH=/user/ pnpm --filter @workspace/user-portal run build > /tmp/zbx_portal.log 2>&1) &
 spinner $! "Building user portal (Vite)..."
-ok "User portal → artifacts/user-portal/dist/"
+ok "User portal → artifacts/user-portal/dist/public/"
 
 # Admin panel
-(sudo -u "$APP_USER" BASE_PATH=/admin/ pnpm --filter @workspace/admin run build > /tmp/zbx_admin.log 2>&1) &
+(sudo -u "$APP_USER" PORT=3001 BASE_PATH=/admin/ pnpm --filter @workspace/admin run build > /tmp/zbx_admin.log 2>&1) &
 spinner $! "Building admin panel (Vite)..."
-ok "Admin panel → artifacts/admin/dist/"
+ok "Admin panel → artifacts/admin/dist/public/"
 
 # Go service
 (cd "$APP_DIR/artifacts/go-service" && \
