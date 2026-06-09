@@ -307,6 +307,13 @@ export default function AITradingScreen() {
                     {new Date(sub.createdAt).toLocaleDateString("en-IN")}
                   </Text>
                 </View>
+                <TouchableOpacity
+                  style={[styles.invoiceBtn, { borderColor: meta.color + "50", backgroundColor: meta.color + "10" }]}
+                  onPress={() => router.push(`/ai-invoice/${sub.id}` as any)}
+                >
+                  <Feather name="file-text" size={12} color={meta.color} />
+                  <Text style={[styles.invoiceBtnText, { color: meta.color }]}>View P&L Statement</Text>
+                </TouchableOpacity>
               </View>
             );
           }}
@@ -493,6 +500,8 @@ const styles = StyleSheet.create({
   subTop: { flexDirection: "row", alignItems: "center", gap: 12 },
   subProfit: { fontSize: 15, fontWeight: "800" },
   subMeta: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 10 },
+  invoiceBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, height: 36, borderRadius: 8, borderWidth: 1, marginTop: 10 },
+  invoiceBtnText: { fontSize: 12, fontWeight: "700" },
   statusBadge: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
   statusDot: { width: 6, height: 6, borderRadius: 3 },
   statusText: { fontSize: 12, fontWeight: "600", textTransform: "capitalize" },

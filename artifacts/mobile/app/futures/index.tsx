@@ -303,6 +303,33 @@ export default function FuturesScreen() {
                           </View>
                         ))}
                       </View>
+                      <View style={styles.posActRow}>
+                        <TouchableOpacity
+                          style={[styles.posCloseBtn, { backgroundColor: "#F6465D20", borderColor: "#F6465D50" }]}
+                          onPress={async () => {
+                            try {
+                              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                              const parts = (p.symbol||"").match(/^([A-Z]+?)(USDT|BTC|ETH|BNB)$/);
+                              await apiFetch("/api/futures/position", {
+                                method: "DELETE",
+                                body: JSON.stringify({ currency: parts?.[2] ?? "USDT", pair: parts?.[1] ?? p.symbol, side: p.side }),
+                              });
+                              void qc.invalidateQueries({ queryKey: ["futures-positions"] });
+                              router.push(`/futures-invoice/${p.id}` as any);
+                            } catch { /* ignore */ }
+                          }}
+                        >
+                          <Feather name="x-square" size={12} color="#F6465D" />
+                          <Text style={[styles.posActLabel, { color: "#F6465D" }]}>Close</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.posCloseBtn, { backgroundColor: "#eb910015", borderColor: "#eb910050" }]}
+                          onPress={() => router.push(`/futures-invoice/${p.id}` as any)}
+                        >
+                          <Feather name="file-text" size={12} color="#eb9100" />
+                          <Text style={[styles.posActLabel, { color: "#eb9100" }]}>Invoice</Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
                   );
                 })
@@ -514,6 +541,9 @@ const styles = StyleSheet.create({
   posStat:{flex:1},
   posStatLabel:{fontSize:10,textTransform:"uppercase"},
   posStatVal:{fontSize:12,fontWeight:"700",marginTop:2},
+  posActRow:{flexDirection:"row",gap:8,marginTop:10},
+  posCloseBtn:{flex:1,flexDirection:"row",alignItems:"center",justifyContent:"center",gap:5,height:34,borderRadius:8,borderWidth:1},
+  posActLabel:{fontSize:12,fontWeight:"700"},
   typeRow:{flexDirection:"row",borderRadius:8,padding:3,gap:2},
   typeBtn:{flex:1,paddingVertical:8,alignItems:"center",borderRadius:6},
   typeBtnLabel:{fontSize:13,fontWeight:"700"},

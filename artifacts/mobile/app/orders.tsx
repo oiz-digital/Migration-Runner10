@@ -181,6 +181,17 @@ export default function OrdersScreen() {
                     </View>
                   </>
                 )}
+                {(o.status === "filled" || o.status === "partially_filled") && (
+                  <View style={[styles.cancelRow, { borderTopColor: colors.border }]}>
+                    <TouchableOpacity
+                      style={[styles.invoiceBtn, { borderColor: colors.primary + "60", backgroundColor: colors.primary + "10" }]}
+                      onPress={() => router.push(`/trade-invoice/${o.id}` as any)}
+                    >
+                      <Feather name="file-text" size={13} color={colors.primary} />
+                      <Text style={[styles.cancelLabel, { color: colors.primary }]}>View Tax Invoice</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
             );
           }}
@@ -220,4 +231,5 @@ const styles = StyleSheet.create({
   cancelRow: { borderTopWidth: StyleSheet.hairlineWidth, padding: 10 },
   cancelBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 8, borderRadius: 8, borderWidth: 1 },
   cancelLabel: { fontSize: 13, fontWeight: "700" },
+  invoiceBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 8, borderRadius: 8, borderWidth: 1 },
 });

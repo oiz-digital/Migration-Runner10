@@ -214,7 +214,7 @@ export default function TradeSymbolScreen() {
                   <Text style={[styles.bookColLabel, { color: colors.mutedForeground }]}>Price</Text>
                   <Text style={[styles.bookColLabel, { color: colors.mutedForeground, textAlign: "right" }]}>Qty</Text>
                 </View>
-                {[...asks].reverse().map((a, i) => (
+                {[...asks].reverse().filter(a => a && typeof a.price === "number").map((a, i) => (
                   <TouchableOpacity key={i} style={styles.bookRow} onPress={() => setLimitPrice(a.price.toFixed(a.price < 1 ? 4 : 2))}>
                     <View style={[styles.depthBar, { width: `${Math.min(100, ((a.total ?? a.price * a.qty) / maxAskTotal) * 100)}%`, backgroundColor: "#e8151510" }]} />
                     <Text style={[styles.bookPrice, { color: colors.destructive }]}>{a.price.toFixed(a.price < 1 ? 4 : 2)}</Text>
@@ -228,7 +228,7 @@ export default function TradeSymbolScreen() {
                     style={{ color: change24h >= 0 ? colors.success : colors.destructive, fontSize: 13, fontWeight: "800" }}
                   />
                 </View>
-                {bids.map((b, i) => (
+                {bids.filter(b => b && typeof b.price === "number").map((b, i) => (
                   <TouchableOpacity key={i} style={styles.bookRow} onPress={() => setLimitPrice(b.price.toFixed(b.price < 1 ? 4 : 2))}>
                     <View style={[styles.depthBar, { width: `${Math.min(100, ((b.total ?? b.price * b.qty) / maxBidTotal) * 100)}%`, backgroundColor: "#22c55e10" }]} />
                     <Text style={[styles.bookPrice, { color: colors.success }]}>{b.price.toFixed(b.price < 1 ? 4 : 2)}</Text>

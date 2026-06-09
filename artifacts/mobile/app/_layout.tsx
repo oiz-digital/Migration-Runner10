@@ -56,6 +56,9 @@ function RootLayoutNav() {
       <Stack.Screen name="inr-payments/index" />
       <Stack.Screen name="discover/index" />
       <Stack.Screen name="legal/[page]" />
+      <Stack.Screen name="trade-invoice/[id]" />
+      <Stack.Screen name="ai-invoice/[id]" />
+      <Stack.Screen name="futures-invoice/[id]" />
     </Stack>
   );
 }

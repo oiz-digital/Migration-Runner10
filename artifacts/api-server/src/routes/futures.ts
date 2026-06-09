@@ -27,6 +27,7 @@ import {
 import { verifyJwt } from "../lib/jwt";
 import { readSessionCookie, getUserBySession } from "../lib/auth";
 import { logger } from "../lib/logger";
+import { getInrRate } from "../lib/price-service";
 
 const r: IRouter = Router();
 
@@ -1064,5 +1065,82 @@ export async function restoreBooksOnBoot(): Promise<void> {
     logger.warn({ err: String(e) }, "[futures] restoreBooksOnBoot failed");
   }
 }
+
+// ── GET /futures/positions/:id/invoice ────────────────────────────────────
+r.get("/futures/positions/:id/invoice", bicryptoAuth, async (req: any, res: Response): Promise<void> => {
+  const id = parseInt(req.params.id as string, 10);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid position id" }); return; }
+  const u = req.bcUser;
+
+  const [pos] = await db.select().from(futuresPositionsTable)
+    .where(and(eq(futuresPositionsTable.id, id), eq(futuresPositionsTable.userId, u.id))).limit(1);
+  if (!pos) { res.status(404).json({ error: "Position not found" }); return; }
+
+  const [pair] = await db.select().from(pairsTable).where(eq(pairsTable.id, pos.pairId)).limit(1);
+  let symbol = `POS-${id}`;
+  if (pair) {
+    const [base] = await db.select().from(coinsTable).where(eq(coinsTable.id, (pair as any).baseCoinId)).limit(1);
+    const [quote] = await db.select().from(coinsTable).where(eq(coinsTable.id, (pair as any).quoteCoinId)).limit(1);
+    if (base && quote) symbol = `${(base as any).symbol}${(quote as any).symbol}`;
+  }
+
+  const qty        = Number(pos.qty ?? 0);
+  const entryPrice = Number(pos.entryPrice ?? 0);
+  const markPrice  = Number(pos.markPrice ?? entryPrice);
+  const leverage   = Number(pos.leverage ?? 1);
+  const margin     = Number(pos.marginAmount ?? 0);
+  const realizedPnl = Number((pos as any).realizedPnl ?? 0);
+  const TAKER_FEE  = 0.0006; // 0.06% each side
+  const openNotional  = qty * entryPrice;
+  const closeNotional = qty * markPrice;
+  const feeUsdt    = +((openNotional + closeNotional) * TAKER_FEE).toFixed(8);
+  const netPnlUsdt = +(realizedPnl - feeUsdt).toFixed(8);
+
+  const inrRate = getInrRate();
+  const toInr   = (v: number) => +(v * inrRate).toFixed(2);
+  const iso     = (d: any) => d instanceof Date ? d.toISOString() : (d ?? null);
+
+  res.json({
+    invoiceNo: `FUT-${String(pos.id).padStart(8, "0")}`,
+    issuedAt:  new Date().toISOString(),
+    type:      "futures_position",
+    exchange: {
+      name:    "Zebvix Exchange",
+      short:   "ZBX",
+      legal:   "Zebvix Exchange — Futures Position Settlement Invoice",
+      cin:     "U74999KA2020PTC123456",
+      address: "Bangalore, India",
+    },
+    user: { id: u.id, name: u.name ?? u.email ?? "Customer", email: u.email ?? "" },
+    position: {
+      id: pos.id, symbol,
+      side:        pos.side,
+      qty,         leverage,
+      entryPrice,  markPrice,
+      margin,      status: pos.status,
+      openedAt:    iso((pos as any).openedAt ?? (pos as any).createdAt),
+      closedAt:    iso((pos as any).closedAt),
+      closeReason: (pos as any).closeReason ?? null,
+    },
+    charges: { feeRatePct: TAKER_FEE * 100, feeNote: "Taker fee on open + close notional" },
+    totals: {
+      openNotionalUsdt:  +openNotional.toFixed(4),
+      closeNotionalUsdt: +closeNotional.toFixed(4),
+      marginUsdt:        +margin.toFixed(4),
+      grossPnlUsdt:      +realizedPnl.toFixed(4),
+      feeUsdt:           +feeUsdt.toFixed(4),
+      netPnlUsdt,
+      openNotionalInr:   toInr(openNotional),
+      marginInr:         toInr(margin),
+      grossPnlInr:       toInr(realizedPnl),
+      feeInr:            toInr(feeUsdt),
+      netPnlInr:         toInr(netPnlUsdt),
+      inrRate,
+    },
+    legend: realizedPnl >= 0
+      ? "Net P&L = Gross P&L − Taker Fee (profit)"
+      : "Net P&L = Gross P&L − Taker Fee (loss)",
+  });
+});
 
 export default r;
