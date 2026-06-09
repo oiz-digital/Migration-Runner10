@@ -345,28 +345,33 @@ cd "$APP_DIR"
 
 set -a; source "$ENV_FILE"; set +a
 
-# pnpm install
-(sudo -u "$APP_USER" pnpm install --frozen-lockfile --prod=false > /tmp/zbx_pnpm.log 2>&1) &
+# pnpm install — run as root so pnpm store resolves correctly in /root/.local/share/pnpm
+(HOME=/root pnpm install --no-frozen-lockfile > /tmp/zbx_pnpm.log 2>&1) &
 spinner $! "Installing pnpm dependencies..."
+[[ -f /tmp/zbx_pnpm.log ]] && grep -i "error\|ERR" /tmp/zbx_pnpm.log | head -5 || true
 ok "pnpm dependencies installed"
 
+# Fix ownership after root install
+chown -R "$APP_USER":"$APP_USER" "$APP_DIR"
+
 # Typecheck libs
-(sudo -u "$APP_USER" pnpm run typecheck:libs > /tmp/zbx_libs.log 2>&1) &
+(HOME=/root pnpm run typecheck:libs > /tmp/zbx_libs.log 2>&1) &
 spinner $! "Building shared TypeScript libraries..."
 ok "Libraries built"
 
 # API server
-(sudo -u "$APP_USER" pnpm --filter @workspace/api-server run build > /tmp/zbx_api.log 2>&1) &
+(HOME=/root pnpm --filter @workspace/api-server run build > /tmp/zbx_api.log 2>&1) &
 spinner $! "Building API server (esbuild)..."
 ok "API server → artifacts/api-server/dist/"
 
 # User portal
-(sudo -u "$APP_USER" PORT=3000 BASE_PATH=/user/ pnpm --filter @workspace/user-portal run build > /tmp/zbx_portal.log 2>&1) &
+(HOME=/root PORT=3000 BASE_PATH=/user/ pnpm --filter @workspace/user-portal run build > /tmp/zbx_portal.log 2>&1) &
 spinner $! "Building user portal (Vite)..."
+[[ -f /tmp/zbx_portal.log ]] && grep -i "error\|ERR\|vite" /tmp/zbx_portal.log | tail -5 || true
 ok "User portal → artifacts/user-portal/dist/public/"
 
 # Admin panel
-(sudo -u "$APP_USER" PORT=3001 BASE_PATH=/admin/ pnpm --filter @workspace/admin run build > /tmp/zbx_admin.log 2>&1) &
+(HOME=/root PORT=3001 BASE_PATH=/admin/ pnpm --filter @workspace/admin run build > /tmp/zbx_admin.log 2>&1) &
 spinner $! "Building admin panel (Vite)..."
 ok "Admin panel → artifacts/admin/dist/public/"
 
