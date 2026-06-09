@@ -354,8 +354,8 @@ ok "pnpm dependencies installed"
 # Fix ownership after root install
 chown -R "$APP_USER":"$APP_USER" "$APP_DIR"
 
-# Typecheck libs
-(HOME=/root pnpm run typecheck:libs > /tmp/zbx_libs.log 2>&1) &
+# Build shared libs (tsc --build via local binary)
+(HOME=/root "$APP_DIR/node_modules/.bin/tsc" --build > /tmp/zbx_libs.log 2>&1) &
 spinner $! "Building shared TypeScript libraries..."
 ok "Libraries built"
 
