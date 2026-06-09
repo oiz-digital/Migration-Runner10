@@ -344,59 +344,54 @@ ok "Source code synced to $APP_DIR"
 
 cd "$APP_DIR"
 
-# pnpm install — run BEFORE sourcing .env so NODE_ENV=production doesn't skip devDependencies
-# --shamefully-hoist: flattens node_modules so tsc/vite/esbuild are accessible in PATH
-(HOME=/root CI=true NODE_ENV=development pnpm install --no-frozen-lockfile --shamefully-hoist --yes > /tmp/zbx_pnpm.log 2>&1) &
-spinner $! "Installing pnpm dependencies..."
-[[ -f /tmp/zbx_pnpm.log ]] && grep -i "error\|ERR" /tmp/zbx_pnpm.log | head -5 || true
+# ── pnpm install (synchronous — shows live output) ────────────────
+info "Installing pnpm dependencies (may take 3-5 min)..."
+HOME=/root CI=true NODE_ENV=development \
+  pnpm install --no-frozen-lockfile --shamefully-hoist --yes \
+  2>&1 | tee /tmp/zbx_pnpm.log | grep --line-buffered -E "^\s*(warn|ERR|error|✔|added|packages)" || true
 ok "pnpm dependencies installed"
 
-# Fix ownership after root install
+# Fix ownership
 chown -R "$APP_USER":"$APP_USER" "$APP_DIR"
 
-# Now source .env for build env vars (DATABASE_URL, NODE_ENV, etc.)
+# Source .env for build vars
 set -a; source "$ENV_FILE"; set +a
 
-# Build shared libs — use local tsc binary; skip on failure (not required for esbuild)
-if [[ -f "$APP_DIR/node_modules/.bin/tsc" ]]; then
-  (HOME=/root "$APP_DIR/node_modules/.bin/tsc" --build > /tmp/zbx_libs.log 2>&1) &
-  spinner $! "Building shared TypeScript libraries..." || {
-    warn "tsc --build had warnings (non-fatal for production build)"
-    cat /tmp/zbx_libs.log | tail -5 || true
-  }
+# ── Build shared libs ─────────────────────────────────────────────
+info "Building shared TypeScript libraries..."
+if [[ -x "$APP_DIR/node_modules/.bin/tsc" ]]; then
+  HOME=/root "$APP_DIR/node_modules/.bin/tsc" --build > /tmp/zbx_libs.log 2>&1 \
+    || { warn "tsc warnings (non-fatal):"; tail -5 /tmp/zbx_libs.log || true; }
   ok "Libraries built"
 else
-  warn "tsc not found in node_modules/.bin — skipping lib typecheck (build will still succeed)"
+  warn "tsc not found — skipping (esbuild handles TS directly)"
 fi
 
-# API server — esbuild compiles TS directly, no tsc needed
-(HOME=/root pnpm --filter @workspace/api-server run build > /tmp/zbx_api.log 2>&1) &
-spinner $! "Building API server (esbuild)..."
-if [[ $? -ne 0 ]]; then
-  err "API server build failed — check /tmp/zbx_api.log"
-fi
+# ── API server (esbuild) ──────────────────────────────────────────
+info "Building API server..."
+HOME=/root pnpm --filter @workspace/api-server run build > /tmp/zbx_api.log 2>&1 \
+  || { echo ""; tail -20 /tmp/zbx_api.log; err "API server build failed"; }
 ok "API server → artifacts/api-server/dist/"
 
-# User portal
-(HOME=/root PORT=3000 BASE_PATH=/user/ pnpm --filter @workspace/user-portal run build > /tmp/zbx_portal.log 2>&1) &
-spinner $! "Building user portal (Vite)..."
-if [[ $? -ne 0 ]]; then
-  err "User portal build failed — check /tmp/zbx_portal.log"
-fi
+# ── User portal (Vite) ────────────────────────────────────────────
+info "Building user portal..."
+HOME=/root PORT=3000 BASE_PATH=/user/ \
+  pnpm --filter @workspace/user-portal run build > /tmp/zbx_portal.log 2>&1 \
+  || { echo ""; tail -20 /tmp/zbx_portal.log; err "User portal build failed"; }
 ok "User portal → artifacts/user-portal/dist/public/"
 
-# Admin panel
-(HOME=/root PORT=3001 BASE_PATH=/admin/ pnpm --filter @workspace/admin run build > /tmp/zbx_admin.log 2>&1) &
-spinner $! "Building admin panel (Vite)..."
-if [[ $? -ne 0 ]]; then
-  err "Admin panel build failed — check /tmp/zbx_admin.log"
-fi
+# ── Admin panel (Vite) ────────────────────────────────────────────
+info "Building admin panel..."
+HOME=/root PORT=3001 BASE_PATH=/admin/ \
+  pnpm --filter @workspace/admin run build > /tmp/zbx_admin.log 2>&1 \
+  || { echo ""; tail -20 /tmp/zbx_admin.log; err "Admin panel build failed"; }
 ok "Admin panel → artifacts/admin/dist/public/"
 
-# Go service
+# ── Go matching engine ────────────────────────────────────────────
+info "Building Go matching engine..."
 (cd "$APP_DIR/artifacts/go-service" && \
- /usr/local/go/bin/go build -o server -ldflags="-s -w" . > /tmp/zbx_go.log 2>&1) &
-spinner $! "Building Go matching engine..."
+  /usr/local/go/bin/go build -o server -ldflags="-s -w" .) > /tmp/zbx_go.log 2>&1 \
+  || { echo ""; tail -10 /tmp/zbx_go.log; err "Go build failed"; }
 ok "Go engine → artifacts/go-service/server"
 
 # Copy static files
