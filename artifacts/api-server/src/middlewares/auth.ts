@@ -29,8 +29,16 @@ function blockIfNotActive(user: User, res: Response): boolean {
   return false;
 }
 
+function readToken(req: Request): string | undefined {
+  const cookie = readSessionCookie(req);
+  if (cookie) return cookie;
+  const auth = req.headers["authorization"] ?? req.headers["Authorization"];
+  if (typeof auth === "string" && auth.startsWith("Bearer ")) return auth.slice(7).trim();
+  return undefined;
+}
+
 export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
-  const token = readSessionCookie(req);
+  const token = readToken(req);
   const user = await getUserBySession(token);
   if (!user) {
     res.status(401).json({ error: "Unauthorized" });
@@ -42,13 +50,12 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
 }
 
 /**
- * Best-effort auth: hydrates `req.user` if a valid session cookie is present
- * but never short-circuits to 401. Use for public endpoints that personalize
- * their response when a user is logged in (e.g. fee quote with VIP tier).
+ * Best-effort auth: hydrates `req.user` if a valid session cookie or Bearer
+ * token is present but never short-circuits to 401.
  */
 export async function optionalAuth(req: Request, _res: Response, next: NextFunction): Promise<void> {
   try {
-    const token = readSessionCookie(req);
+    const token = readToken(req);
     const user = await getUserBySession(token);
     if (user) req.user = user;
   } catch { /* ignore — request continues unauthenticated */ }
@@ -57,7 +64,7 @@ export async function optionalAuth(req: Request, _res: Response, next: NextFunct
 
 export function requireRole(...roles: string[]) {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const token = readSessionCookie(req);
+    const token = readToken(req);
     const user = await getUserBySession(token);
     if (!user) {
       res.status(401).json({ error: "Unauthorized" });

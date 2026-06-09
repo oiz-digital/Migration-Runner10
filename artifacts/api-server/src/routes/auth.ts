@@ -245,7 +245,7 @@ router.post("/auth/register", validate(RegisterBody), async (req, res): Promise<
 
   const token = await createSession(user.id, req);
   res.cookie(SESSION_COOKIE, token, COOKIE_OPTS);
-  res.status(201).json({ user: sanitizeUser(user) });
+  res.status(201).json({ user: sanitizeUser(user), token });
 });
 
 router.post("/auth/login", validate(LoginBody), async (req, res): Promise<void> => {
@@ -321,7 +321,7 @@ router.post("/auth/login", validate(LoginBody), async (req, res): Promise<void> 
   await db.update(usersTable).set({ lastLoginAt: new Date() }).where(eq(usersTable.id, user.id));
   const token = await createSession(user.id, req);
   res.cookie(SESSION_COOKIE, token, COOKIE_OPTS);
-  res.json({ user: sanitizeUser(user) });
+  res.json({ user: sanitizeUser(user), token });
 });
 
 // ─── /auth/challenge/send — server-driven OTP send for a challenge ──────
@@ -411,7 +411,7 @@ router.post("/auth/login/verify", validate(VerifyBody), async (req, res): Promis
   await db.update(usersTable).set({ lastLoginAt: new Date() }).where(eq(usersTable.id, user.id));
   const sessToken = await createSession(user.id, req);
   res.cookie(SESSION_COOKIE, sessToken, COOKIE_OPTS);
-  res.json({ user: sanitizeUser(user) });
+  res.json({ user: sanitizeUser(user), token: sessToken });
 });
 
 // ─── /auth/register/verify — finishes a signup challenge ─────────────────
@@ -452,7 +452,7 @@ router.post("/auth/register/verify", validate(VerifyBody), async (req, res): Pro
   const [fresh] = await db.select().from(usersTable).where(eq(usersTable.id, ch.userId)).limit(1);
   const sessToken = await createSession(ch.userId, req);
   res.cookie(SESSION_COOKIE, sessToken, COOKIE_OPTS);
-  res.status(201).json({ user: sanitizeUser(fresh ?? user) });
+  res.status(201).json({ user: sanitizeUser(fresh ?? user), token: sessToken });
 });
 
 /**

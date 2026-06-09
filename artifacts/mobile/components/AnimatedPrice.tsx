@@ -17,12 +17,12 @@ interface Props {
 
 export function AnimatedPrice({ price, format, style, prefix = "" }: Props) {
   const prevRef = useRef(price);
-  const isUpRef = useRef(true);
   const flash = useSharedValue(0);
+  const isUp = useSharedValue(true);
 
   useEffect(() => {
     if (price !== prevRef.current) {
-      isUpRef.current = price > prevRef.current;
+      isUp.value = price > prevRef.current;
       prevRef.current = price;
       flash.value = withSequence(
         withTiming(1, { duration: 80 }),
@@ -34,9 +34,9 @@ export function AnimatedPrice({ price, format, style, prefix = "" }: Props) {
   const animStyle = useAnimatedStyle(() => ({
     backgroundColor:
       flash.value > 0
-        ? isUpRef.current
-          ? `rgba(34,197,94,${flash.value * 0.35})`
-          : `rgba(232,21,21,${flash.value * 0.35})`
+        ? isUp.value
+          ? `rgba(14,203,129,${flash.value * 0.35})`
+          : `rgba(246,70,93,${flash.value * 0.35})`
         : "transparent",
   }));
 

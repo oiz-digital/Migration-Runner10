@@ -35,10 +35,14 @@ interface AuthContextValue extends AuthState {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function extractSession(headers: Headers): string | null {
-  const raw = headers.get("set-cookie") ?? headers.get("Set-Cookie") ?? "";
-  const match = raw.match(/cx_session=([^;]+)/);
-  return match ? match[1] : null;
+function extractSessionFromHeaders(headers: Headers): string | null {
+  try {
+    const raw = headers.get("set-cookie") ?? headers.get("Set-Cookie") ?? "";
+    const match = raw.match(/cx_session=([^;]+)/);
+    return match ? match[1] : null;
+  } catch {
+    return null;
+  }
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -48,6 +52,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading: true,
     isAuthenticated: false,
   });
+
+  const fetchAndUpdateUser = useCallback(async (session: string) => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/auth/me`, {
+        headers: {
+          Cookie: `cx_session=${session}`,
+          Authorization: `Bearer ${session}`,
+        },
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json() as { user?: ZUser } | ZUser;
+        const userData = (data as any).user ?? (data as ZUser);
+        await AsyncStorage.setItem(USER_KEY, JSON.stringify(userData));
+        setState((s) => ({ ...s, user: userData, isAuthenticated: true }));
+      } else {
+        await AsyncStorage.multiRemove([SESSION_KEY, USER_KEY]);
+        setState((s) => ({ ...s, user: null, session: null, isAuthenticated: false }));
+      }
+    } catch {}
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -67,24 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setState((s) => ({ ...s, isLoading: false }));
       }
     })();
-  }, []);
-
-  const fetchAndUpdateUser = useCallback(async (session: string) => {
-    try {
-      const res = await fetch(`${BASE_URL}/api/user/me`, {
-        headers: { Cookie: `cx_session=${session}` },
-        credentials: "include",
-      });
-      if (res.ok) {
-        const data = await res.json() as ZUser;
-        await AsyncStorage.setItem(USER_KEY, JSON.stringify(data));
-        setState((s) => ({ ...s, user: data, isAuthenticated: true }));
-      } else {
-        await AsyncStorage.multiRemove([SESSION_KEY, USER_KEY]);
-        setState((s) => ({ ...s, user: null, session: null, isAuthenticated: false }));
-      }
-    } catch {}
-  }, []);
+  }, [fetchAndUpdateUser]);
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await fetch(`${BASE_URL}/api/auth/login`, {
@@ -94,15 +102,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       credentials: "include",
     });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ message: "Login failed" })) as { message?: string };
-      throw new Error(err.message ?? "Login failed");
+      const err = await res.json().catch(() => ({})) as { message?: string; error?: string };
+      throw new Error(err.message ?? err.error ?? "Login failed");
     }
-    const session = extractSession(res.headers);
-    const data = await res.json() as { user?: ZUser };
+    const data = await res.json() as { user?: ZUser; token?: string };
     const user = data.user ?? null;
+    const session = data.token ?? extractSessionFromHeaders(res.headers);
     if (session) await AsyncStorage.setItem(SESSION_KEY, session);
     if (user) await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
-    setState({ user, session, isLoading: false, isAuthenticated: !!user });
+    setState({ user, session: session ?? null, isLoading: false, isAuthenticated: !!user });
     if (session) void fetchAndUpdateUser(session);
   }, [fetchAndUpdateUser]);
 
@@ -114,15 +122,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       credentials: "include",
     });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ message: "Registration failed" })) as { message?: string };
-      throw new Error(err.message ?? "Registration failed");
+      const err = await res.json().catch(() => ({})) as { message?: string; error?: string };
+      throw new Error(err.message ?? err.error ?? "Registration failed");
     }
-    const session = extractSession(res.headers);
-    const data = await res.json() as { user?: ZUser };
+    const data = await res.json() as { user?: ZUser; token?: string };
     const user = data.user ?? null;
+    const session = data.token ?? extractSessionFromHeaders(res.headers);
     if (session) await AsyncStorage.setItem(SESSION_KEY, session);
     if (user) await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
-    setState({ user, session, isLoading: false, isAuthenticated: !!user });
+    setState({ user, session: session ?? null, isLoading: false, isAuthenticated: !!user });
   }, []);
 
   const logout = useCallback(async () => {
@@ -130,7 +138,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (session) {
       await fetch(`${BASE_URL}/api/auth/logout`, {
         method: "POST",
-        headers: { Cookie: `cx_session=${session}` },
+        headers: {
+          Cookie: `cx_session=${session}`,
+          Authorization: `Bearer ${session}`,
+        },
         credentials: "include",
       }).catch(() => {});
     }
