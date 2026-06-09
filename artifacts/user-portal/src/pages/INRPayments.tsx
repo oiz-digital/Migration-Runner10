@@ -41,13 +41,14 @@ const METHOD_LABELS: Record<string, string> = {
   upi: "UPI", bank_transfer: "Bank Transfer", neft: "NEFT", rtgs: "RTGS", imps: "IMPS",
 };
 
-const PAYMENT_DETAILS = {
-  upiId: "zebvix@ybl",
-  bankName: "HDFC Bank",
-  accountNumber: "XXXX XXXX 1234",
-  ifscCode: "HDFC0001234",
-  accountHolder: "Zebvix Exchange Pvt Ltd",
-};
+interface BankDetails {
+  upiId?: string;
+  bankName?: string;
+  accountNumber?: string;
+  ifscCode?: string;
+  accountHolder?: string;
+  note?: string;
+}
 
 function statusVariant(s: string): "success" | "warning" | "danger" | "neutral" {
   const v = s.toLowerCase();
@@ -65,6 +66,13 @@ export default function INRPayments() {
     bankName: "", accountNumber: "", ifscCode: "", accountHolder: "",
   });
   const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const bankDetailsQ = useQuery<BankDetails>({
+    queryKey: ["/payments/inr/bank-details"],
+    queryFn: () => get<BankDetails>("/payments/inr/bank-details"),
+    staleTime: 5 * 60 * 1000,
+  });
+  const payDet = bankDetailsQ.data;
 
   const historyQ = useQuery<INRTx[]>({
     queryKey: ["/payments/inr/history"],
@@ -166,11 +174,11 @@ export default function INRPayments() {
           <SectionCard title="Our Payment Details" icon={CreditCard}>
             <div className="space-y-2">
               {[
-                ["UPI ID", PAYMENT_DETAILS.upiId],
-                ["Bank", PAYMENT_DETAILS.bankName],
-                ["Account", PAYMENT_DETAILS.accountNumber],
-                ["IFSC", PAYMENT_DETAILS.ifscCode],
-                ["Name", PAYMENT_DETAILS.accountHolder],
+                ["UPI ID",  payDet?.upiId         ?? "zebvix@ybl"],
+                ["Bank",    payDet?.bankName       ?? "—"],
+                ["Account", payDet?.accountNumber  ?? "—"],
+                ["IFSC",    payDet?.ifscCode       ?? "—"],
+                ["Name",    payDet?.accountHolder  ?? "Zebvix Exchange Pvt Ltd"],
               ].map(([label, value]) => (
                 <div key={label} className="flex items-center justify-between py-1.5 border-b border-border/30 last:border-0">
                   <span className="text-xs text-muted-foreground">{label}</span>

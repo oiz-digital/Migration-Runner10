@@ -24,6 +24,33 @@ import { requireAuth } from "../middlewares/auth";
 const router: IRouter = Router();
 function uid(req: any): number { return req.user!.id as number; }
 
+// Reference mid-prices for simulated Forex/CFD orders.
+// Prices are updated periodically to track real market levels.
+const FOREX_REF: Record<string, number> = {
+  EURUSD: 1.0876, GBPUSD: 1.2743, USDJPY: 157.23, USDCHF: 0.8954,
+  AUDUSD: 0.6589, NZDUSD: 0.6045, USDCAD: 1.3654, EURJPY: 170.86,
+  GBPJPY: 199.34, EURGBP: 0.8531,
+  USDINR: 83.45,  EURINR: 90.72,  GBPINR: 106.31, JPYINR: 0.531,
+  AUDINR: 54.98,
+  XAUUSD: 2324.5, XAGUSD: 29.42,  XPTUSD: 998.4,
+  US30: 38654,    SPX500: 5234,    NAS100: 18234,
+  BTCUSD: 67000,  ETHUSD: 3500,   BNBUSD: 590,
+};
+
+/** Returns a simulated open-price close to the reference for the given symbol. */
+function simOpenPrice(symbol: string): number {
+  const ref = FOREX_REF[symbol.toUpperCase()];
+  if (ref) {
+    // Spread: ±5 pips (0.5 pip for JPY/INR pairs which have larger absolute values)
+    const pip = ref >= 100 ? 0.01 : ref >= 1 ? 0.0001 : 0.00001;
+    const jitter = (Math.random() - 0.5) * pip * 10;
+    const dp = ref >= 10000 ? 0 : ref >= 100 ? 2 : ref >= 1 ? 4 : 5;
+    return +( ref + jitter ).toFixed(dp);
+  }
+  // Unknown symbol: return 1.00000 as safe fallback
+  return 1.00000;
+}
+
 // Well-known MT5 broker servers list (for autocomplete/validation)
 const KNOWN_SERVERS = [
   "ICMarkets-Demo", "ICMarkets-Live01", "ICMarkets-Live02",
@@ -228,7 +255,7 @@ router.post("/mt5/orders", requireAuth, async (req, res): Promise<void> => {
 
   // Simulate order execution
   const ticket = "MT5-" + Date.now().toString(36).toUpperCase();
-  const openPrice = +(Math.random() * 2 + 0.5).toFixed(5); // placeholder
+  const openPrice = simOpenPrice(symbol);
 
   const [order] = await db.insert(mt5OrdersTable).values({
     userId,

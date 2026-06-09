@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, inrTransactionsTable, walletsTable, coinsTable, kycRecordsTable } from "@workspace/db";
+import { db, inrTransactionsTable, walletsTable, coinsTable, kycRecordsTable, settingsTable } from "@workspace/db";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 import { getInrRate } from "../lib/price-service";
@@ -51,6 +51,27 @@ const WithdrawSchema = z.object({
   ifscCode:      z.string().optional(),
   accountHolder: z.string().optional(),
   upiId:         z.string().optional(),
+});
+
+/* GET /api/payments/inr/bank-details — returns Zebvix deposit account details.
+   Admin can configure via settings key "inr_deposit_bank" (JSON). */
+router.get("/payments/inr/bank-details", async (_req, res): Promise<void> => {
+  try {
+    const [row] = await db.select().from(settingsTable)
+      .where(eq(settingsTable.key, "inr_deposit_bank")).limit(1);
+    if (row?.value) {
+      res.json(JSON.parse(row.value as string));
+      return;
+    }
+  } catch { /* fall through to defaults */ }
+  res.json({
+    upiId:         "zebvix@ybl",
+    bankName:      "HDFC Bank",
+    accountNumber: "50200093456789",
+    ifscCode:      "HDFC0001234",
+    accountHolder: "Zebvix Exchange Pvt Ltd",
+    note:          "Add your User ID in payment remarks for faster credit",
+  });
 });
 
 /* POST /api/payments/inr/deposit */

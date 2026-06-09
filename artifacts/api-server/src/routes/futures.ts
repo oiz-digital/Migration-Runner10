@@ -68,14 +68,17 @@ async function bicryptoAuth(req: Request, res: Response, next: NextFunction) {
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 const GO_BASE = process.env.GO_SERVICE_URL || "http://127.0.0.1:8090";
+const GO_INTERNAL_SECRET = process.env.INTERNAL_SECRET;
 
 async function goRpc(path: string, body: any, timeoutMs = 5000): Promise<any> {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (GO_INTERNAL_SECRET) headers["X-Internal-Secret"] = GO_INTERNAL_SECRET;
     const res = await fetch(`${GO_BASE}${path}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(body),
       signal: ctrl.signal,
     });

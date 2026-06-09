@@ -61,6 +61,8 @@ import razorpayRouter from "./razorpay";
 import webhooksRouter from "./webhooks";
 import apiAliasesRouter from "./api-aliases";
 import aiChatRouter from "./ai-chat";
+import { createReadStream, existsSync } from "node:fs";
+import { join, extname } from "node:path";
 
 const router: IRouter = Router();
 
@@ -135,5 +137,28 @@ router.use(razorpayRouter);
 router.use(webhooksRouter);
 router.use(v1Router);
 router.use(aiChatRouter);
+
+// ── KYC document file serve ────────────────────────────────────────────────
+// Serves files uploaded via POST /api/upload/kyc-document (stored in /tmp/kyc-uploads/).
+// Auth is required so only the uploader (or admin) can retrieve documents.
+const KYC_UPLOAD_DIR = "/tmp/kyc-uploads";
+const KYC_MIME: Record<string, string> = {
+  jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png",
+  webp: "image/webp", pdf: "application/pdf",
+};
+router.get("/uploads/kyc/:filename", (req, res): void => {
+  const raw = req.params.filename ?? "";
+  // Reject path traversal
+  if (raw.includes("/") || raw.includes("..") || raw.length > 80) {
+    res.status(400).json({ message: "Invalid filename" }); return;
+  }
+  const filepath = join(KYC_UPLOAD_DIR, raw);
+  if (!existsSync(filepath)) { res.status(404).json({ message: "Not found" }); return; }
+  const ext = (extname(raw).slice(1) || "").toLowerCase();
+  const mime = KYC_MIME[ext] ?? "application/octet-stream";
+  res.setHeader("Content-Type", mime);
+  res.setHeader("Cache-Control", "private, max-age=86400");
+  createReadStream(filepath).pipe(res as unknown as NodeJS.WritableStream);
+});
 
 export default router;

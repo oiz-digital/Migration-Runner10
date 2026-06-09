@@ -155,6 +155,22 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
         }
 }
 
+// internalAuth rejects /internal/* RPC calls that don't carry the correct
+// shared secret (X-Internal-Secret header). When INTERNAL_SECRET env var is
+// empty (development) the middleware is a no-op so dev still works without config.
+func internalAuth(next http.HandlerFunc) http.HandlerFunc {
+        secret := os.Getenv("INTERNAL_SECRET")
+        return func(w http.ResponseWriter, r *http.Request) {
+                if secret != "" && r.Header.Get("X-Internal-Secret") != secret {
+                        w.Header().Set("Content-Type", "application/json")
+                        w.WriteHeader(http.StatusUnauthorized)
+                        _, _ = w.Write([]byte(`{"error":"unauthorized","code":401}`))
+                        return
+                }
+                next(w, r)
+        }
+}
+
 func main() {
         port := os.Getenv("PORT")
         if port == "" {
@@ -177,17 +193,16 @@ func main() {
         mux.HandleFunc(prefix+"/", srv.handleHealth)
 
         // Internal RPC for the Node api-server (loopback only in production).
-        mux.HandleFunc("/internal/futures/place", srv.handlePlace)
-        mux.HandleFunc("/internal/futures/cancel", srv.handleCancel)
-        mux.HandleFunc("/internal/futures/seed", srv.handleSeed)
-        mux.HandleFunc("/internal/futures/snapshot", srv.handleSnapshot)
+        // Protected by a shared secret when INTERNAL_SECRET env var is set.
+        mux.HandleFunc("/internal/futures/place", internalAuth(srv.handlePlace))
+        mux.HandleFunc("/internal/futures/cancel", internalAuth(srv.handleCancel))
+        mux.HandleFunc("/internal/futures/seed", internalAuth(srv.handleSeed))
+        mux.HandleFunc("/internal/futures/snapshot", internalAuth(srv.handleSnapshot))
 
         // Binds to 0.0.0.0 so Replit's port detection sees the service and the
         // shared proxy can route the /go-service/ preview. The proxy only exposes
-        // the /go-service/ path prefix externally, so the unauthenticated
-        // /internal/futures/* matching RPC is not reachable from outside the
-        // container. Set BIND_ADDR=127.0.0.1 to restore loopback-only binding
-        // (a shared-secret middleware for /internal/* is tracked as a follow-up).
+        // the /go-service/ path prefix externally; /internal/* is additionally
+        // protected by the internalAuth shared-secret middleware above.
         bind := os.Getenv("BIND_ADDR")
         if bind == "" {
                 bind = "0.0.0.0"

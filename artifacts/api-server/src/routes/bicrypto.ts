@@ -21,11 +21,19 @@ import {
 import { signJwt, verifyJwt, newCsrfToken, newSessionId, powHash } from "../lib/jwt";
 import { getCache, getInrRate } from "../lib/price-service";
 import { getHistory as getPriceHistory } from "../lib/price-history";
-import { rGet, rSet } from "../lib/redis";
-import { randomBytes, createHash } from "node:crypto";
+import { rGet, rSet, getRedis } from "../lib/redis";
+import Busboy from "busboy";
+import { createWriteStream, mkdirSync, existsSync, createReadStream, statSync } from "node:fs";
+import { join } from "node:path";
+import { randomBytes, createHash, randomUUID } from "node:crypto";
 import { consumeVerifiedOtp, dispatchOtp } from "./otp";
 import { placeSpotOrder, cancelSpotOrderById } from "./orders";
 import { getSpotFeeRates, loadVipTiers, type VipTier } from "./fees";
+
+const KYC_UPLOAD_DIR = "/tmp/kyc-uploads";
+if (!existsSync(KYC_UPLOAD_DIR)) {
+  try { mkdirSync(KYC_UPLOAD_DIR, { recursive: true }); } catch { /* ignore */ }
+}
 
 const r: IRouter = Router();
 
@@ -535,8 +543,32 @@ r.post("/user/notification/:id/read", bicryptoAuth, (req, res) =>
   res.json({ id: req.params.id, read: true, readAt: new Date().toISOString() }));
 r.delete("/user/notification/:id", bicryptoAuth, (_req, res) => res.json({ message: "Deleted" }));
 
-r.get("/user/watchlist", bicryptoAuth, (_req, res) => res.json({ items: [], pagination: emptyPg() }));
-r.post("/user/watchlist", bicryptoAuth, (_req, res) => res.json({ message: "Added" }));
+r.get("/user/watchlist", bicryptoAuth, async (req: any, res): Promise<void> => {
+  const redis = getRedis();
+  const userId: number = req.bcUser.id;
+  if (!redis) { res.json({ items: [], pagination: emptyPg() }); return; }
+  const symbols = await redis.smembers(`zebvix:watchlist:${userId}`);
+  const items = symbols.sort().map((s) => ({ symbol: s, createdAt: new Date().toISOString() }));
+  res.json({
+    items,
+    pagination: { count: items.length, perPage: 200, page: 1, pages: 1, lastPage: 1, nextPage: null, prevPage: null },
+  });
+});
+r.post("/user/watchlist", bicryptoAuth, async (req: any, res): Promise<void> => {
+  const redis = getRedis();
+  const userId: number = req.bcUser.id;
+  const symbol = (req.body?.symbol as string | undefined)?.toUpperCase();
+  if (!symbol) { res.status(400).json({ message: "symbol is required" }); return; }
+  if (redis) await redis.sadd(`zebvix:watchlist:${userId}`, symbol);
+  res.json({ message: "Added", symbol });
+});
+r.delete("/user/watchlist/:symbol", bicryptoAuth, async (req: any, res): Promise<void> => {
+  const redis = getRedis();
+  const userId: number = req.bcUser.id;
+  const symbol = req.params.symbol?.toUpperCase();
+  if (redis && symbol) await redis.srem(`zebvix:watchlist:${userId}`, symbol);
+  res.json({ message: "Removed", symbol });
+});
 
 // KYC
 r.get("/user/kyc/status", bicryptoAuth, (req: any, res) => res.json({
@@ -2192,7 +2224,43 @@ r.all("/ecosystem", ECOSYSTEM_GONE);
 r.all("/ecosystem/*splat", ECOSYSTEM_GONE);
 
 // Upload (KYC etc)
-r.post("/upload/kyc-document", bicryptoAuth, (_req, res) => res.json({ url: "https://placeholder.local/doc.png" }));
+r.post("/upload/kyc-document", bicryptoAuth, (req, res): void => {
+  const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
+  const EXT_MAP: Record<string, string> = {
+    "image/jpeg": "jpg", "image/png": "png",
+    "image/webp": "webp", "application/pdf": "pdf",
+  };
+  let responded = false;
+  const done = (status: number, body: object) => {
+    if (!responded) { responded = true; res.status(status).json(body); }
+  };
+
+  let bb: ReturnType<typeof Busboy>;
+  try { bb = Busboy({ headers: req.headers, limits: { fileSize: 10 * 1024 * 1024 } }); }
+  catch { done(400, { message: "Invalid multipart request" }); return; }
+
+  bb.on("file", (_field, file, info) => {
+    const { mimeType } = info;
+    if (!ALLOWED_MIME.has(mimeType)) {
+      file.resume();
+      done(415, { message: "Unsupported file type — use JPEG, PNG, WebP or PDF" });
+      return;
+    }
+    const ext = EXT_MAP[mimeType] ?? "bin";
+    const filename = `${randomUUID()}.${ext}`;
+    const filepath = join(KYC_UPLOAD_DIR, filename);
+    const ws = createWriteStream(filepath);
+    file.pipe(ws);
+    ws.on("close", () => done(200, { url: `/api/uploads/kyc/${filename}` }));
+    ws.on("error", () => done(500, { message: "File write failed" }));
+  });
+
+  bb.on("error", () => done(400, { message: "Upload parse error" }));
+  bb.on("finish", () => {
+    if (!responded) done(400, { message: "No file received" });
+  });
+  req.pipe(bb);
+});
 
 // Used by injectable.config (sanity check)
 r.get("/healthz", (_req, res) => res.json({ ok: true, layer: "bicrypto" }));

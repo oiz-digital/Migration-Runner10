@@ -13,3 +13,6 @@
 - [API Response Shapes](api-response-shapes.md) — staking/pool and staking/position return `{ items: [], pagination: {} }` not plain arrays; mobile must extract `.items` with Array.isArray guard.
 - [Futures Pairs Schema](futures-schema.md) — futures pairs use `takerFee`/`makerFee` not `takerFeeRate`/`makerFeeRate`; futuresPositionsTable has no `updatedAt` column; pairs table also has no `updatedAt`.
 - [Price Tick Type](price-tick-type.md) — Tick type in price-service has `usdt/inr/change24h/volume24h/ts` — no `price` or `lastPrice`; use `tick.usdt` for USD price in getRawTick consumers.
+- [Go internal auth](go-internal-auth.md) — internalAuth middleware wraps /internal/futures/* handlers; is a no-op in dev (INTERNAL_SECRET unset); set INTERNAL_SECRET env var in prod to enforce.
+- [KYC upload & watchlist](kyc-upload-watchlist.md) — KYC upload uses busboy → /tmp/kyc-uploads/{uuid}.ext, served via GET /api/uploads/kyc/:filename; watchlist is Redis SET key zebvix:watchlist:{userId}.
+- [INR bank details](inr-bank-details.md) — GET /api/payments/inr/bank-details reads settingsTable key "inr_deposit_bank" (JSON), falls back to hardcoded defaults; admin can override via that settings key.
