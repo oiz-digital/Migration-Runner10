@@ -117,7 +117,7 @@ const DEFAULT_FOOTER: FooterConfig = {
       links: [
         { label: "Help center", href: "/help" },
         { label: "Submit a request", href: "/support" },
-        { label: "API documentation", href: "/docs/api" },
+        { label: "API documentation", href: "/api-docs" },
         { label: "Fee schedule", href: "/fees" },
         { label: "System status", href: "/status" },
       ],
@@ -125,11 +125,11 @@ const DEFAULT_FOOTER: FooterConfig = {
     {
       title: "Legal",
       links: [
-        { label: "Terms of service", href: "/legal/terms" },
-        { label: "Privacy policy", href: "/legal/privacy" },
-        { label: "Risk disclosure", href: "/legal/risk" },
-        { label: "AML / KYC policy", href: "/legal/aml" },
-        { label: "Cookies", href: "/legal/cookies" },
+        { label: "Terms of service", href: "/terms" },
+        { label: "Privacy policy", href: "/privacy" },
+        { label: "Risk disclosure", href: "/risk" },
+        { label: "AML / KYC policy", href: "/aml" },
+        { label: "Cookies", href: "/cookies" },
       ],
     },
   ],
