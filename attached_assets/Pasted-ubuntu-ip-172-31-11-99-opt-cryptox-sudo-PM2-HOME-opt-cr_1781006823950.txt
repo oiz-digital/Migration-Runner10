@@ -1,0 +1,65 @@
+ubuntu@ip-172-31-11-99:/opt/cryptox$ sudo PM2_HOME=/opt/cryptox/.pm2 pm2 restart cryptox-api
+sleep 5
+sudo PM2_HOME=/opt/cryptox/.pm2 pm2 status
+sudo PM2_HOME=/opt/cryptox/.pm2 pm2 logs cryptox-api --lines 20 --nostream
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [cryptox-api](ids: [ 0 ])
+[PM2] [cryptox-api](0) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 0  │ cryptox-api        │ fork     │ 25   │ online    │ 0%       │ 11.5mb   │
+│ 1  │ cryptox-go         │ fork     │ 0    │ online    │ 0%       │ 6.7mb    │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 0  │ cryptox-api        │ fork     │ 25   │ online    │ 0%       │ 237.4mb  │
+│ 1  │ cryptox-go         │ fork     │ 0    │ online    │ 0%       │ 6.7mb    │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[TAILING] Tailing last 20 lines for [cryptox-api] process (change the value with --lines option)
+/var/log/cryptox/api-error.log last 20 lines:
+0|cryptox- | 2026-06-09 11:56:28 +00:00:     at src/lib/price-service.ts (/opt/cryptox/artifacts/api-server/src/lib/price-service.ts:1:1)
+0|cryptox- | 2026-06-09 11:56:28 +00:00:     at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)
+0|cryptox- | 2026-06-09 11:56:28 +00:00:     at <anonymous> (/opt/cryptox/artifacts/api-server/src/index.ts:8:1)
+0|cryptox- | 2026-06-09 11:56:28 +00:00:     at ModuleJob.run (node:internal/modules/esm/module_job:439:25)
+0|cryptox- | 2026-06-09 11:56:28 +00:00:     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+0|cryptox- | 2026-06-09 11:56:28 +00:00:     at async node:internal/modules/esm/loader:633:26
+0|cryptox- | 2026-06-09 12:05:08 +00:00: Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/opt/cryptox/artifacts/api-server/dist/index.mjs' imported from /usr/lib/node_modules/pm2/lib/ProcessContainerFork.js
+0|cryptox- | 2026-06-09 12:05:08 +00:00:     at finalizeResolution (node:internal/modules/esm/resolve:271:11)
+0|cryptox- | 2026-06-09 12:05:08 +00:00:     at moduleResolve (node:internal/modules/esm/resolve:865:10)
+0|cryptox- | 2026-06-09 12:05:08 +00:00:     at defaultResolve (node:internal/modules/esm/resolve:992:11)
+0|cryptox- | 2026-06-09 12:05:08 +00:00:     at #cachedDefaultResolve (node:internal/modules/esm/loader:691:20)
+0|cryptox- | 2026-06-09 12:05:08 +00:00:     at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:708:38)
+0|cryptox- | 2026-06-09 12:05:08 +00:00:     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:740:52)
+0|cryptox- | 2026-06-09 12:05:08 +00:00:     at #resolve (node:internal/modules/esm/loader:673:17)
+0|cryptox- | 2026-06-09 12:05:08 +00:00:     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:593:35)
+0|cryptox- | 2026-06-09 12:05:08 +00:00:     at node:internal/modules/esm/loader:622:32
+0|cryptox- | 2026-06-09 12:05:08 +00:00:     at TracingChannel.tracePromise (node:diagnostics_channel:362:14) {
+0|cryptox- | 2026-06-09 12:05:08 +00:00:   code: 'ERR_MODULE_NOT_FOUND',
+0|cryptox- | 2026-06-09 12:05:08 +00:00:   url: 'file:///opt/cryptox/artifacts/api-server/dist/index.mjs'
+0|cryptox- | 2026-06-09 12:05:08 +00:00: }
+
+/var/log/cryptox/api-out.log last 20 lines:
+0|cryptox- | 2026-06-09 12:06:48 +00:00: {"level":30,"time":1781006808499,"pid":36050,"hostname":"ip-172-31-11-99","channel":"prices.tick","msg":"[ws-fanout] subscribed for cross-instance price ticks"}
+0|cryptox- | 2026-06-09 12:06:48 +00:00: {"level":30,"time":1781006808543,"pid":36050,"hostname":"ip-172-31-11-99","allowedOrigins":["https://zebvix.com","https://www.zebvix.com"],"msg":"CORS allow-list configured"}
+0|cryptox- | 2026-06-09 12:06:48 +00:00: {"level":30,"time":1781006808704,"pid":36050,"hostname":"ip-172-31-11-99","userDist":"/opt/user-portal/dist/public","adminDist":"/opt/admin/dist/public","msg":"Production static frontend serving enabled"}
+0|cryptox- | 2026-06-09 12:06:48 +00:00: {"level":30,"time":1781006808704,"pid":36050,"hostname":"ip-172-31-11-99","port":8080,"instanceId":"a217ec8f-3b5e-4754-ba3c-4f891e76a831","wsPaths":["/api/ws/prices","/api/exchange/ticker","/api/exchange/ws","/api/exchange/market","/api/futures/ws","/api/ws/exchange"],"msg":"Server listening (HTTP + price WS aliases)"}
+0|cryptox- | 2026-06-09 12:06:48 +00:00: {"level":30,"time":1781006808781,"pid":36050,"hostname":"ip-172-31-11-99","banners":0,"promotions":0,"markets":0,"earn":0,"funding":0,"orderbook":0,"trades":0,"settings":0,"elapsedMs":29,"msg":"cache warmup complete"}
+0|cryptox- | 2026-06-09 12:06:48 +00:00: {"level":30,"time":1781006808782,"pid":36050,"hostname":"ip-172-31-11-99","intervalMs":1000,"msg":"price service started (leader-gated)"}
+0|cryptox- | 2026-06-09 12:06:48 +00:00: {"level":30,"time":1781006808782,"pid":36050,"hostname":"ip-172-31-11-99","intervalMs":3000,"msg":"bot service started"}
+0|cryptox- | 2026-06-09 12:06:48 +00:00: {"level":30,"time":1781006808782,"pid":36050,"hostname":"ip-172-31-11-99","intervalMs":30000,"msg":"deposit sweeper started"}
+0|cryptox- | 2026-06-09 12:06:48 +00:00: {"level":30,"time":1781006808782,"pid":36050,"hostname":"ip-172-31-11-99","intervalMs":30000,"msg":"Withdrawal confirmation watcher started"}
+0|cryptox- | 2026-06-09 12:06:48 +00:00: {"level":30,"time":1781006808782,"pid":36050,"hostname":"ip-172-31-11-99","intervalMs":60000,"msg":"auto-withdraw scheduler started"}
+0|cryptox- | 2026-06-09 12:06:48 +00:00: {"level":30,"time":1781006808782,"pid":36050,"hostname":"ip-172-31-11-99","msg":"Futures engine starting (auto-funding 60s, settle 30s, risk 5s, leader-gated)"}
+0|cryptox- | 2026-06-09 12:06:48 +00:00: {"level":30,"time":1781006808782,"pid":36050,"hostname":"ip-172-31-11-99","intervalMs":900000,"msg":"listing discovery worker started"}
+0|cryptox- | 2026-06-09 12:06:48 +00:00: {"level":30,"time":1781006808782,"pid":36050,"hostname":"ip-172-31-11-99","intervalMs":30000,"msg":"price-alerts.starting"}
+0|cryptox- | 2026-06-09 12:06:48 +00:00: {"level":30,"time":1781006808782,"pid":36050,"hostname":"ip-172-31-11-99","intervalMs":30000,"msg":"bot-engine.starting"}
+0|cryptox- | 2026-06-09 12:06:48 +00:00: {"level":30,"time":1781006808783,"pid":36050,"hostname":"ip-172-31-11-99","intervalMs":1800000,"msg":"earn-engine: starting (leader-gated, 30min interval)"}
+0|cryptox- | 2026-06-09 12:06:48 +00:00: {"level":30,"time":1781006808783,"pid":36050,"hostname":"ip-172-31-11-99","intervalMs":60000,"msg":"p2p-engine starting (auto-expire pending orders, leader-gated)"}
+0|cryptox- | 2026-06-09 12:06:48 +00:00: {"level":30,"time":1781006808783,"pid":36050,"hostname":"ip-172-31-11-99","msg":"ai-credit-engine: initialized (1h interval, daily variance, 5-level referral commissions)"}
+0|cryptox- | 2026-06-09 12:06:48 +00:00: {"level":30,"time":1781006808783,"pid":36050,"hostname":"ip-172-31-11-99","intervalMs":5000,"msg":"Pair stats service started (leader-gated)"}
+0|cryptox- | 2026-06-09 12:06:48 +00:00: {"level":30,"time":1781006808783,"pid":36050,"hostname":"ip-172-31-11-99","instanceId":"a217ec8f-3b5e-4754-ba3c-4f891e76a831","leader":true,"msg":"Multi-server workers started"}
+0|cryptox- | 2026-06-09 12:06:48 +00:00: {"level":30,"time":1781006808788,"pid":36050,"hostname":"ip-172-31-11-99","msg":"[futures] no open orders to restore"}
+
+ubuntu@ip-172-31-11-99:/opt/cryptox$
