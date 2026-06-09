@@ -84,6 +84,10 @@ fi
 # ── Root check ────────────────────────────────────────────────────
 [[ $EUID -ne 0 ]] && err "Run as root: sudo bash $0"
 
+# ── Source directory (repo root — one level above deploy/) ────────
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SOURCE_DIR="$(dirname "$SCRIPT_DIR")"
+
 # ─────────────────────────────────────────────────────────────────
 #  SECTION 1 — INTERACTIVE CONFIGURATION
 # ─────────────────────────────────────────────────────────────────
@@ -322,6 +326,20 @@ fi
 #  SECTION 5 — BUILD
 # ─────────────────────────────────────────────────────────────────
 step "STEP 5/8 — Build"
+
+# Sync source → APP_DIR (exclude .git, node_modules, dist, .env)
+(rsync -a --delete \
+  --exclude='.git' \
+  --exclude='node_modules' \
+  --exclude='*/node_modules' \
+  --exclude='*/dist' \
+  --exclude='.env' \
+  --exclude='artifacts/go-service/server' \
+  "$SOURCE_DIR/" "$APP_DIR/") &
+spinner $! "Syncing source code to $APP_DIR..."
+chown -R "$APP_USER":"$APP_USER" "$APP_DIR"
+ok "Source code synced to $APP_DIR"
+
 cd "$APP_DIR"
 
 set -a; source "$ENV_FILE"; set +a
