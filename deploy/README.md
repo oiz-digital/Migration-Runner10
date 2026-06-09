@@ -1,6 +1,47 @@
 # Zebvix — VPS Production Deployment Guide
 
-Deploy the full Zebvix platform (API + User Portal + Admin + Go Engine) on your own Ubuntu 22.04 VPS.
+Deploy the full Zebvix platform (API + User Portal + Admin + Go Engine) on your own Ubuntu 22.04 VPS in one command.
+
+---
+
+## Quick Start (Recommended)
+
+```bash
+# 1. Clone the repo to your VPS
+git clone https://github.com/YOUR_ORG/zebvix.git /opt/cryptox
+cd /opt/cryptox
+
+# 2. Run the all-in-one interactive setup (as root)
+sudo bash deploy/zebvix-setup.sh
+```
+
+The setup wizard will ask for:
+- Domain name
+- App name (Zebvix)
+- Database name, user, password, port
+- Admin email, password, display name
+
+Then it will install everything, build, migrate, create the admin account, configure nginx + SSL, and show you a full status dashboard at the end.
+
+---
+
+## Upgrade Without Data Loss
+
+When you push new code or add a new feature:
+
+```bash
+cd /opt/cryptox
+git pull origin main
+sudo bash deploy/zebvix-setup.sh --upgrade
+```
+
+**What `--upgrade` does:**
+- Backs up the database automatically before anything runs
+- Skips reinstalling system packages (Node, Go, etc.)
+- Preserves your existing `.env` (all your custom SMTP, gateway, wallet configs)
+- Runs new DB migrations via `drizzle push` (additive only — no column drops)
+- Does a zero-downtime `pm2 reload` instead of a full restart
+- Updates admin password if you provide a new one
 
 ---
 
@@ -15,15 +56,15 @@ Nginx (port 80/443 + SSL)
    ├── /admin/      → Static files (Vite SPA)
    ├── /api/        → Node.js API Server (PM2, port 8080)
    └── /go-service/ → Go Order Engine (PM2, port 23004)
-             │
-             ▼
-        PostgreSQL (port 5432, local)
-        Redis (embedded in API server — no external Redis needed)
+            │
+            ▼
+       PostgreSQL (port 5432, local)
+       Redis (embedded in API server — no external Redis needed)
 ```
 
 ---
 
-## Requirements
+## Server Requirements
 
 | Requirement | Minimum | Recommended |
 |------------|---------|-------------|
@@ -31,154 +72,68 @@ Nginx (port 80/443 + SSL)
 | CPU | 2 vCPU | 4 vCPU |
 | RAM | 4 GB | 8 GB |
 | Disk | 40 GB SSD | 80 GB SSD |
-| Domain | Required (for SSL) | zebvix.com |
+| Domain | Required (for SSL) | e.g. zebvix.com |
 
 ---
 
-## Step 1 — Clone the repo on your VPS
+## Files in This Folder
 
-```bash
-git clone https://github.com/YOUR_ORG/cryptox.git /opt/cryptox
-cd /opt/cryptox
-```
+| File | Purpose |
+|------|---------|
+| `zebvix-setup.sh` | **Main script** — interactive setup + upgrade wizard |
+| `create-admin.mjs` | Admin user creation helper (called by setup script) |
+| `build.sh` | Build-only script (skips system install) |
+| `install.sh` | System packages only (called by setup on fresh install) |
+| `pm2.config.cjs` | PM2 process configuration |
+| `nginx.conf` | Nginx reverse proxy + SSL config template |
+| `.env.example` | Environment variable reference |
 
 ---
 
-## Step 2 — Run the VPS installer (as root)
+## Manual Steps (Advanced)
 
-This installs Node.js 24, pnpm, Go, PM2, PostgreSQL, nginx, and configures the firewall.
-
+### Step 1 — System setup only
 ```bash
 sudo bash deploy/install.sh
 ```
 
-What it does:
-- Installs all system dependencies
-- Creates `cryptox` system user at `/opt/cryptox`
-- Sets up PostgreSQL database + user (auto-generates password)
-- Configures UFW firewall (ports 22, 80, 443 only)
-- Sets up nginx config and log rotation
-- Configures PM2 for auto-start on reboot
-
----
-
-## Step 3 — Configure environment variables
-
-```bash
-cp deploy/.env.example .env
-nano .env
-```
-
-**Required variables:**
-
-| Variable | Description |
-|----------|-------------|
-| `DATABASE_URL` | PostgreSQL connection (auto-set by install.sh) |
-| `SESSION_SECRET` | 64-char random hex — generate with `openssl rand -hex 64` |
-| `NODE_ENV` | `production` |
-| `PORT` | `8080` (API server port) |
-
-Optional (configure via Admin panel instead):
-- Email: configure SMTP/SendGrid/Mailgun in Admin → API Integrations → Email
-- Crypto hot wallet: configure in Admin → Networks
-- Payment gateway: configure in Admin → API Integrations
-
----
-
-## Step 4 — Build all services
-
+### Step 2 — Build only
 ```bash
 sudo -u cryptox bash deploy/build.sh
 ```
 
-This runs in order:
-1. `pnpm install --frozen-lockfile`
-2. TypeScript lib build (`tsc --build`)
-3. API server esbuild bundle → `artifacts/api-server/dist/`
-4. User portal Vite build → `/opt/cryptox/dist/user/`
-5. Admin panel Vite build → `/opt/cryptox/dist/admin/`
-6. Go service binary → `artifacts/go-service/server`
-7. Database schema push (drizzle)
-8. PM2 restart (if already running)
-
----
-
-## Step 5 — Start with PM2
-
+### Step 3 — Create admin manually
 ```bash
-# Start all services
+DATABASE_URL="postgresql://..." node deploy/create-admin.mjs \
+  --email admin@zebvix.com \
+  --password "YourPass" \
+  --name "Admin"
+```
+
+### Step 4 — Start PM2
+```bash
 pm2 start deploy/pm2.config.cjs
-
-# Save PM2 process list (survives reboot)
 pm2 save
-
-# View status
-pm2 status
-
-# View logs
-pm2 logs cryptox-api
-pm2 logs cryptox-go
 ```
 
----
-
-## Step 6 — SSL with Let's Encrypt
-
+### Step 5 — SSL
 ```bash
-# Replace zebvix.com with your actual domain
-sudo certbot --nginx -d zebvix.com -d www.zebvix.com
+certbot --nginx -d zebvix.com -d www.zebvix.com
 ```
-
-Certbot auto-renews via cron. Nginx config already has SSL stubs ready.
-
----
-
-## Step 7 — Verify deployment
-
-```bash
-# API health check
-curl https://zebvix.com/api/healthz
-
-# Go service health check
-curl https://zebvix.com/go-service/healthz
-
-# Check PM2 status
-pm2 status
-
-# Check nginx
-sudo nginx -t && sudo systemctl status nginx
-```
-
----
-
-## Updating (zero-downtime)
-
-```bash
-cd /opt/cryptox
-
-# Pull latest code
-git pull origin main
-
-# Rebuild and restart
-sudo -u cryptox bash deploy/build.sh
-```
-
-PM2 will automatically reload after `build.sh` runs `pm2 restart all`.
 
 ---
 
 ## PM2 Commands Reference
 
 ```bash
-pm2 status                    # List all processes
-pm2 logs                      # Tail all logs
-pm2 logs cryptox-api          # API server logs only
-pm2 restart cryptox-api       # Restart API server
-pm2 restart cryptox-go        # Restart Go engine
+pm2 status                    # List all processes + status
+pm2 monit                     # Live dashboard (CPU, memory, logs)
+pm2 logs cryptox-api          # API server logs
+pm2 logs cryptox-go           # Go engine logs
 pm2 reload cryptox-api        # Zero-downtime reload (cluster mode)
+pm2 restart cryptox-go        # Restart Go engine
 pm2 stop all                  # Stop all
-pm2 delete all                # Remove all from PM2
-pm2 monit                     # Live monitoring dashboard
+pm2 save                      # Save process list (survives reboot)
 ```
 
 ---
@@ -189,15 +144,32 @@ pm2 monit                     # Live monitoring dashboard
 # Connect to PostgreSQL
 sudo -u postgres psql -d cryptox
 
-# Manual schema push (if needed)
+# Manual schema migration (additive — safe to run anytime)
 cd /opt/cryptox && pnpm --filter @workspace/db run push
 
 # Backup database
-pg_dump -U cryptox cryptox > backup_$(date +%Y%m%d).sql
+pg_dump -U cryptox -h localhost cryptox > backup_$(date +%Y%m%d_%H%M%S).sql
 
 # Restore from backup
-psql -U cryptox cryptox < backup_YYYYMMDD.sql
+psql -U cryptox -h localhost cryptox < backup_YYYYMMDD.sql
 ```
+
+---
+
+## Adding a New Feature Without Data Loss
+
+When you add a new DB table or column in `lib/db/src/schema/`:
+
+```bash
+# On the VPS — just run upgrade:
+sudo bash deploy/zebvix-setup.sh --upgrade
+```
+
+Drizzle `push` is additive by design:
+- New tables → created
+- New columns → added with defaults
+- Existing data → never touched
+- Old columns → only dropped if you explicitly add `drop` annotations
 
 ---
 
@@ -205,38 +177,44 @@ psql -U cryptox cryptox < backup_YYYYMMDD.sql
 
 | Service | Log file |
 |---------|----------|
-| API Server | `/var/log/cryptox/api.log` |
+| API Server (all) | `/var/log/cryptox/api.log` |
 | API Server (errors) | `/var/log/cryptox/api-error.log` |
-| Go Engine | `/var/log/cryptox/go.log` |
+| Go Engine (all) | `/var/log/cryptox/go.log` |
+| Go Engine (errors) | `/var/log/cryptox/go-error.log` |
 | Nginx access | `/var/log/nginx/access.log` |
 | Nginx errors | `/var/log/nginx/error.log` |
 
-Logs are rotated daily, kept 14 days, compressed after 1 day.
+Logs rotate daily, kept 14 days, compressed after 1 day.
 
 ---
 
-## Admin Panel Setup (first run)
+## Admin Panel First-Run Checklist
 
-1. Open `https://zebvix.com/admin/`
-2. Login with admin credentials
-3. Go to **API Integrations → Email** — configure SMTP/SendGrid
-4. Go to **Networks** — set hot wallet address + private key for BSC USDT
-5. Go to **Exchange Settings** — configure TDS %, trading fees, etc.
+After setup, open `https://zebvix.com/admin/` and complete:
+
+1. **API Integrations → Email** — configure SMTP / SendGrid / Mailgun
+2. **Networks** — set hot wallet RPC endpoints for each blockchain
+3. **Exchange Settings** — configure TDS %, maker/taker fees, withdrawal limits
+4. **Coins & Pairs** — enable/disable trading pairs
+5. **KYC Settings** — configure DigiLocker / Aadhaar API credentials
 
 ---
 
-## Security Hardening (recommended)
+## Security Hardening
 
 ```bash
-# Disable root SSH login
+# Disable root SSH password login
 sudo sed -i 's/PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config
 sudo systemctl reload sshd
 
-# Install fail2ban (done by install.sh)
-sudo systemctl enable fail2ban --now
-
-# Restrict admin panel to office IPs (edit nginx.conf)
+# Restrict admin panel to specific IPs (edit nginx.conf)
 # Uncomment allow/deny lines in the /admin/ location block
+
+# Check fail2ban is active
+sudo systemctl status fail2ban
+
+# Verify firewall rules
+sudo ufw status
 ```
 
 ---
@@ -246,8 +224,10 @@ sudo systemctl enable fail2ban --now
 | Problem | Fix |
 |---------|-----|
 | API not starting | `pm2 logs cryptox-api` — check for missing env vars |
-| DB connection failed | Verify `DATABASE_URL` in `.env`, check PostgreSQL: `sudo systemctl status postgresql` |
+| DB connection failed | Verify `DATABASE_URL` in `/opt/cryptox/.env`, check: `sudo systemctl status postgresql` |
 | Nginx 502 Bad Gateway | API not running — `pm2 restart cryptox-api` |
-| Build fails | Run `pnpm install` first, check Node version: `node --version` (must be v24) |
+| Build fails | `pnpm install` first, check Node v24: `node --version` |
 | Port 8080 in use | `lsof -i :8080` — kill conflicting process |
-| SSL not working | `certbot renew --dry-run`, check domain DNS points to VPS IP |
+| SSL not working | `certbot renew --dry-run`, verify DNS A record points to VPS IP |
+| Admin login fails | Re-run: `node deploy/create-admin.mjs --email ... --password ...` |
+| Migration error | Check `/tmp/zbx_db.log` — run `pnpm --filter @workspace/db run push` manually |
