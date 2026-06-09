@@ -67,12 +67,17 @@ function baseAsset(sym: string) {
 function quoteAsset(sym: string) {
   return sym.split("/")[1] || "";
 }
+function currencyPrefix(sym: string): string {
+  if (isInr(sym)) return "₹";
+  const q = sym.split("/")[1] ?? sym;
+  if (q === "USDT" || q === "USDC" || q === "USD" || q === "BUSD") return "$";
+  return "";
+}
 function fmtPrice(n: number, sym: string): string {
   if (!isFinite(n) || n === 0) return "—";
   const inr = isInr(sym);
   const digits = inr ? 2 : n < 1 ? 6 : n < 100 ? 4 : 2;
-  const prefix = inr ? "₹" : "";
-  return prefix + n.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  return currencyPrefix(sym) + n.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
 }
 function fmtCompact(n: number, prefix = "") {
   if (!isFinite(n) || n === 0) return prefix + "0";
@@ -495,7 +500,7 @@ export default function Markets() {
               <StatTile
                 icon={<Activity className="h-4 w-4" />}
                 label="24h Volume"
-                value={loading ? "—" : fmtCompact(stats.totalQuoteVol, "₹")}
+                value={loading ? "—" : fmtCompact(stats.totalQuoteVol, "$")}
               />
               <StatTile
                 icon={<TrendingUp className="h-4 w-4 text-success" />}

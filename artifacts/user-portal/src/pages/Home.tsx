@@ -92,12 +92,17 @@ const ZBX_TESTNET = { name: "Zebvix Testnet", id: 8990, hexId: "0x231e" };
 function isInr(sym: string) {
   return sym.endsWith("/INR") || sym.endsWith("INR");
 }
+function currencyPrefix(sym: string): string {
+  if (isInr(sym)) return "₹";
+  const q = sym.split("/")[1] ?? sym;
+  if (q === "USDT" || q === "USDC" || q === "USD" || q === "BUSD") return "$";
+  return "";
+}
 function fmtPrice(n: number, sym: string): string {
   if (!isFinite(n) || n === 0) return "—";
   const inr = isInr(sym);
   const digits = inr ? 2 : n < 1 ? 6 : n < 100 ? 4 : 2;
-  const prefix = inr ? "₹" : "";
-  return prefix + n.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  return currencyPrefix(sym) + n.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
 }
 function fmtCompact(n: number, prefix = "") {
   if (!isFinite(n) || n === 0) return prefix + "0";
@@ -680,10 +685,12 @@ export default function Home() {
   const stats = useMemo(() => {
     // Only show our own exchange volume from DB — never global market data
     const totalVolumeInr = dbStats?.totalVolumeInr ?? 0;
+    const inrRate = dbStats?.inrRate ?? 85;
+    const totalVolumeUsd = inrRate > 0 ? totalVolumeInr / inrRate : 0;
     const gainers = all.filter((t) => t.priceChangePercent > 0).length;
     const markets = all.length;
     const totalTrades24h = dbStats?.totalTrades24h ?? 0;
-    return { totalVolumeInr, gainers, markets, totalTrades24h };
+    return { totalVolumeInr, totalVolumeUsd, gainers, markets, totalTrades24h };
   }, [all, usdRates, dbStats]);
 
   const tape = useMemo(
@@ -745,7 +752,7 @@ export default function Home() {
           {[
             { label: "Registered users", value: 210000, suffix: "+", prefix: "", compact: true },
             { label: "24h trades executed", value: stats.totalTrades24h || 18400, suffix: "", prefix: "", compact: true },
-            { label: "Total volume", value: stats.totalVolumeInr || 5200000000, suffix: "", prefix: "₹", compact: true },
+            { label: "Total volume", value: stats.totalVolumeUsd || 61176470, suffix: "", prefix: "$", compact: true },
             { label: "Active markets", value: stats.markets || 249, suffix: "", prefix: "", compact: false },
           ].map((s) => (
             <div key={s.label} className="flex items-baseline gap-2">
@@ -860,7 +867,7 @@ export default function Home() {
                 <Activity className="h-3.5 w-3.5 text-primary" /> 24h volume
               </div>
               <div className="text-3xl font-bold mt-2">
-                <AnimatedNumber value={stats.totalVolumeInr} prefix="₹" compact />
+                <AnimatedNumber value={stats.totalVolumeUsd} prefix="$" compact />
               </div>
               <div className="text-xs text-success mt-1">
                 {stats.totalTrades24h > 0

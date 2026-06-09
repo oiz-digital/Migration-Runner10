@@ -73,8 +73,9 @@ function sma(values: { time: number; close: number }[], period: number): LineDat
 function fmtPrice(n: number, quote: string): string {
   if (!isFinite(n) || n === 0) return "—";
   const inr = quote === "INR";
+  const usd = quote === "USDT" || quote === "USDC" || quote === "USD" || quote === "BUSD";
   const digits = inr ? 2 : n < 1 ? 6 : n < 100 ? 4 : 2;
-  const prefix = inr ? "₹" : "";
+  const prefix = inr ? "₹" : usd ? "$" : "";
   return prefix + n.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
 }
 function fmtCompact(n: number): string {
