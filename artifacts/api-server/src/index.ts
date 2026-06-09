@@ -34,6 +34,27 @@ if (!rawPort) throw new Error("PORT environment variable is required but was not
 const port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) throw new Error(`Invalid PORT value: "${rawPort}"`);
 
+// ─── Production startup security checks ──────────────────────────────────
+if (process.env["NODE_ENV"] === "production") {
+  if (!process.env["INTERNAL_SECRET"]) {
+    logger.warn(
+      "INTERNAL_SECRET is not set — Go service /internal/* endpoints have no shared-secret protection. " +
+      "Set INTERNAL_SECRET in your .env (use: openssl rand -hex 32) before going live.",
+    );
+  }
+  const sessionSecret = process.env["SESSION_SECRET"] ?? "";
+  if (sessionSecret.length < 32) {
+    logger.warn(
+      { len: sessionSecret.length },
+      "SESSION_SECRET is too short for production — use `openssl rand -hex 64` to generate a strong secret.",
+    );
+  }
+  if (!process.env["CORS_ORIGINS"]) {
+    // getAllowedOrigins() in app.ts will throw — this just surfaces it earlier.
+    logger.warn("CORS_ORIGINS is not set — app.ts will refuse to start in production without it.");
+  }
+}
+
 // Flutter UI hits several historical Bicrypto WS paths. Rather than create
 // one WSS per path (each binds the upgrade handler), we attach one WSS with
 // `noServer:true` and route HTTP `upgrade` events to it for each known path.

@@ -380,8 +380,8 @@ step "STEP 6/8 — Database Migrations"
 
 (DATABASE_URL="$DATABASE_URL" sudo -u "$APP_USER" \
   env DATABASE_URL="$DATABASE_URL" \
-  pnpm --filter @workspace/db run push > /tmp/zbx_db.log 2>&1) &
-spinner $! "Running Drizzle schema migration (push)..."
+  pnpm --filter @workspace/db run migrate > /tmp/zbx_db.log 2>&1) &
+spinner $! "Running Drizzle schema migration (migrate)..."
 ok "Database schema up to date"
 info "Migration log: /tmp/zbx_db.log"
 

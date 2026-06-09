@@ -50,6 +50,9 @@ module.exports = {
         PORT: "23004",
         BASE_PATH: "/go-service/",
         GIN_MODE: "release",
+        // Bind to loopback only — Nginx proxies /go-service/ externally.
+        // /internal/* endpoints are then unreachable from outside the host.
+        BIND_ADDR: "127.0.0.1",
       },
       env_file: `${APP_DIR}/.env`,
       log_file: "/var/log/cryptox/go.log",

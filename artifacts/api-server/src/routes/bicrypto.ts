@@ -30,7 +30,10 @@ import { consumeVerifiedOtp, dispatchOtp } from "./otp";
 import { placeSpotOrder, cancelSpotOrderById } from "./orders";
 import { getSpotFeeRates, loadVipTiers, type VipTier } from "./fees";
 
-const KYC_UPLOAD_DIR = "/tmp/kyc-uploads";
+// Allow operators to relocate KYC uploads to a persistent directory
+// (e.g. /var/lib/zebvix/kyc-uploads) via the KYC_UPLOAD_DIR env var.
+// Falls back to /tmp/kyc-uploads for local dev / Replit.
+const KYC_UPLOAD_DIR = process.env["KYC_UPLOAD_DIR"] ?? "/tmp/kyc-uploads";
 if (!existsSync(KYC_UPLOAD_DIR)) {
   try { mkdirSync(KYC_UPLOAD_DIR, { recursive: true }); } catch { /* ignore */ }
 }

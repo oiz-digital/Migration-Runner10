@@ -22,6 +22,21 @@ const app: Express = express();
 // `x-forwarded-for` chain we log on login would be unverified.
 app.set("trust proxy", 1);
 
+// ─── HTTPS enforcement (VPS / production behind Nginx) ───────────────────
+// On Replit the outer proxy always uses HTTPS so this is a no-op there.
+// On a VPS, Nginx terminates TLS and sets X-Forwarded-Proto. Redirect any
+// plain-HTTP request to HTTPS so `secure:true` cookies always transmit and
+// HSTS takes effect immediately.
+if (process.env["NODE_ENV"] === "production") {
+  app.use((req: Request, res: Response, next: NextFunction): void => {
+    if (req.headers["x-forwarded-proto"] === "http") {
+      res.redirect(301, `https://${req.headers.host}${req.url}`);
+      return;
+    }
+    next();
+  });
+}
+
 // ─── CORS allow-list ─────────────────────────────────────────────────────
 // In dev we trust the REPLIT_DEV_DOMAIN. In production CORS_ORIGINS
 // (comma-separated) is REQUIRED — we refuse to boot without it so a
@@ -285,6 +300,17 @@ app.use(
     crossOriginResourcePolicy: { policy: "cross-origin" },
   }),
 );
+
+// Permissions-Policy: disable powerful APIs that this app never uses.
+// Prevents malicious scripts from accessing camera, microphone, payment
+// UI, geolocation, or USB on behalf of the user.
+app.use((_req: Request, res: Response, next: NextFunction): void => {
+  res.setHeader(
+    "Permissions-Policy",
+    "payment=(), geolocation=(), camera=(), microphone=(), usb=(), interest-cohort=()",
+  );
+  next();
+});
 
 app.use(corsMiddleware);
 app.use(cookieParser());

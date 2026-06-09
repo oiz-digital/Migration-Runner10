@@ -139,9 +139,9 @@ router.use(v1Router);
 router.use(aiChatRouter);
 
 // ── KYC document file serve ────────────────────────────────────────────────
-// Serves files uploaded via POST /api/upload/kyc-document (stored in /tmp/kyc-uploads/).
-// Auth is required so only the uploader (or admin) can retrieve documents.
-const KYC_UPLOAD_DIR = "/tmp/kyc-uploads";
+// Serves files uploaded via POST /api/upload/kyc-document.
+// Configurable via KYC_UPLOAD_DIR env var; falls back to /tmp for dev.
+const KYC_UPLOAD_DIR = process.env["KYC_UPLOAD_DIR"] ?? "/tmp/kyc-uploads";
 const KYC_MIME: Record<string, string> = {
   jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png",
   webp: "image/webp", pdf: "application/pdf",
