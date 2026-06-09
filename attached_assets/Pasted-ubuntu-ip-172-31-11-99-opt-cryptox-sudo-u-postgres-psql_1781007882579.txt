@@ -1,0 +1,44 @@
+ubuntu@ip-172-31-11-99:/opt/cryptox$ sudo -u postgres psql zebvixdb << 'SQL'
+INSERT INTO ai_trading_plans (name, description, min_amount, max_amount, daily_return, duration_days, risk_level, status, featured, coin_symbol)
+VALUES
+  ('Starter','Low-risk daily earning plan for beginners',1000,50000,0.50,30,'low','active',false,'USDT'),
+  ('Basic','Steady returns with minimal risk exposure',5000,100000,0.75,30,'low','active',false,'USDT'),
+  ('Silver','Balanced plan for moderate growth',10000,250000,1.00,60,'medium','active',false,'USDT'),
+  ('Gold','Higher returns with managed medium risk',25000,500000,1.25,60,'medium','active',true,'USDT'),
+  ('Platinum','Advanced AI strategy for experienced investors',50000,1000000,1.50,90,'medium','active',true,'USDT'),
+  ('Diamond','Premium high-yield plan with active AI management',100000,2500000,1.75,90,'high','active',true,'USDT'),
+  ('Elite','Top-tier aggressive growth for high-net-worth users',250000,5000000,2.00,120,'high','active',false,'USDT'),
+  ('Institutional','Maximum returns, institutional-grade AI trading',500000,10000000,2.50,180,'high','active',false,'USDT')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO settings (key, value) VALUES
+  ('site_name','"Zebvix"'),('site_description','"India''s Professional Crypto Exchange"'),
+  ('site_email','"support@zebvix.com"'),('maintenance_mode','false'),
+  ('registration_enabled','true'),('kyc_required','true'),
+  ('min_withdrawal_usdt','"10"'),('max_withdrawal_daily','"50000"'),
+  ('tds_rate','"0.01"'),('tds_enabled','true'),('p2p_enabled','true'),
+  ('futures_enabled','true'),('staking_enabled','true'),('referral_enabled','true'),
+  ('referral_bonus_pct','"0.20"'),('inr_deposit_enabled','true'),
+  ('inr_withdraw_enabled','true'),('spot_fee_maker','"0.001"'),
+  ('spot_fee_taker','"0.001"'),('futures_fee_maker','"0.0002"'),
+  ('futures_fee_taker','"0.0005"'),('leverage_max','"100"'),('otp_provider','"email"')
+ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
+
+SELECT COUNT(*) AS ai_plans FROM ai_trading_plans;
+SELECT COUNT(*) AS settings FROM settings;
+SQL
+ERROR:  column "min_amount" of relation "ai_trading_plans" does not exist
+LINE 1: INSERT INTO ai_trading_plans (name, description, min_amount,...
+                                                         ^
+ERROR:  relation "settings" does not exist
+LINE 1: INSERT INTO settings (key, value) VALUES
+                    ^
+ ai_plans
+----------
+        0
+(1 row)
+
+ERROR:  relation "settings" does not exist
+LINE 1: SELECT COUNT(*) AS settings FROM settings;
+                                         ^
+ubuntu@ip-172-31-11-99:/opt/cryptox$
