@@ -55,30 +55,71 @@ const COMMODITY_SECTOR_BADGE: Record<string, string> = {
   "Base Metals": "border-gray-500/40 text-foreground/80",
 };
 
+function CommoditiesComingSoon() {
+  const [email, setEmail] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  return (
+    <div className="min-h-[calc(100vh-56px)] bg-background">
+      <div className="max-w-xl mx-auto px-6 py-16 flex flex-col items-center text-center gap-8">
+        <div className="relative">
+          <div className="w-24 h-24 rounded-3xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+            <Gem className="w-10 h-10 text-amber-400" />
+          </div>
+          <div className="absolute -top-2 -right-2 px-2 py-1 rounded-full text-[10px] font-bold bg-amber-400/15 border border-amber-400/30 text-amber-400">SOON</div>
+        </div>
+        <div className="space-y-3">
+          <p className="text-xs font-bold uppercase tracking-widest text-amber-400">Coming Soon</p>
+          <h1 className="text-4xl font-bold tracking-tight">Commodities</h1>
+          <p className="text-muted-foreground leading-relaxed max-w-sm">Trade Gold, Silver, Crude Oil, Natural Gas and more — real-time commodity markets with MCX integration.</p>
+        </div>
+        <div className="flex flex-wrap justify-center gap-2">
+          {["Gold · Silver · Platinum", "Crude Oil · Natural Gas", "MCX Integration", "Up to 10× Leverage", "INR Settlement"].map((f) => (
+            <span key={f} className="px-3 py-1.5 rounded-full text-xs font-medium bg-amber-500/10 border border-amber-500/20 text-amber-400">{f}</span>
+          ))}
+        </div>
+        <div className="w-full max-w-sm space-y-3">
+          {submitted ? (
+            <div className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-medium">
+              ✓ You'll be notified when Commodities launches!
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input type="email" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)}
+                className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-1 focus:ring-amber-400/50" />
+              <button onClick={() => { if (email) setSubmitted(true); }}
+                className="px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-semibold hover:bg-amber-400 transition-colors">
+                Notify Me
+              </button>
+            </div>
+          )}
+        </div>
+        <div className="w-full max-w-sm space-y-3 text-left border border-border/50 rounded-xl p-4 bg-card/40">
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Roadmap</p>
+          {[
+            { q: "Q3 2025", label: "MCX API integration (paper mode)", done: false },
+            { q: "Q4 2025", label: "Gold & Silver live pricing", done: false },
+            { q: "Q1 2026", label: "Energy commodities (Crude, NG)", done: false },
+            { q: "Q2 2026", label: "Full live trading + hedging", done: false },
+          ].map((r) => (
+            <div key={r.q} className="flex items-center gap-3">
+              <div className={`w-2 h-2 rounded-full flex-shrink-0 ${r.done ? "bg-emerald-400" : "bg-muted-foreground/30"}`} />
+              <span className="text-xs text-muted-foreground w-20 flex-shrink-0">{r.q}</span>
+              <span className={`text-sm ${r.done ? "text-foreground font-medium" : "text-muted-foreground"}`}>{r.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Commodities() {
   const { user } = useAuth();
   const qc = useQueryClient();
 
   const COMING_SOON_COMMODITIES: boolean = true;
   if (COMING_SOON_COMMODITIES) {
-    return (
-      <div className="min-h-[calc(100vh-56px)] flex flex-col items-center justify-center gap-6 px-4 text-center bg-background">
-        <div className="w-20 h-20 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-          <Clock className="w-9 h-9 text-amber-400" />
-        </div>
-        <div className="max-w-sm space-y-2">
-          <p className="text-xs font-bold uppercase tracking-widest text-amber-400">Coming Soon</p>
-          <h1 className="text-3xl font-bold tracking-tight">Commodities</h1>
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            Trade Gold, Silver, Crude Oil and more — real-time commodity markets coming soon to Zebvix.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/60 border border-border/50">
-          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-          <span className="text-xs text-muted-foreground font-medium">Launching soon on Zebvix</span>
-        </div>
-      </div>
-    );
+    return <CommoditiesComingSoon />;
   }
 
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);

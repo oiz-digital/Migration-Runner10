@@ -77,7 +77,7 @@ export default function InviteScreen() {
   });
 
   const stats = statsQ.data;
-  const referralCode = stats?.code ?? user?.referralCode ?? "ZEBVIX" + (user?.id ?? "");
+  const referralCode = stats?.code ?? "ZEBVIX" + (user?.id ?? "");
   const referralLink = stats?.link ?? `https://zebvix.com/r/${referralCode}`;
 
   const copyCode = async () => {

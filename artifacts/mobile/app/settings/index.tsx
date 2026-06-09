@@ -20,6 +20,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme, type AppTheme } from "@/contexts/ThemeContext";
 import { apiFetch, apiPost, apiPut } from "@/hooks/useApi";
 
 interface UserSettings {
@@ -110,6 +111,9 @@ export default function SettingsScreen() {
   const [otpCode, setOtpCode] = useState("");
   const [twoFaStep, setTwoFaStep] = useState<"idle" | "pending" | "verify">("idle");
   const [qrUri, setQrUri] = useState("");
+  const [showThemePicker, setShowThemePicker] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const THEME_LABELS: Record<AppTheme, string> = { dark: "Dark", light: "Light", system: "System" };
 
   const enable2FAMut = useMutation({
     mutationFn: () => apiPost<{ qrUri: string; secret: string }>("/api/auth/2fa/enable"),
@@ -290,7 +294,7 @@ export default function SettingsScreen() {
             <RowDivider colors={colors} />
             <SettingNav icon="globe" label="Language" value="English" iconColor="#346aa9" onPress={() => {}} colors={colors} />
             <RowDivider colors={colors} />
-            <SettingNav icon="moon" label="Appearance" value="Dark" iconColor="#9945ff" onPress={() => {}} colors={colors} />
+            <SettingNav icon="moon" label="Appearance" value={THEME_LABELS[theme]} iconColor="#9945ff" onPress={() => setShowThemePicker(true)} colors={colors} />
             <RowDivider colors={colors} />
             <SettingNav icon="bar-chart-2" label="Default Chart Type" value="Candlestick" iconColor="#eb9100" onPress={() => {}} colors={colors} />
           </View>
@@ -356,6 +360,42 @@ export default function SettingsScreen() {
           Zebvix v1.0.0 · FIU-IND Compliant · PMLA 2002
         </Text>
       </ScrollView>
+
+      {/* Theme Picker Modal */}
+      {showThemePicker && (
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modal, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.modalTitle, { color: colors.foreground }]}>Appearance</Text>
+            <Text style={[styles.modalSub, { color: colors.mutedForeground }]}>Choose your preferred display mode</Text>
+            {(["dark", "light", "system"] as AppTheme[]).map((t) => (
+              <TouchableOpacity
+                key={t}
+                style={[
+                  styles.themeOption,
+                  { borderColor: theme === t ? colors.primary : colors.border, backgroundColor: theme === t ? colors.primary + "15" : colors.muted },
+                ]}
+                onPress={() => { setTheme(t); setShowThemePicker(false); }}
+              >
+                <Feather
+                  name={t === "dark" ? "moon" : t === "light" ? "sun" : "monitor"}
+                  size={18}
+                  color={theme === t ? colors.primary : colors.mutedForeground}
+                />
+                <Text style={[styles.themeOptionLabel, { color: theme === t ? colors.primary : colors.foreground }]}>
+                  {THEME_LABELS[t]}
+                </Text>
+                {theme === t && <Feather name="check" size={16} color={colors.primary} style={{ marginLeft: "auto" }} />}
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={[styles.modalBtn, { backgroundColor: colors.muted, marginTop: 8 }]}
+              onPress={() => setShowThemePicker(false)}
+            >
+              <Text style={{ color: colors.foreground, fontWeight: "600" }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       {/* 2FA Modal */}
       {show2FAModal && (
@@ -434,6 +474,8 @@ const styles = StyleSheet.create({
   version: { textAlign: "center", fontSize: 11, marginTop: 24, marginBottom: 8 },
   modalOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "#000000cc", justifyContent: "center", alignItems: "center", zIndex: 99 },
   modal: { width: "88%", borderRadius: 18, borderWidth: 1, padding: 24 },
+  themeOption: { flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderRadius: 12, borderWidth: 1.5, marginBottom: 8 },
+  themeOptionLabel: { fontSize: 15, fontWeight: "600" },
   modalTitle: { fontSize: 18, fontWeight: "800", textAlign: "center", marginBottom: 12 },
   modalSub: { fontSize: 13, textAlign: "center", marginBottom: 16 },
   codeInput: { borderWidth: 1, borderRadius: 10, padding: 14, fontSize: 24, fontWeight: "700", textAlign: "center", letterSpacing: 8, marginBottom: 16 },

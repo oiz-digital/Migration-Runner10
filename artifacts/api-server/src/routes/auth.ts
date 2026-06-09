@@ -23,6 +23,8 @@ import {
   maskPhone,
   type AuthChallengePurpose,
 } from "../lib/auth-challenge";
+import { sendWelcomeEmail } from "../lib/email";
+import { screenOnboarding } from "../lib/sanctions";
 
 const router: IRouter = Router();
 
@@ -171,6 +173,16 @@ router.post("/auth/register", validate(RegisterBody), async (req, res): Promise<
     return;
   }
 
+  // PMLA 2002 / FIU-IND: sanctions screening at onboarding
+  const sanctionsResult = screenOnboarding({ name: name || "" });
+  if (sanctionsResult.riskLevel === "blocked") {
+    res.status(403).json({
+      error: "Account creation denied. Please contact compliance@zebvix.com.",
+      code: "sanctions_blocked",
+    });
+    return;
+  }
+
   const existing = await db
     .select()
     .from(usersTable)
@@ -216,6 +228,11 @@ router.post("/auth/register", validate(RegisterBody), async (req, res): Promise<
     inits.push({ userId: user.id, walletType: "spot", coinId: usdtCoin[0].id, balance: "0" });
   }
   if (inits.length) await db.insert(walletsTable).values(inits);
+
+  // Fire-and-forget welcome email (non-blocking)
+  if (user.email) {
+    sendWelcomeEmail(user.email, { name: user.name }).catch(() => {});
+  }
 
   // If admin requires email or phone OTP at signup, gate session creation
   // behind a verification challenge. Otherwise sign the user in immediately.

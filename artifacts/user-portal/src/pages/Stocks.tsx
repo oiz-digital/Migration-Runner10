@@ -140,6 +140,60 @@ function fmtChange(n: number) {
   return (n >= 0 ? "+" : "") + n.toFixed(2) + "%";
 }
 
+function StocksComingSoon() {
+  const [email, setEmail] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  return (
+    <div className="min-h-[calc(100vh-56px)] bg-background">
+      <div className="max-w-xl mx-auto px-6 py-16 flex flex-col items-center text-center gap-8">
+        <div className="relative">
+          <div className="w-24 h-24 rounded-3xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+            <Building2 className="w-10 h-10 text-blue-400" />
+          </div>
+          <div className="absolute -top-2 -right-2 px-2 py-1 rounded-full text-[10px] font-bold bg-amber-400/15 border border-amber-400/30 text-amber-400">SOON</div>
+        </div>
+        <div className="space-y-3">
+          <p className="text-xs font-bold uppercase tracking-widest text-amber-400">Coming Soon</p>
+          <h1 className="text-4xl font-bold tracking-tight">Stocks Trading</h1>
+          <p className="text-muted-foreground leading-relaxed max-w-sm">NSE India & US NASDAQ/NYSE stocks — Reliance, TCS, AAPL, NVDA and more with real-time market depth.</p>
+        </div>
+        <div className="flex flex-wrap justify-center gap-2">
+          {["NSE Equities", "NASDAQ · NYSE", "Real-time L2", "Up to 5× Leverage", "Angel One Integration"].map((f) => (
+            <span key={f} className="px-3 py-1.5 rounded-full text-xs font-medium bg-blue-500/10 border border-blue-500/20 text-blue-400">{f}</span>
+          ))}
+        </div>
+        <div className="w-full max-w-sm space-y-3">
+          {submitted ? (
+            <div className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-medium">
+              ✓ You'll be notified when Stocks launches!
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Input type="email" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="flex-1" />
+              <Button onClick={() => { if (email) { setSubmitted(true); } }}>Notify Me</Button>
+            </div>
+          )}
+        </div>
+        <div className="w-full max-w-sm space-y-3 text-left border border-border/50 rounded-xl p-4 bg-card/40">
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Roadmap</p>
+          {[
+            { q: "Q2 2025", label: "Angel One SmartAPI integration", done: true },
+            { q: "Q3 2025", label: "NSE equity paper trading", done: false },
+            { q: "Q4 2025", label: "NASDAQ & NYSE live data", done: false },
+            { q: "Q1 2026", label: "Full live trading + margin", done: false },
+          ].map((r) => (
+            <div key={r.q} className="flex items-center gap-3">
+              <div className={`w-2 h-2 rounded-full flex-shrink-0 ${r.done ? "bg-emerald-400" : "bg-muted-foreground/30"}`} />
+              <span className="text-xs text-muted-foreground w-20 flex-shrink-0">{r.q}</span>
+              <span className={`text-sm ${r.done ? "text-foreground font-medium" : "text-muted-foreground"}`}>{r.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const SECTOR_COLORS: Record<string, string> = {
   Technology: "text-blue-400",
   Banking: "text-green-400",
@@ -263,24 +317,7 @@ export default function Stocks() {
 
   const COMING_SOON_STOCKS: boolean = true;
   if (COMING_SOON_STOCKS) {
-    return (
-      <div className="min-h-[calc(100vh-56px)] flex flex-col items-center justify-center gap-6 px-4 text-center bg-background">
-        <div className="w-20 h-20 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-          <Clock className="w-9 h-9 text-amber-400" />
-        </div>
-        <div className="max-w-sm space-y-2">
-          <p className="text-xs font-bold uppercase tracking-widest text-amber-400">Coming Soon</p>
-          <h1 className="text-3xl font-bold tracking-tight">Stocks</h1>
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            NSE India & US NASDAQ stocks — Reliance, TCS, AAPL, NVDA and more. Coming soon to Zebvix.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/60 border border-border/50">
-          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-          <span className="text-xs text-muted-foreground font-medium">Launching soon on Zebvix</span>
-        </div>
-      </div>
-    );
+    return <StocksComingSoon />;
   }
 
   return (

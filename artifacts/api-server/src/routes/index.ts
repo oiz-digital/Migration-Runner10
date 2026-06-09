@@ -60,6 +60,7 @@ import adminPriceAlertsRouter from "./admin-price-alerts";
 import razorpayRouter from "./razorpay";
 import webhooksRouter from "./webhooks";
 import apiAliasesRouter from "./api-aliases";
+import aiChatRouter from "./ai-chat";
 
 const router: IRouter = Router();
 
@@ -133,5 +134,6 @@ router.use(adminPriceAlertsRouter);
 router.use(razorpayRouter);
 router.use(webhooksRouter);
 router.use(v1Router);
+router.use(aiChatRouter);
 
 export default router;

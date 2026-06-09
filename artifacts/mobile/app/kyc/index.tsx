@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Modal,
   Platform,
   ScrollView,
@@ -20,6 +21,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch, apiPost } from "@/hooks/useApi";
+import * as ImagePicker from "expo-image-picker";
 import { EmptyState } from "@/components/EmptyState";
 
 interface KycRecord {
@@ -90,6 +92,9 @@ export default function KYCScreen() {
   const [panNo, setPanNo] = useState("");
   const [dob, setDob] = useState("");
   const [aadhaarNo, setAadhaarNo] = useState("");
+  const [aadhaarDocUri, setAadhaarDocUri] = useState<string | null>(null);
+  const [selfieUri, setSelfieUri] = useState<string | null>(null);
+  const [docUploading, setDocUploading] = useState(false);
   const [bankModal, setBankModal] = useState(false);
   const [bankName, setBankName] = useState("");
   const [accountNo, setAccountNo] = useState("");
@@ -127,11 +132,94 @@ export default function KYCScreen() {
     },
   });
 
+  const pickAadhaarDoc = async () => {
+    if (Platform.OS === "web") return;
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission Required", "Please allow access to your photo library to upload documents.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.85,
+      allowsEditing: true,
+      aspect: [4, 3],
+    });
+    if (!result.canceled && result.assets[0]) {
+      setAadhaarDocUri(result.assets[0].uri);
+    }
+  };
+
+  const takeSelfie = async () => {
+    if (Platform.OS === "web") return;
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Camera Permission Required", "Please allow camera access to take a selfie for KYC verification.");
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      cameraType: ImagePicker.CameraType.front,
+      quality: 0.85,
+      allowsEditing: true,
+      aspect: [1, 1],
+    });
+    if (!result.canceled && result.assets[0]) {
+      setSelfieUri(result.assets[0].uri);
+    }
+  };
+
+  const uploadDocumentAndApply = async () => {
+    setDocUploading(true);
+    try {
+      // Upload aadhaar doc if selected
+      let docUrl: string | undefined;
+      if (aadhaarDocUri) {
+        const formData = new FormData();
+        const filename = aadhaarDocUri.split("/").pop() || "aadhaar.jpg";
+        formData.append("document", { uri: aadhaarDocUri, name: filename, type: "image/jpeg" } as any);
+        formData.append("type", "aadhaar");
+        const uploadRes = await fetch("/api/user/kyc/upload/kyc-document", {
+          method: "POST",
+          body: formData,
+          credentials: "include",
+        });
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json() as { url: string };
+          docUrl = uploadData.url;
+        }
+      }
+      // Upload selfie if selected (level 3)
+      let selfieUrl: string | undefined;
+      if (selfieUri) {
+        const formData = new FormData();
+        const filename = selfieUri.split("/").pop() || "selfie.jpg";
+        formData.append("document", { uri: selfieUri, name: filename, type: "image/jpeg" } as any);
+        formData.append("type", "selfie");
+        const uploadRes = await fetch("/api/user/kyc/upload/kyc-document", {
+          method: "POST",
+          body: formData,
+          credentials: "include",
+        });
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json() as { url: string };
+          selfieUrl = uploadData.url;
+        }
+      }
+      if (formStep === "aadhaar") {
+        applyMutation.mutate({ level: 2, aadhaarNumber: aadhaarNo, ...(docUrl ? { aadhaarDocUrl: docUrl } : {}) });
+      } else if (formStep === "selfie") {
+        applyMutation.mutate({ level: 3, ...(selfieUrl ? { selfieUrl } : {}) });
+      }
+    } finally {
+      setDocUploading(false);
+    }
+  };
+
   const handleApply = () => {
     if (formStep === "pan") {
       applyMutation.mutate({ level: 1, panNumber: panNo, dob });
-    } else if (formStep === "aadhaar") {
-      applyMutation.mutate({ level: 2, aadhaarNumber: aadhaarNo });
+    } else if (formStep === "aadhaar" || formStep === "selfie") {
+      void uploadDocumentAndApply();
     }
   };
 
@@ -399,27 +487,59 @@ export default function KYCScreen() {
                 </>
               )}
               {formStep === "aadhaar" && (
-                <View style={[styles.inputWrap, { backgroundColor: colors.muted, borderColor: colors.border }]}>
-                  <Feather name="shield" size={16} color={colors.mutedForeground} />
-                  <TextInput
-                    style={[styles.input, { color: colors.foreground }]}
-                    placeholder="Aadhaar Number (12 digits)"
-                    placeholderTextColor={colors.mutedForeground}
-                    value={aadhaarNo}
-                    onChangeText={setAadhaarNo}
-                    keyboardType="number-pad"
-                    maxLength={12}
-                  />
-                </View>
+                <>
+                  <View style={[styles.inputWrap, { backgroundColor: colors.muted, borderColor: colors.border }]}>
+                    <Feather name="shield" size={16} color={colors.mutedForeground} />
+                    <TextInput
+                      style={[styles.input, { color: colors.foreground }]}
+                      placeholder="Aadhaar Number (12 digits)"
+                      placeholderTextColor={colors.mutedForeground}
+                      value={aadhaarNo}
+                      onChangeText={setAadhaarNo}
+                      keyboardType="number-pad"
+                      maxLength={12}
+                    />
+                  </View>
+                  <TouchableOpacity
+                    style={[styles.inputWrap, { backgroundColor: aadhaarDocUri ? colors.primary + "18" : colors.muted, borderColor: aadhaarDocUri ? colors.primary : colors.border, justifyContent: "center", gap: 10 }]}
+                    onPress={() => void pickAadhaarDoc()}
+                  >
+                    <Feather name={aadhaarDocUri ? "check-circle" : "upload"} size={16} color={aadhaarDocUri ? colors.primary : colors.mutedForeground} />
+                    <Text style={{ color: aadhaarDocUri ? colors.primary : colors.mutedForeground, fontSize: 14, fontWeight: "600" }}>
+                      {aadhaarDocUri ? "Aadhaar photo selected ✓" : "Upload Aadhaar photo (optional)"}
+                    </Text>
+                  </TouchableOpacity>
+                  <Text style={{ fontSize: 11, color: colors.mutedForeground, textAlign: "center" }}>
+                    Upload a clear photo of your Aadhaar card for faster verification
+                  </Text>
+                </>
               )}
               {formStep === "selfie" && (
-                <View style={{ alignItems: "center", gap: 12, paddingVertical: 20 }}>
-                  <View style={[styles.uploadCircle, { backgroundColor: colors.muted, borderColor: colors.border }]}>
-                    <Feather name="camera" size={32} color={colors.mutedForeground} />
-                  </View>
-                  <Text style={{ color: colors.mutedForeground, textAlign: "center", fontSize: 13 }}>
-                    Tap below to upload a live selfie or government-issued photo ID for Level 2 verification.
+                <View style={{ alignItems: "center", gap: 14, paddingVertical: 10 }}>
+                  <TouchableOpacity
+                    style={[styles.uploadCircle, {
+                      backgroundColor: selfieUri ? colors.primary + "18" : colors.muted,
+                      borderColor: selfieUri ? colors.primary : colors.border,
+                    }]}
+                    onPress={() => void takeSelfie()}
+                  >
+                    <Feather name={selfieUri ? "check-circle" : "camera"} size={32} color={selfieUri ? colors.primary : colors.mutedForeground} />
+                  </TouchableOpacity>
+                  <Text style={{ color: colors.foreground, textAlign: "center", fontSize: 14, fontWeight: "700" }}>
+                    {selfieUri ? "Selfie captured!" : "Take a live selfie"}
                   </Text>
+                  <Text style={{ color: colors.mutedForeground, textAlign: "center", fontSize: 12, lineHeight: 18 }}>
+                    Look directly at the camera in good lighting. No sunglasses or headwear.
+                  </Text>
+                  <TouchableOpacity
+                    style={[{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 10 }, { backgroundColor: colors.primary }]}
+                    onPress={() => void takeSelfie()}
+                  >
+                    <Feather name="camera" size={15} color="#fff" />
+                    <Text style={{ color: "#fff", fontWeight: "700", fontSize: 14 }}>
+                      {selfieUri ? "Retake Selfie" : "Open Camera"}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               )}
 
@@ -432,9 +552,9 @@ export default function KYCScreen() {
               <TouchableOpacity
                 style={[styles.submitBtn, { backgroundColor: colors.primary }]}
                 onPress={handleApply}
-                disabled={applyMutation.isPending}
+                disabled={applyMutation.isPending || docUploading}
               >
-                {applyMutation.isPending
+                {(applyMutation.isPending || docUploading)
                   ? <ActivityIndicator color="#fff" size="small" />
                   : <>
                       <Feather name="send" size={15} color="#fff" />

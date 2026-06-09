@@ -1267,20 +1267,39 @@ export default function Forex() {
   const COMING_SOON_FOREX: boolean = true;
   if (COMING_SOON_FOREX) {
     return (
-      <div className="min-h-[calc(100vh-56px)] flex flex-col items-center justify-center gap-6 px-4 text-center bg-background">
-        <div className="w-20 h-20 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-          <Clock className="w-9 h-9 text-amber-400" />
-        </div>
-        <div className="max-w-sm space-y-2">
-          <p className="text-xs font-bold uppercase tracking-widest text-amber-400">Coming Soon</p>
-          <h1 className="text-3xl font-bold tracking-tight">Forex Trading</h1>
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            Trade 8+ currency pairs with up to 50× leverage — EURINR, USDINR and more. Coming soon to Zebvix.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/60 border border-border/50">
-          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-          <span className="text-xs text-muted-foreground font-medium">Launching soon on Zebvix</span>
+      <div className="min-h-[calc(100vh-56px)] bg-background">
+        <div className="max-w-xl mx-auto px-6 py-16 flex flex-col items-center text-center gap-8">
+          <div className="relative">
+            <div className="w-24 h-24 rounded-3xl bg-green-500/10 border border-green-500/20 flex items-center justify-center">
+              <Globe className="w-10 h-10 text-green-400" />
+            </div>
+            <div className="absolute -top-2 -right-2 px-2 py-1 rounded-full text-[10px] font-bold bg-amber-400/15 border border-amber-400/30 text-amber-400">SOON</div>
+          </div>
+          <div className="space-y-3">
+            <p className="text-xs font-bold uppercase tracking-widest text-amber-400">Coming Soon</p>
+            <h1 className="text-4xl font-bold tracking-tight">Forex Trading</h1>
+            <p className="text-muted-foreground leading-relaxed max-w-sm">Trade currency pairs with up to 50× leverage — EURINR, USDINR, GBPINR and major G10 pairs via MT5.</p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-2">
+            {["8+ Currency Pairs", "USDINR · EURINR · GBPINR", "Up to 50× Leverage", "MT5 Integration", "24/5 Markets"].map((f) => (
+              <span key={f} className="px-3 py-1.5 rounded-full text-xs font-medium bg-green-500/10 border border-green-500/20 text-green-400">{f}</span>
+            ))}
+          </div>
+          <div className="w-full max-w-sm space-y-3 text-left border border-border/50 rounded-xl p-4 bg-card/40">
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Roadmap</p>
+            {[
+              { q: "Q3 2025", label: "MT5 demo account integration", done: false },
+              { q: "Q4 2025", label: "INR pairs live (USDINR, EURINR)", done: false },
+              { q: "Q1 2026", label: "G10 major pairs + micro lots", done: false },
+              { q: "Q2 2026", label: "Full live trading + swap-free", done: false },
+            ].map((r) => (
+              <div key={r.q} className="flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full flex-shrink-0 bg-muted-foreground/30" />
+                <span className="text-xs text-muted-foreground w-20 flex-shrink-0">{r.q}</span>
+                <span className="text-sm text-muted-foreground">{r.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );

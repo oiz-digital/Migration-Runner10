@@ -37,6 +37,7 @@ import {
 import { auditLogsTable } from "@workspace/db";
 import { requireRole } from "../middlewares/auth";
 import { sanitizeUser } from "../lib/auth";
+import { sendKycApprovedEmail, sendKycRejectedEmail, sendDepositEmail } from "../lib/email";
 import { logAdminAction } from "../lib/audit";
 import { adminCancelSpotOrderById } from "./orders";
 import { encryptSecret, maskSecret, decryptSecret } from "../lib/crypto-vault";
@@ -927,6 +928,19 @@ router.patch("/admin/kyc/:id", adminOnly, async (req, res): Promise<void> => {
       .where(eq(usersTable.id, rec.userId));
   }
   res.json(rec);
+  // Fire-and-forget KYC status email
+  const [kycUser] = await db.select().from(usersTable).where(eq(usersTable.id, rec.userId)).limit(1);
+  if (kycUser?.email) {
+    if (status === "approved") {
+      sendKycApprovedEmail(kycUser.email, { name: kycUser.name || undefined, level: rec.level }).catch(() => {});
+    } else if (status === "rejected") {
+      sendKycRejectedEmail(kycUser.email, {
+        name: kycUser.name || undefined,
+        level: rec.level,
+        reason: (rejectReason as string | undefined) || "Please contact support for details.",
+      }).catch(() => {});
+    }
+  }
 });
 
 // Admin-initiated Re-KYC: marks an approved record as needing re-submission.
@@ -1518,6 +1532,17 @@ router.patch("/admin/inr-deposits/:id", adminOnly, async (req, res): Promise<voi
       return d;
     });
     res.json(updated);
+    // Fire-and-forget deposit confirmation email
+    if (status === "completed" && updated) {
+      const [depUser] = await db.select().from(usersTable).where(eq(usersTable.id, updated.userId)).limit(1);
+      if (depUser?.email) {
+        sendDepositEmail(depUser.email, {
+          amount: updated.amount,
+          currency: "INR",
+          method: "INR Bank Transfer",
+        }).catch(() => {});
+      }
+    }
   } catch (e: any) {
     if (e?.code === 404) { res.status(404).json({ error: e.message }); return; }
     if (e?.code) { res.status(e.code).json({ error: e.message }); return; }

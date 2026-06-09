@@ -1,7 +1,8 @@
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   FlatList,
   Platform,
@@ -60,6 +61,15 @@ export default function FuturesScreen() {
   const [selected, setSelected] = useState<string>("BTC");
   const [side, setSide] = useState<"long"|"short">("long");
   const [leverage, setLeverage] = useState(10);
+  const [showRiskGate, setShowRiskGate] = useState(false);
+  const [pendingLeverage, setPendingLeverage] = useState<number | null>(null);
+  const [riskAcknowledged, setRiskAcknowledged] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem("zebvix_futures_risk_ack_v1").then((v) => {
+      if (v === "true") setRiskAcknowledged(true);
+    });
+  }, []);
   const [margin, setMargin] = useState("");
   const [orderTab, setOrderTab] = useState<OrderTab>("order");
   const [orderType, setOrderType] = useState<"market"|"limit">("market");
@@ -403,9 +413,17 @@ export default function FuturesScreen() {
                     <TouchableOpacity
                       key={l}
                       style={[styles.levBtn,{borderColor:l===leverage?colors.primary:colors.border},l===leverage&&{backgroundColor:colors.primary+"20"}]}
-                      onPress={()=>setLeverage(l)}
+                      onPress={()=>{
+                        if (l >= 50 && !riskAcknowledged) {
+                          setPendingLeverage(l);
+                          setShowRiskGate(true);
+                        } else {
+                          setLeverage(l);
+                        }
+                      }}
                     >
                       <Text style={[styles.levLabel,{color:l===leverage?colors.primary:colors.mutedForeground}]}>{l}×</Text>
+                      {l>=50&&<Text style={{fontSize:8,color:"#F6465D",fontWeight:"700"}}>HIGH</Text>}
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -487,6 +505,58 @@ export default function FuturesScreen() {
           )}
         </View>
       </View>
+
+      {/* Risk Gate Modal for high leverage */}
+      {showRiskGate && (
+        <View style={{...StyleSheet.absoluteFillObject,backgroundColor:"#000000cc",justifyContent:"center",alignItems:"center",zIndex:99}}>
+          <View style={{width:"90%",backgroundColor:"#1a0505",borderRadius:20,borderWidth:1.5,borderColor:"#F6465D40",padding:24,gap:14}}>
+            <View style={{alignItems:"center",gap:8}}>
+              <View style={{width:60,height:60,borderRadius:30,backgroundColor:"#F6465D20",alignItems:"center",justifyContent:"center"}}>
+                <Feather name="alert-triangle" size={28} color="#F6465D" />
+              </View>
+              <Text style={{fontSize:18,fontWeight:"800",color:"#f8fafc",textAlign:"center"}}>High Leverage Warning</Text>
+              <Text style={{fontSize:13,color:"#9ba3af",textAlign:"center",lineHeight:20}}>
+                {pendingLeverage}× leverage amplifies both gains AND losses. A 1% adverse move = {pendingLeverage}% loss on your margin.
+              </Text>
+            </View>
+            <View style={{backgroundColor:"#F6465D10",borderRadius:12,borderWidth:1,borderColor:"#F6465D30",padding:14,gap:8}}>
+              {[
+                "Liquidation risk: your entire margin can be lost",
+                "High volatility can trigger instant liquidation",
+                "Only trade with funds you can afford to lose",
+                "Use stop-losses to protect your position",
+              ].map((w)=>(
+                <View key={w} style={{flexDirection:"row",alignItems:"flex-start",gap:8}}>
+                  <Feather name="x-circle" size={13} color="#F6465D" style={{marginTop:2}} />
+                  <Text style={{flex:1,fontSize:12,color:"#f87171",lineHeight:18}}>{w}</Text>
+                </View>
+              ))}
+            </View>
+            <Text style={{fontSize:11,color:"#6b7a9e",textAlign:"center",lineHeight:16}}>
+              This warning is shown once per Zebvix FIU-IND risk disclosure policy.
+            </Text>
+            <View style={{flexDirection:"row",gap:10}}>
+              <TouchableOpacity
+                style={{flex:1,paddingVertical:13,borderRadius:10,alignItems:"center",backgroundColor:"#1e293b",borderWidth:1,borderColor:"#334155"}}
+                onPress={()=>{setShowRiskGate(false);setPendingLeverage(null);}}
+              >
+                <Text style={{color:"#94a3b8",fontWeight:"700"}}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{flex:1,paddingVertical:13,borderRadius:10,alignItems:"center",backgroundColor:"#F6465D"}}
+                onPress={()=>{
+                  if (pendingLeverage) setLeverage(pendingLeverage);
+                  setRiskAcknowledged(true);
+                  void AsyncStorage.setItem("zebvix_futures_risk_ack_v1","true");
+                  setShowRiskGate(false);setPendingLeverage(null);
+                }}
+              >
+                <Text style={{color:"#fff",fontWeight:"800"}}>I Understand — Proceed</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   );
 }

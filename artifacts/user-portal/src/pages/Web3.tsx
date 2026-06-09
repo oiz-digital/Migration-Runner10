@@ -164,12 +164,17 @@ export default function Web3Page() {
 
   return (
     <div className="container mx-auto px-3 md:px-6 py-5">
-      {/* Under Development banner */}
-      <div className="mb-5 flex items-center gap-3 rounded-xl border border-amber-400/30 bg-amber-500/5 px-4 py-3 text-sm text-amber-300">
-        <Construction className="h-5 w-5 flex-shrink-0 text-amber-400" />
-        <div>
-          <span className="font-semibold text-amber-400">Blockchain features under development</span>
-          <span className="text-amber-300/70 ml-2">— Web3 swap, bridge and on-chain wallets are coming soon. Exchange trading is fully live.</span>
+      {/* Testnet Preview banner */}
+      <div className="mb-5 flex items-start gap-3 rounded-xl border border-amber-400/30 bg-amber-500/5 px-4 py-3 text-sm">
+        <Construction className="h-5 w-5 flex-shrink-0 text-amber-400 mt-0.5" />
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-amber-400">Testnet Preview Mode</span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400/20 text-amber-400 border border-amber-400/30">PREVIEW</span>
+          </div>
+          <p className="text-amber-300/70 text-xs leading-relaxed">
+            Web3 swap, bridge and on-chain wallets are running in <strong className="text-amber-300">testnet-only</strong> mode — no real funds. All quotes and transactions are simulated. Exchange spot &amp; futures trading is fully live with real balances.
+          </p>
         </div>
       </div>
 

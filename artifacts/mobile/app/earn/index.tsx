@@ -95,12 +95,14 @@ export default function EarnScreen() {
     },
   });
 
-  const activePools = (pools ?? []).filter((p) => p.status === "active" || !p.status);
-  const filteredPools = filter === "all" ? activePools : activePools.filter((p) => filter === "flexible" ? p.flexible : !p.flexible);
+  type Pool = NonNullable<typeof pools>[number];
+  type Pos = NonNullable<typeof myPositions>[number];
+  const activePools = (pools ?? []).filter((p: Pool) => p.status === "active" || !p.status);
+  const filteredPools = filter === "all" ? activePools : activePools.filter((p: Pool) => filter === "flexible" ? p.flexible : !p.flexible);
 
-  const totalEarnings = (myPositions ?? []).reduce((s, p) => s + parseFloat(p.earnings || "0"), 0);
-  const totalStakedAmt = (myPositions ?? []).reduce((s, p) => s + parseFloat(p.amount || "0"), 0);
-  const maxApy = activePools.length > 0 ? Math.max(...activePools.map((p) => parseFloat(p.apy || "0"))) : 0;
+  const totalEarnings = (myPositions ?? []).reduce((s: number, p: Pos) => s + parseFloat(p.earnings || "0"), 0);
+  const totalStakedAmt = (myPositions ?? []).reduce((s: number, p: Pos) => s + parseFloat(p.amount || "0"), 0);
+  const maxApy = activePools.length > 0 ? Math.max(...activePools.map((p: Pool) => parseFloat(p.apy || "0"))) : 0;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -235,7 +237,7 @@ export default function EarnScreen() {
 
                     {/* APY calculator preview */}
                     <View style={[styles.calcPreview, { backgroundColor: colors.muted, borderColor: colors.border }]}>
-                      <Feather name="calculator" size={12} color={colors.mutedForeground} />
+                      <Feather name="percent" size={12} color={colors.mutedForeground} />
                       <Text style={[styles.calcText, { color: colors.mutedForeground }]}>
                         1,000 {pool.coinSymbol} → earn ~{((1000 * apy) / 100 / 12).toFixed(2)} {pool.coinSymbol}/mo
                       </Text>

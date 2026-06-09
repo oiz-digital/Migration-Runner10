@@ -55,6 +55,8 @@ interface ChatMsg {
 
 type Tab = "plans" | "my" | "chat";
 
+interface AIChatResponse { reply: string }
+
 const RISK_META: Record<string, { color: string; icon: keyof typeof Feather.glyphMap; label: string }> = {
   low: { color: "#22c55e", icon: "shield", label: "Low Risk" },
   medium: { color: "#f59e0b", icon: "activity", label: "Medium Risk" },
@@ -124,15 +126,25 @@ export default function AITradingScreen() {
     if (!msg) return;
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const userMsg: ChatMsg = { role: "user", content: msg, ts: Date.now() };
-    setChatMsgs((p) => [...p, userMsg]);
+    const history = [...chatMsgs, userMsg];
+    setChatMsgs(history);
     setChatInput("");
     setChatLoading(true);
-    setTimeout(() => {
-      const reply = AI_RESPONSES[msg] ?? `Great question! "${msg}" — Our AI strategies are designed to optimise for risk-adjusted returns. For personalised advice based on your portfolio, please complete Level 2 KYC and our AI advisor will provide tailored recommendations. Is there anything specific about our trading plans I can clarify?`;
-      setChatMsgs((p) => [...p, { role: "assistant", content: reply, ts: Date.now() }]);
+    try {
+      const data = await apiPost<AIChatResponse>("/api/ai/chat", {
+        messages: history.map((m) => ({ role: m.role, content: m.content })),
+      });
+      setChatMsgs((p) => [...p, { role: "assistant", content: data.reply, ts: Date.now() }]);
+    } catch {
+      setChatMsgs((p) => [...p, {
+        role: "assistant",
+        content: "Sorry, I'm having trouble connecting right now. Please try again in a moment.",
+        ts: Date.now(),
+      }]);
+    } finally {
       setChatLoading(false);
       setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 100);
-    }, 900 + Math.random() * 600);
+    }
   };
 
   const activePlans = (plans ?? []).filter((p) => p.status === "active");
