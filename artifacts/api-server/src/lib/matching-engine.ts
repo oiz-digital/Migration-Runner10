@@ -382,7 +382,6 @@ export async function tryMatch(takerOrderId: number, opts?: { takerVipTier?: num
           lastPrice: String(tradePrice),
           volume24h: sql`"volume_24h" + ${String(fillQty)}::numeric`,
           quoteVolume24h: sql`"quote_volume_24h" + ${String(notional)}::numeric`,
-          updatedAt: new Date(),
         }).where(eq(pairsTable.id, pair.id));
 
         // Update Redis book — maker

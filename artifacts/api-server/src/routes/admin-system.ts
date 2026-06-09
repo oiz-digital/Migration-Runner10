@@ -8,7 +8,7 @@
  *   PUT  /api/admin/inr-transactions/:id — approve/reject INR tx
  */
 import { Router, type IRouter } from "express";
-import { db, ordersTable, cryptoDepositsTable, usersTable, inrTransactionsTable, walletsTable, coinsTable } from "@workspace/db";
+import { db, ordersTable, cryptoDepositsTable, usersTable, inrTransactionsTable, walletsTable, coinsTable, pairsTable } from "@workspace/db";
 import { eq, and, desc, sql, ilike, or } from "drizzle-orm";
 import { requireRole } from "../middlewares/auth";
 import { isRedisReady, getRedis } from "../lib/redis";
@@ -116,7 +116,7 @@ router.get("/admin/system-status", adminAuth, async (req: any, res): Promise<voi
 
 /* ─── Graceful Restart ───────────────────────────────────────────────────── */
 router.post("/admin/restart", adminAuth, async (req: any, res): Promise<void> => {
-  await logAdminAction(req.user?.id ?? 0, "system.restart", {}, "api-server process restart initiated by admin").catch(() => null);
+  await logAdminAction(req, { action: "system.restart", entity: "api-server", payload: { pid: process.pid } }).catch(() => null);
   req.log.info({ adminId: req.user?.id }, "admin: graceful restart requested");
   res.json({ ok: true, message: "API server restarting… will be back in ~5s", pid: process.pid });
   // Give the response time to flush, then exit cleanly — the workflow manager restarts the process.
@@ -129,23 +129,24 @@ router.get("/admin/trades", adminAuth, async (req, res): Promise<void> => {
   const lim = Math.min(parseInt(String(limit ?? "50"), 10), 500);
   const off = parseInt(String(offset ?? "0"), 10);
 
-  const conds: any[] = [sql`${ordersTable.status} IN ('filled', 'partially_filled')`, sql`${ordersTable.filledQuantity}::numeric > 0`];
-  if (symbol) conds.push(eq(ordersTable.symbol, String(symbol)));
+  const conds: any[] = [sql`${ordersTable.status} IN ('filled', 'partially_filled')`, sql`${ordersTable.filledQty}::numeric > 0`];
+  if (symbol) conds.push(sql`EXISTS(SELECT 1 FROM pairs WHERE pairs.id = ${ordersTable.pairId} AND pairs.symbol = ${String(symbol)})`);
   if (userId) conds.push(eq(ordersTable.userId, parseInt(String(userId), 10)));
 
   const rows = await db.select().from(ordersTable)
     .where(and(...conds)).orderBy(desc(ordersTable.updatedAt)).limit(lim).offset(off);
 
   const result = await Promise.all(rows.map(async (o) => {
-    const [u] = await db.select({ username: usersTable.username, email: usersTable.email })
+    const [u] = await db.select({ name: usersTable.name, email: usersTable.email })
       .from(usersTable).where(eq(usersTable.id, o.userId)).limit(1);
-    const filled = parseFloat(o.filledQuantity ?? "0");
-    const price  = parseFloat(o.avgFillPrice ?? o.price ?? "0");
+    const [pair] = await db.select({ symbol: pairsTable.symbol }).from(pairsTable).where(eq(pairsTable.id, o.pairId)).limit(1);
+    const filled = parseFloat(o.filledQty ?? "0");
+    const price  = parseFloat(o.avgPrice ?? o.price ?? "0");
     return {
       id: o.id, userId: o.userId,
-      username: u?.username ?? "?", email: u?.email ?? "",
-      symbol: o.symbol, side: o.side, type: o.type, status: o.status,
-      quantity: parseFloat(o.quantity), filledQuantity: filled,
+      username: u?.name ?? "?", email: u?.email ?? "",
+      symbol: pair?.symbol ?? String(o.pairId), side: o.side, type: o.type, status: o.status,
+      quantity: parseFloat(o.qty), filledQuantity: filled,
       avgFillPrice: price, value: parseFloat((filled * price).toFixed(2)),
       fee: o.fee != null ? parseFloat(o.fee) : null,
       createdAt: o.createdAt instanceof Date ? o.createdAt.toISOString() : o.createdAt,
@@ -179,7 +180,7 @@ router.get("/admin/inr-transactions", adminAuth, async (req, res): Promise<void>
 
   const rows = await db.select({
     tx:       inrTransactionsTable,
-    username: usersTable.username,
+    username: usersTable.name,
     email:    usersTable.email,
   }).from(inrTransactionsTable)
     .leftJoin(usersTable, eq(inrTransactionsTable.userId, usersTable.id))

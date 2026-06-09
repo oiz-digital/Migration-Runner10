@@ -75,7 +75,7 @@ async function rpcCall(rpcUrl: string, method: string, params: any[]): Promise<a
     signal: AbortSignal.timeout(15000),
   });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  const j = await r.json();
+  const j = await r.json() as any;
   if (j.error) throw new Error(j.error.message || "RPC error");
   return j.result;
 }

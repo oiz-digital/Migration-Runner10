@@ -143,24 +143,22 @@ export default function TDSReportPage() {
           value={summary ? `₹${fmt(summary.total_tds, 4)}` : "—"}
           icon={Percent}
           loading={isLoading}
-          accent="amber"
-          sub="1% deducted on sell value"
+          accent
+          hint="1% deducted on sell value"
         />
         <PremiumStatCard
           title="Sell Trades with TDS"
           value={summary?.total_trades ?? "—"}
           icon={TrendingDown}
           loading={isLoading}
-          accent="blue"
-          sub="Total qualifying sell orders"
+          hint="Total qualifying sell orders"
         />
         <PremiumStatCard
           title="Unique Sellers"
           value={summary?.unique_sellers ?? "—"}
           icon={Users}
           loading={isLoading}
-          accent="green"
-          sub="Users with TDS deducted"
+          hint="Users with TDS deducted"
         />
       </div>
 

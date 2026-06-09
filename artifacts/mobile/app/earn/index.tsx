@@ -75,13 +75,13 @@ export default function EarnScreen() {
 
   const { data: pools, isLoading } = useQuery({
     queryKey: ["earn-pools"],
-    queryFn: () => apiFetch<EarnPool[]>("/api/staking/pool"),
+    queryFn: () => apiFetch<{ items: EarnPool[] } | EarnPool[]>("/api/staking/pool").then(r => Array.isArray(r) ? r : (r as any)?.items ?? []),
     staleTime: 60_000,
   });
 
   const { data: myPositions } = useQuery({
     queryKey: ["earn-positions"],
-    queryFn: () => apiFetch<EarnPos[]>("/api/staking/position"),
+    queryFn: () => apiFetch<{ items: EarnPos[] } | EarnPos[]>("/api/staking/position").then(r => Array.isArray(r) ? r : (r as any)?.items ?? []),
     enabled: isAuthenticated,
   });
 

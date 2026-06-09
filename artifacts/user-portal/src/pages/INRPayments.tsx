@@ -246,7 +246,7 @@ export default function INRPayments() {
                       <div className={`text-sm font-bold tabular-nums ${tx.type === "deposit" ? "text-emerald-400" : "text-rose-400"}`}>
                         {tx.type === "deposit" ? "+" : "-"}₹{tx.amountInr.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                       </div>
-                      <StatusPill variant={statusVariant(tx.status)} label={tx.status} />
+                      <StatusPill variant={statusVariant(tx.status)} status={tx.status} />
                     </div>
                   </div>
                 ))}

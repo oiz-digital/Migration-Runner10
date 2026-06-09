@@ -36,7 +36,7 @@ function nextSlot(now: Date, intervalHours: number): Date {
 
 function priceForSymbol(symbol: string): number | null {
   const tick = getCache().find((t) => t.symbol.toUpperCase() === symbol.toUpperCase());
-  return tick ? Number(tick.price) : null;
+  return tick ? Number(tick.usdt) : null;
 }
 
 // ─── 1. Auto-create next funding rate row for every futures pair ──────────────

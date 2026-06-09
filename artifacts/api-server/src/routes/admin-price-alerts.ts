@@ -27,7 +27,7 @@ router.get("/admin/price-alerts", adminAuth, async (req, res): Promise<void> => 
     triggeredAt: priceAlertsTable.triggeredAt,
     createdAt:   priceAlertsTable.createdAt,
     userEmail:   usersTable.email,
-    userUsername:usersTable.username,
+    userUsername:usersTable.name,
   })
     .from(priceAlertsTable)
     .leftJoin(usersTable, eq(priceAlertsTable.userId, usersTable.id))

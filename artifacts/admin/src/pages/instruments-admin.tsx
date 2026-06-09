@@ -111,8 +111,7 @@ export default function InstrumentsAdminPage() {
     <div className="space-y-6 p-6">
       <PageHeader
         title="Forex, Stocks & Commodities"
-        subtitle="Manage all tradeable instruments — Forex, Indian & international stocks, Gold, Silver, Oil"
-        icon={Gem}
+        description="Manage all tradeable instruments — Forex, Indian & international stocks, Gold, Silver, Oil"
       />
 
       {/* Stats */}

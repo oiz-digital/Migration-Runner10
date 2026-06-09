@@ -261,7 +261,7 @@ function AlertRow({ alert, onDelete, onDisable }: {
         {alert.note && <div className="text-xs text-muted-foreground mt-0.5">{alert.note}</div>}
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <StatusPill variant={statusVariant} label={alert.status} />
+        <StatusPill variant={statusVariant} status={alert.status} />
         {alert.status === "active" && onDisable && (
           <Button size="sm" variant="ghost" className="text-xs h-7 px-2 text-muted-foreground" onClick={onDisable}>
             Disable

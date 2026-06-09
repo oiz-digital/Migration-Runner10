@@ -130,7 +130,7 @@ function methodLabel(m: string): string {
 }
 
 
-const COMING_SOON_P2P: boolean = true;
+const COMING_SOON_P2P: boolean = false;
 
 export default function P2P() {
   const { user } = useAuth();

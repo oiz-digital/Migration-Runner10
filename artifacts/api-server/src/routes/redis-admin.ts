@@ -165,13 +165,13 @@ router.get("/redis/configs", requireAuth, requireRole("admin", "superadmin"), as
 });
 
 router.patch("/redis/configs/:key", requireAuth, requireRole("admin", "superadmin"), async (req, res) => {
-  const key = req.params.key;
+  const key = Array.isArray(req.params.key) ? req.params.key[0] : req.params.key;
   const allowed: any = {};
   for (const f of ["label","description","category","ttlSec","enabled","cacheOnServer","cacheOnMobile","cacheOnWeb","pattern"]) {
     if (f in (req.body ?? {})) allowed[f] = req.body[f];
   }
   if (Object.keys(allowed).length === 0) { res.status(400).json({ error: "no fields" }); return; }
-  const [updated] = await db.update(cacheConfigsTable).set(allowed).where(eq(cacheConfigsTable.cacheKey, key)).returning();
+  const [updated] = await db.update(cacheConfigsTable).set(allowed as any).where(eq(cacheConfigsTable.cacheKey, key)).returning();
   if (!updated) { res.status(404).json({ error: "config not found" }); return; }
   await loadConfigs(true);
   res.json(updated);

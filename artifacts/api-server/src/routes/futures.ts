@@ -130,8 +130,8 @@ async function resolvePair(currency: string, quote: string): Promise<ResolvedPai
     minQty: Number(pair.minQty ?? 0),
     maxLeverage: Number(pair.maxLeverage ?? 100),
     mmRate: Number(pair.mmRate ?? 0.005),
-    takerFeeRate: Number(pair.takerFeeRate ?? 0.0006),
-    makerFeeRate: Number(pair.makerFeeRate ?? 0.0002),
+    takerFeeRate: Number(pair.takerFee ?? 0.0006),
+    makerFeeRate: Number(pair.makerFee ?? 0.0002),
     futuresEnabled: Boolean(pair.futuresEnabled),
     futuresStartAt: pair.futuresStartAt ?? null,
     lastPrice: Number(pair.lastPrice ?? 0),
@@ -813,8 +813,8 @@ r.delete("/futures/order/:id", bicryptoAuth, async (req: any, res: Response): Pr
     qtyPrecision: Number(pair.qtyPrecision ?? 4),
     minQty: Number(pair.minQty ?? 0), maxLeverage: Number(pair.maxLeverage ?? 100),
     mmRate: Number(pair.mmRate ?? 0.005),
-    takerFeeRate: Number(pair.takerFeeRate ?? 0.0006),
-    makerFeeRate: Number(pair.makerFeeRate ?? 0.0002),
+    takerFeeRate: Number(pair.takerFee ?? 0.0006),
+    makerFeeRate: Number(pair.makerFee ?? 0.0002),
     futuresEnabled: Boolean(pair.futuresEnabled),
     futuresStartAt: pair.futuresStartAt ?? null,
     lastPrice: Number(pair.lastPrice ?? 0),
@@ -982,7 +982,7 @@ const setLeverage = async (req: any, res: Response): Promise<void> => {
     // position (matches Bicrypto's behaviour).
     const newLiq = calcLiqPrice(pos.side as any, Number(pos.entryPrice), Number(pos.qty), Number(pos.marginAmount), pair.mmRate);
     await db.update(futuresPositionsTable).set({
-      leverage: lev, liquidationPrice: String(newLiq), updatedAt: new Date(),
+      leverage: lev, liquidationPrice: String(newLiq),
     }).where(eq(futuresPositionsTable.id, pos.id));
     const [after] = await db.select().from(futuresPositionsTable).where(eq(futuresPositionsTable.id, pos.id)).limit(1);
     res.json(positionToFlutter(after, pair, pair.lastPrice || Number(after.markPrice)));

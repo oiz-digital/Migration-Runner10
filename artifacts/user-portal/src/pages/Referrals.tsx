@@ -257,10 +257,9 @@ export default function Referrals() {
                   <div className="text-emerald-400 font-medium tabular-nums">
                     +${parseFloat(r.bonusAmount ?? "0").toFixed(4)}
                   </div>
-                  <StatusPill
-                    variant={r.bonusCredited ? "success" : "neutral"}
-                    label={r.bonusCredited ? "Credited" : "Pending"}
-                  />
+                  <StatusPill variant={r.bonusCredited ? "success" : "neutral"}>
+                    {r.bonusCredited ? "Credited" : "Pending"}
+                  </StatusPill>
                 </div>
               </div>
             ))}

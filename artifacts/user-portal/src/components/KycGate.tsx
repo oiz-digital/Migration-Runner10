@@ -19,7 +19,7 @@ const FEATURE_UNLOCKS: Record<number, string[]> = {
 interface KycGateProps {
   requiredLevel: 1 | 2 | 3;
   feature?: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   mode?: "overlay" | "page";
   className?: string;
 }

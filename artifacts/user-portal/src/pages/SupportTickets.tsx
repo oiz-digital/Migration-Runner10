@@ -138,10 +138,9 @@ export default function SupportTickets() {
           <div className="flex-1 min-w-0">
             <div className="font-semibold truncate">{selectedTicket.subject}</div>
             <div className="flex items-center gap-2 mt-0.5">
-              <StatusPill
-                variant={STATUS_VARIANT[selectedTicket.status] ?? "neutral"}
-                label={STATUS_LABEL[selectedTicket.status] ?? selectedTicket.status}
-              />
+              <StatusPill variant={STATUS_VARIANT[selectedTicket.status] ?? "neutral"}>
+                {STATUS_LABEL[selectedTicket.status] ?? selectedTicket.status}
+              </StatusPill>
               <span className={`text-xs font-medium capitalize ${PRIORITY_CLS[selectedTicket.priority]}`}>
                 {selectedTicket.priority} priority
               </span>
@@ -362,10 +361,9 @@ function TicketRow({ ticket, onClick }: { ticket: Ticket; onClick: () => void })
       <div className="flex-1 min-w-0">
         <div className="font-medium text-sm truncate">{ticket.subject}</div>
         <div className="flex items-center gap-2 mt-1 flex-wrap">
-          <StatusPill
-            variant={STATUS_VARIANT[ticket.status] ?? "neutral"}
-            label={STATUS_LABEL[ticket.status] ?? ticket.status}
-          />
+          <StatusPill variant={STATUS_VARIANT[ticket.status] ?? "neutral"}>
+            {STATUS_LABEL[ticket.status] ?? ticket.status}
+          </StatusPill>
           <span className="text-xs text-muted-foreground capitalize">{ticket.category}</span>
           <span className={`text-xs font-medium capitalize ${PRIORITY_CLS[ticket.priority]}`}>
             {ticket.priority}

@@ -51,7 +51,7 @@ export async function createOrder(cfg: RazorpayConfig, params: {
     headers: { "content-type": "application/json", authorization: authHeader(cfg) },
     body: JSON.stringify(body),
   });
-  const json = await r.json().catch(() => ({}));
+  const json = await r.json().catch(() => ({}) as any) as any;
   if (!r.ok) {
     logger.error({ status: r.status, body: json }, "Razorpay createOrder failed");
     const msg = json?.error?.description || json?.error?.code || `HTTP ${r.status}`;
@@ -64,7 +64,7 @@ export async function fetchPayment(cfg: RazorpayConfig, paymentId: string): Prom
   const r = await fetch(`${API}/payments/${paymentId}`, {
     headers: { authorization: authHeader(cfg) },
   });
-  const json = await r.json().catch(() => ({}));
+  const json = await r.json().catch(() => ({}) as any) as any;
   if (!r.ok) {
     const msg = json?.error?.description || `HTTP ${r.status}`;
     throw new Error(`Razorpay: ${msg}`);

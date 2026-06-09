@@ -18,7 +18,7 @@ const adminAuth = requireRole("admin", "superadmin");
 function assetPrice(symbol: string): number {
   if (symbol === "USDT" || symbol === "USDC" || symbol === "INR") return symbol === "INR" ? 0.012 : 1;
   const tick = getRawTick(`${symbol}USDT`);
-  return tick ? tick.lastPrice : 0;
+  return tick ? tick.usdt : 0;
 }
 
 /* GET /admin/wallet-manager */
@@ -28,11 +28,11 @@ router.get("/admin/wallet-manager", adminAuth, async (req, res): Promise<void> =
   const offset =               parseInt(req.query.offset as string ?? "0",  10) || 0;
 
   let baseQ = db.select({
-    id: usersTable.id, email: usersTable.email, username: usersTable.username,
+    id: usersTable.id, email: usersTable.email, username: usersTable.name,
     status: usersTable.status, createdAt: usersTable.createdAt,
   }).from(usersTable).orderBy(desc(usersTable.createdAt)).$dynamic();
 
-  if (search) baseQ = baseQ.where(or(ilike(usersTable.email, `%${search}%`), ilike(usersTable.username, `%${search}%`)));
+  if (search) baseQ = baseQ.where(or(ilike(usersTable.email, `%${search}%`), ilike(usersTable.name, `%${search}%`)));
 
   const users = await baseQ.limit(limit).offset(offset);
 
@@ -78,7 +78,7 @@ router.get("/admin/wallet-manager/:userId", adminAuth, async (req, res): Promise
   });
 
   const totalUsdValue = +(balances.reduce((s, b) => s + b.usdValue, 0)).toFixed(2);
-  res.json({ user: { id: user.id, email: user.email, username: user.username, status: user.status }, balances, totalUsdValue });
+  res.json({ user: { id: user.id, email: user.email, username: user.name, status: user.status }, balances, totalUsdValue });
 });
 
 /* ── Master Wallets ───────────────────────────────────────────────────────── */

@@ -477,10 +477,10 @@ function OrdersTab({ accountId }: { accountId: number }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           accountId,
+          ...orderForm,
           tradingsymbol: selectedScrip.tradingsymbol,
           symboltoken: selectedScrip.symboltoken,
           exchange: selectedScrip.exchange,
-          ...orderForm,
         }),
       });
       const d = await r.json();

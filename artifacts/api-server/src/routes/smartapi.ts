@@ -120,7 +120,7 @@ router.post("/smartapi/connect", requireAuth, async (req, res): Promise<void> =>
     body: JSON.stringify({ clientcode: clientCode.trim().toUpperCase(), password, totp: totp ?? "" }),
   });
 
-  const loginData = await loginRes.json().catch(() => ({}));
+  const loginData = await loginRes.json().catch(() => ({}) as any) as any;
 
   if (!loginRes.ok || loginData.status === false || !loginData.data?.jwtToken) {
     res.status(401).json({ error: loginData.message ?? "SmartAPI login failed", raw: loginData });
@@ -228,7 +228,7 @@ router.post("/smartapi/refresh", requireAuth, async (req, res): Promise<void> =>
     },
     body: JSON.stringify({ refreshToken: acct.refreshToken }),
   });
-  const data = await r.json().catch(() => ({}));
+  const data = await r.json().catch(() => ({}) as any) as any;
   if (!data.data?.jwtToken) {
     res.status(401).json({ error: "Token refresh failed", raw: data });
     return;

@@ -443,7 +443,7 @@ export default function CoinsPage() {
             : "Set the symbol, pricing source, and listing details."}
           submitLabel="Add coin"
           submitting={create.isPending}
-          initial={prefill ?? undefined}
+          initial={prefill as any}
           onSubmit={(v) => create.mutate(v)}
         />
       )}

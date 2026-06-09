@@ -19,7 +19,7 @@
  *   DELETE /admin/instruments/:id           — delete instrument (adminOnly)
  */
 import { Router, type IRouter } from "express";
-import { eq, and, desc, asc, inArray } from "drizzle-orm";
+import { eq, and, desc, asc, inArray, sql } from "drizzle-orm";
 import {
   db,
   instrumentsTable,
@@ -130,7 +130,11 @@ router.post("/instruments/orders", requireAuth, async (req, res): Promise<void> 
   const [wallet] = await db
     .select()
     .from(walletsTable)
-    .where(and(eq(walletsTable.userId, userId), eq(walletsTable.coinSymbol, quoteCoin), eq(walletsTable.type, "spot")))
+    .where(and(
+      eq(walletsTable.userId, userId),
+      eq(walletsTable.walletType, "spot"),
+      sql`${walletsTable.coinId} = (SELECT id FROM coins WHERE symbol = ${quoteCoin} LIMIT 1)`,
+    ))
     .limit(1);
 
   const available = Number(wallet?.balance ?? 0) - Number(wallet?.locked ?? 0);
@@ -346,7 +350,11 @@ router.post("/instruments/positions/:id/close", requireAuth, async (req, res): P
   const [wallet] = await db
     .select()
     .from(walletsTable)
-    .where(and(eq(walletsTable.userId, userId), eq(walletsTable.coinSymbol, instrument.quoteCurrency), eq(walletsTable.type, "spot")))
+    .where(and(
+      eq(walletsTable.userId, userId),
+      eq(walletsTable.walletType, "spot"),
+      sql`${walletsTable.coinId} = (SELECT id FROM coins WHERE symbol = ${instrument.quoteCurrency} LIMIT 1)`,
+    ))
     .limit(1);
   if (wallet) {
     const credit = Number(position.marginUsed) + netPnl;
@@ -362,7 +370,7 @@ router.post("/instruments/positions/:id/close", requireAuth, async (req, res): P
 // ══════════════════════════════════════════════════════════════════════════════
 
 // ─── Admin: Broker config ─────────────────────────────────────────────────────
-router.get("/admin/broker-config", adminOnly, async (_req, res): Promise<void> => {
+router.get("/admin/broker-config", adminOnly, async (_req: any, res: any): Promise<void> => {
   const [cfg] = await db.select({
     id: brokerConfigTable.id,
     broker: brokerConfigTable.broker,
@@ -377,7 +385,7 @@ router.get("/admin/broker-config", adminOnly, async (_req, res): Promise<void> =
   res.json({ config: cfg ?? null });
 });
 
-router.post("/admin/broker-config", adminOnly, async (req, res): Promise<void> => {
+router.post("/admin/broker-config", adminOnly, async (req: any, res: any): Promise<void> => {
   const { broker, apiKey, clientId, totpSecret, enabled, sandboxMode } = req.body as {
     broker?: string; apiKey?: string; clientId?: string; totpSecret?: string; enabled?: boolean; sandboxMode?: boolean;
   };
@@ -399,7 +407,7 @@ router.post("/admin/broker-config", adminOnly, async (req, res): Promise<void> =
   res.json({ message: "Broker config saved" });
 });
 
-router.post("/admin/broker-config/login", adminOnly, async (req, res): Promise<void> => {
+router.post("/admin/broker-config/login", adminOnly, async (req: any, res: any): Promise<void> => {
   const { password, totp } = req.body as { password: string; totp: string };
   const [cfg] = await db.select().from(brokerConfigTable).limit(1);
   if (!cfg?.clientId || !cfg?.apiKey) {
@@ -421,14 +429,14 @@ router.post("/admin/broker-config/login", adminOnly, async (req, res): Promise<v
 });
 
 // ─── Admin: Instruments CRUD ──────────────────────────────────────────────────
-router.get("/admin/instruments", adminOnly, async (req, res): Promise<void> => {
+router.get("/admin/instruments", adminOnly, async (req: any, res: any): Promise<void> => {
   const assetClass = String(req.query.assetClass ?? "") || null;
   let rows = await db.select().from(instrumentsTable).orderBy(asc(instrumentsTable.assetClass), asc(instrumentsTable.symbol));
   if (assetClass) rows = rows.filter((r) => r.assetClass === assetClass);
   res.json({ instruments: rows });
 });
 
-router.post("/admin/instruments", adminOnly, async (req, res): Promise<void> => {
+router.post("/admin/instruments", adminOnly, async (req: any, res: any): Promise<void> => {
   const data = req.body as Partial<typeof instrumentsTable.$inferInsert>;
   if (!data.symbol || !data.name || !data.assetClass) {
     res.status(400).json({ error: "symbol, name, assetClass required" });
@@ -468,7 +476,7 @@ const ALLOWED_INSTRUMENT_FIELDS = new Set([
   "description","logoUrl","sector","isin","countryCode","manualPrice","priceSource",
 ]);
 
-router.patch("/admin/instruments/:id", adminOnly, async (req, res): Promise<void> => {
+router.patch("/admin/instruments/:id", adminOnly, async (req: any, res: any): Promise<void> => {
   const id = Number(req.params.id);
   const updates: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(req.body)) {
@@ -480,7 +488,7 @@ router.patch("/admin/instruments/:id", adminOnly, async (req, res): Promise<void
   res.json({ instrument: inst });
 });
 
-router.delete("/admin/instruments/:id", adminOnly, async (req, res): Promise<void> => {
+router.delete("/admin/instruments/:id", adminOnly, async (req: any, res: any): Promise<void> => {
   const id = Number(req.params.id);
   await db.update(instrumentsTable).set({ tradingEnabled: false }).where(eq(instrumentsTable.id, id));
   res.json({ message: "Instrument disabled" });

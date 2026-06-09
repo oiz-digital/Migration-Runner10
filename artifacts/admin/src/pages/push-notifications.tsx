@@ -94,12 +94,12 @@ export default function PushNotificationsPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-        <PremiumStatCard title="Active Tokens" value={stats?.active_tokens ?? "—"} icon={Bell} accent="amber" />
-        <PremiumStatCard title="Total Tokens" value={stats?.total_tokens ?? "—"} icon={Bell} accent="blue" />
-        <PremiumStatCard title="Registered Users" value={stats?.registered_users ?? "—"} icon={Users} accent="green" />
-        <PremiumStatCard title="Web" value={stats?.web_tokens ?? "—"} icon={Monitor} accent="purple" />
-        <PremiumStatCard title="Android" value={stats?.android_tokens ?? "—"} icon={Smartphone} accent="green" />
-        <PremiumStatCard title="iOS" value={stats?.ios_tokens ?? "—"} icon={Tablet} accent="blue" />
+        <PremiumStatCard title="Active Tokens" value={stats?.active_tokens ?? "—"} icon={Bell} accent />
+        <PremiumStatCard title="Total Tokens" value={stats?.total_tokens ?? "—"} icon={Bell} />
+        <PremiumStatCard title="Registered Users" value={stats?.registered_users ?? "—"} icon={Users} />
+        <PremiumStatCard title="Web" value={stats?.web_tokens ?? "—"} icon={Monitor} />
+        <PremiumStatCard title="Android" value={stats?.android_tokens ?? "—"} icon={Smartphone} />
+        <PremiumStatCard title="iOS" value={stats?.ios_tokens ?? "—"} icon={Tablet} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

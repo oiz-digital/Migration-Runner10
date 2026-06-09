@@ -113,7 +113,7 @@ export default function Portfolio() {
 
   const historyQ = useQuery<HistoryPoint[]>({
     queryKey: ["portfolio-history"],
-    queryFn: () => get("/portfolio/history").catch(() => []),
+    queryFn: () => (get("/portfolio/history") as Promise<HistoryPoint[]>).catch(() => []),
     staleTime: 300_000,
   });
 

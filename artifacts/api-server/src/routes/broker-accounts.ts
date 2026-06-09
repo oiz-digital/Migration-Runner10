@@ -366,7 +366,7 @@ router.patch("/admin/broker-applications/:id/approve", ...ADMIN_GUARD, async (re
     angelTradingId: angelTradingId ?? `TR${id.toString().padStart(8,"0")}`,
     rejectionReason: null,
   }).where(eq(brokerAccountsTable.id, id)).returning();
-  await logAdminAction(req as any, "broker_account_approved", "broker_accounts", id, {});
+  await logAdminAction(req as any, { action: "broker_account_approved", entity: "broker_accounts", entityId: id });
   res.json({ application: app });
 });
 
@@ -378,7 +378,7 @@ router.patch("/admin/broker-applications/:id/reject", ...ADMIN_GUARD, async (req
     status: "rejected", updatedAt: new Date(),
     rejectionReason: reason ?? "Application rejected by admin",
   }).where(eq(brokerAccountsTable.id, id)).returning();
-  await logAdminAction(req as any, "broker_account_rejected", "broker_accounts", id, { reason });
+  await logAdminAction(req as any, { action: "broker_account_rejected", entity: "broker_accounts", entityId: id, payload: { reason } });
   res.json({ application: app });
 });
 

@@ -8,3 +8,8 @@
 - [Mobile app design](mobile-design.md) — SparkLine/AnimatedPrice/CandleChart use react-native-svg + Reanimated; deterministic spark data from `genSparkData(price, change24h, symbol)` with seeded RNG avoids re-render flicker; klines API at `/api/klines?symbol=BTCUSDT&interval=1h&limit=60`.
 - [Mobile favorites](mobile-favorites.md) — useFavorites hook (AsyncStorage key: zebvix_favorites_v1) persists star'd coins; Markets has ⭐ tab, Trade screen has star icon in header; toggle(symbol) syncs instantly.
 - [Mobile AI chat](mobile-ai-chat.md) — AI Chat tab in ai-trading is local response-map based (no API call needed); add real entries to AI_RESPONSES dict or wire /api/ai/chat endpoint when available.
+- [DB Column Names](db-column-names.md) — users table has `name` not `username`; orders table uses `qty/filledQty/avgPrice` not `quantity/filledQuantity/avgFillPrice`; wallets has `walletType`+`coinId`, no `type`/`coinSymbol`.
+- [logAdminAction Signature](log-admin-action.md) — takes (req, { action, entity, entityId?, payload? }) — 2 args only; old 5-arg calls must be migrated.
+- [API Response Shapes](api-response-shapes.md) — staking/pool and staking/position return `{ items: [], pagination: {} }` not plain arrays; mobile must extract `.items` with Array.isArray guard.
+- [Futures Pairs Schema](futures-schema.md) — futures pairs use `takerFee`/`makerFee` not `takerFeeRate`/`makerFeeRate`; futuresPositionsTable has no `updatedAt` column; pairs table also has no `updatedAt`.
+- [Price Tick Type](price-tick-type.md) — Tick type in price-service has `usdt/inr/change24h/volume24h/ts` — no `price` or `lastPrice`; use `tick.usdt` for USD price in getRawTick consumers.

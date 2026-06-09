@@ -124,7 +124,7 @@ router.get("/admin/support/tickets", adminAuth, async (req, res): Promise<void> 
 
   let q = db.select({
     ticket:   supportTicketsTable,
-    username: usersTable.username,
+    username: usersTable.name,
     email:    usersTable.email,
   }).from(supportTicketsTable)
     .leftJoin(usersTable, eq(supportTicketsTable.userId, usersTable.id))

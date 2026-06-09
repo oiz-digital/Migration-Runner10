@@ -77,8 +77,7 @@ export default function BrokerConfigPage() {
     <div className="space-y-6 p-6">
       <PageHeader
         title="Broker Configuration"
-        subtitle="Angel One SmartAPI — Forex, Stocks & Commodities integration"
-        icon={Globe}
+        description="Angel One SmartAPI — Forex, Stocks & Commodities integration"
       />
 
       {/* Status card */}

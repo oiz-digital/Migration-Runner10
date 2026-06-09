@@ -320,7 +320,7 @@ router.get("/admin/audit-logs/stats", supportPlus, async (_req, res): Promise<vo
       COUNT(DISTINCT entity)::int AS distinct_entities
     FROM audit_logs
   `);
-  res.json((stats as any).rows?.[0] ?? stats[0] ?? {});
+  res.json((stats as any).rows?.[0] ?? (stats as any)[0] ?? {});
 });
 
 // Users
@@ -404,9 +404,9 @@ router.get("/admin/coins/binance-discover", adminOnly, async (_req, res): Promis
     res.status(502).json({ error: "Binance API unavailable" });
     return;
   }
-  const tickers: Array<{
+  const tickers = await bnResp.json() as Array<{
     symbol: string; lastPrice: string; priceChangePercent: string; quoteVolume: string;
-  }> = await bnResp.json();
+  }>;
 
   // Only consider USDT-quoted pairs (most liquid, easiest to map 1-to-1 with a base coin)
   const usdtPairs = tickers
@@ -605,7 +605,7 @@ router.post("/admin/seed/bsc-usdt", adminOnly, async (req, res): Promise<void> =
       };
       if (b.hotWalletAddress) vals.hotWalletAddress = b.hotWalletAddress;
       if (b.hotWalletPrivateKey) vals.hotWalletPrivateKeyEnc = encryptSecret(b.hotWalletPrivateKey);
-      const [created] = await db.insert(networksTable).values(vals).returning();
+      const [created] = await db.insert(networksTable).values(vals as any).returning();
       network = created;
     }
 
@@ -806,7 +806,7 @@ router.get("/admin/orders/stats", supportPlus, async (_req, res): Promise<void> 
       COALESCE(SUM(filled_qty * avg_price) FILTER (WHERE status = 'filled'), 0) AS filled_value
     FROM orders
   `);
-  res.json((stats as any).rows?.[0] ?? stats[0] ?? {});
+  res.json((stats as any).rows?.[0] ?? (stats as any)[0] ?? {});
 });
 
 router.get("/admin/trades", supportPlus, async (req, res): Promise<void> => {
@@ -1770,7 +1770,7 @@ router.post("/admin/crypto-deposits/:id/sweep", adminOnly, async (req, res): Pro
   // Set/reset to pending so sweepDepositToMaster can claim it
   await db.update(cryptoDepositsTable).set({ sweepStatus: "pending" }).where(eq(cryptoDepositsTable.id, id));
   const result = await sweepDepositToMaster(id);
-  await logAdminAction(req, "manual_sweep", "deposit", id, { result });
+  await logAdminAction(req, { action: "manual_sweep", entity: "deposit", entityId: id, payload: { result } });
   res.json({ ok: result.status === "swept", ...result });
 });
 
@@ -2120,7 +2120,7 @@ router.post("/admin/earn-positions/:id/force-redeem", adminOnly, async (req, res
         status: "redeemed", totalEarned: String(Math.max(0, earned).toFixed(8)), closedAt: new Date(),
       }).where(eq(earnPositionsTable.id, id)).returning();
 
-      await logAdminAction(req, "earn.force_redeem", { positionId: id, userId: pos.userId, payout: payout.toFixed(8) });
+      await logAdminAction(req, { action: "earn.force_redeem", entity: "earn_positions", entityId: id, payload: { userId: pos.userId, payout: payout.toFixed(8) } });
       return { ...updated, payout, earned };
     });
     res.json(result);
@@ -2426,7 +2426,7 @@ router.post("/admin/push/broadcast", adminOnly, async (req, res): Promise<void> 
   const { title, body, imageUrl, platform, data } = req.body ?? {};
   if (!title || !body) { res.status(400).json({ error: "title and body required" }); return; }
   const result = await broadcastPush({ title, body, imageUrl, data }, { platform });
-  await logAdminAction(req, "push_broadcast", "push", undefined, { title, body, ...result });
+  await logAdminAction(req, { action: "push_broadcast", entity: "push", payload: { title, body, ...result } });
   res.json(result);
 });
 

@@ -40,10 +40,10 @@ export function CookieConsentBanner() {
 
   useEffect(() => {
     if (!getStoredConsent()) {
-      // small delay so page loads first
       const t = setTimeout(() => setVisible(true), 1200);
       return () => clearTimeout(t);
     }
+    return undefined;
   }, []);
 
   if (!visible) return null;

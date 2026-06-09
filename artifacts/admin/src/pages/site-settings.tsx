@@ -34,7 +34,7 @@ const DEFAULTS = {
     showLeagues: true, showNews: true, showAnnouncements: true, showDex: true,
     showTools: true, showSignup: true, showLogin: true, signupBonusZbx: 50,
   },
-  bannerStrip: { enabled: false, message: "", ctaLabel: "", ctaUrl: "", kind: "info" as const },
+  bannerStrip: { enabled: false, message: "", ctaLabel: "", ctaUrl: "", kind: "info" as "info" | "success" | "warning" | "danger" },
   footer: {
     columns: [],
     socials: [],

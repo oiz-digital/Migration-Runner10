@@ -176,7 +176,7 @@ const navItems: NavEntry[] = [
       { href: "/trade",   label: "Spot Trading",     desc: "Buy and sell crypto with deep liquidity",          icon: TrendingUp },
       { href: "/futures", label: "Futures",          desc: "Up to 100× leverage on perpetual contracts",       icon: Zap,           badge: "100×", badgeTone: "hot" },
       { href: "/options", label: "Options",          desc: "Hedge or speculate with crypto options",           icon: Sigma,         badge: "NEW",  badgeTone: "new" },
-      { href: "/p2p",     label: "P2P Trading",      desc: "Buy and sell crypto directly with other users",    icon: Users,         badge: "SOON", badgeTone: "soon" },
+      { href: "/p2p",     label: "P2P Trading",      desc: "Buy and sell crypto directly with other users",    icon: Users,         badge: "LIVE", badgeTone: "new" },
       { href: "/convert", label: "Instant Convert",  desc: "One-click swap between any two supported assets",  icon: ArrowLeftRight },
       { href: "/ai-trading", label: "AI Trade",       desc: "AI-powered trade suggestions and automated bots", icon: Brain,         badge: "AI",   badgeTone: "new" },
     ],

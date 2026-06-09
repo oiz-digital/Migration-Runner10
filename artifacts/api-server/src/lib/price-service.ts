@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { logger } from "./logger";
 import { rSet, rPublish, rHset } from "./redis";
 import { isLeader, INSTANCE_ID } from "./leader";
+import { getPairStats } from "./pair-stats";
 
 type Tick = { symbol: string; usdt: number; inr: number; change24h: number; volume24h: number; ts: number };
 

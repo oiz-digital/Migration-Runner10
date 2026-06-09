@@ -104,10 +104,9 @@ export default function BrokerDashboard() {
                 {account.segmentCurrency  && <Badge className="bg-purple-500/15 text-purple-400 border-purple-500/30 text-xs">Currency</Badge>}
               </div>
             </div>
-            <StatusPill
-              variant={account.status === "active" ? "success" : account.status === "submitted" ? "info" : "warning"}
-              label={account.status?.toUpperCase() ?? "PENDING"}
-            />
+            <StatusPill variant={account.status === "active" ? "success" : account.status === "submitted" ? "info" : "warning"}>
+              {account.status?.toUpperCase() ?? "PENDING"}
+            </StatusPill>
           </div>
         </div>
       )}
@@ -193,7 +192,7 @@ export default function BrokerDashboard() {
                       {group}
                     </div>
                     <div className="divide-y divide-border/40">
-                      {items.map((pos: any) => {
+                      {(items as any[]).map((pos: any) => {
                         const invested = Number(pos.holdingQty) * Number(pos.avgBuyPrice);
                         const current  = Number(pos.holdingQty) * Number(pos.currentPrice ?? pos.avgBuyPrice);
                         const pnl      = current - invested;
@@ -259,7 +258,7 @@ export default function BrokerDashboard() {
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <StatusPill variant={statusVariant(order.status)} label={order.status} />
+                      <StatusPill variant={statusVariant(order.status)} status={order.status} />
                       {order.pnl != null && (
                         <div className={`text-xs font-semibold mt-1 tabular-nums ${Number(order.pnl) >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
                           P&L: {fmtPnl(order.pnl)}

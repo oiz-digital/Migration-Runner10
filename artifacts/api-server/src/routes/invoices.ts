@@ -28,8 +28,8 @@ router.get("/orders/:id/invoice", requireAuth, async (req: any, res): Promise<vo
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.user!.id)).limit(1);
 
-  const filledQty  = parseFloat(order.filledQuantity ?? "0");
-  const avgPrice   = parseFloat(order.avgFillPrice ?? order.price ?? "0");
+  const filledQty  = parseFloat(order.filledQty ?? "0");
+  const avgPrice   = parseFloat(order.avgPrice ?? order.price ?? "0");
   const grossUsdt  = filledQty * avgPrice;
   const feeRate    = order.type === "maker" ? MAKER_FEE : TAKER_FEE;
   const feeUsdt    = parseFloat(order.fee ?? String((grossUsdt * feeRate).toFixed(8)));
@@ -55,16 +55,16 @@ router.get("/orders/:id/invoice", requireAuth, async (req: any, res): Promise<vo
     },
     user: {
       id:    user?.id,
-      name:  user?.username ?? user?.email ?? "Customer",
+      name:  user?.name ?? user?.email ?? "Customer",
       email: user?.email ?? "",
     },
     order: {
       id:           order.id,
-      symbol:       order.symbol,
+      pairId:       order.pairId,
       side:         order.side,
       type:         order.type,
       status:       order.status,
-      quantity:     parseFloat(order.quantity),
+      quantity:     parseFloat(order.qty),
       filledQty,
       avgFillPrice: avgPrice,
       createdAt:    order.createdAt instanceof Date ? order.createdAt.toISOString() : order.createdAt,
