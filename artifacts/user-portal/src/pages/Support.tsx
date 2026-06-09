@@ -110,13 +110,13 @@ export default function Support() {
                   placeholder="Search help articles… (KYC, deposit, withdraw, bank…)"
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); if (e.target.value) setTab("help"); }}
-                  className="pl-10 h-11 bg-zinc-950/70 border-zinc-800"
+                  className="pl-10 h-11 bg-zinc-950/70 border-border"
                   data-testid="input-help-search"
                 />
               </div>
             </div>
             <div className="hidden md:flex flex-col gap-2 min-w-[220px]">
-              <Card className="bg-zinc-950/70 border-zinc-800 p-3 cursor-pointer hover:border-amber-500/40 transition-colors" onClick={() => setTab("chat")} data-testid="card-quick-chat">
+              <Card className="bg-zinc-950/70 border-border p-3 cursor-pointer hover:border-amber-500/40 transition-colors" onClick={() => setTab("chat")} data-testid="card-quick-chat">
                 <div className="flex items-center gap-2">
                   <div className="h-9 w-9 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
                     <Bot className="h-4 w-4 text-amber-400" />
@@ -128,7 +128,7 @@ export default function Support() {
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>
               </Card>
-              <Card className="bg-zinc-950/70 border-zinc-800 p-3 cursor-pointer hover:border-amber-500/40 transition-colors" onClick={() => setTab("tickets")} data-testid="card-quick-ticket">
+              <Card className="bg-zinc-950/70 border-border p-3 cursor-pointer hover:border-amber-500/40 transition-colors" onClick={() => setTab("tickets")} data-testid="card-quick-ticket">
                 <div className="flex items-center gap-2">
                   <div className="h-9 w-9 rounded-lg bg-sky-500/15 border border-sky-500/30 flex items-center justify-center">
                     <MessageSquare className="h-4 w-4 text-sky-400" />
@@ -146,7 +146,7 @@ export default function Support() {
 
         {/* Tabs */}
         <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="mt-5">
-          <TabsList className="grid grid-cols-3 w-full md:w-auto md:inline-grid bg-zinc-900 border border-zinc-800">
+          <TabsList className="grid grid-cols-3 w-full md:w-auto md:inline-grid bg-card border border-border">
             <TabsTrigger value="help" data-testid="tab-help">
               <LifeBuoy className="h-4 w-4 mr-1.5" /> Help Center
             </TabsTrigger>
@@ -172,17 +172,17 @@ export default function Support() {
         </Tabs>
 
         {/* Footer contact strip */}
-        <Card className="mt-6 p-4 border-zinc-800 bg-gradient-to-r from-zinc-950 to-zinc-900">
+        <Card className="mt-6 p-4 border-border bg-gradient-to-r from-zinc-950 to-zinc-900">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <AlertCircle className="h-4 w-4 text-amber-400" />
               Still need help? Our human team is on standby.
             </div>
             <div className="flex flex-wrap gap-2">
-              <a href="mailto:support@zebvix.com" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-zinc-800 hover:border-amber-500/40 hover:bg-amber-500/5 transition-colors text-xs">
+              <a href="mailto:support@zebvix.com" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border hover:border-amber-500/40 hover:bg-amber-500/5 transition-colors text-xs">
                 <Mail className="h-3.5 w-3.5 text-amber-400" /> support@zebvix.com
               </a>
-              <a href="tel:+911800123456" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-zinc-800 hover:border-amber-500/40 hover:bg-amber-500/5 transition-colors text-xs">
+              <a href="tel:+911800123456" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border hover:border-amber-500/40 hover:bg-amber-500/5 transition-colors text-xs">
                 <Phone className="h-3.5 w-3.5 text-amber-400" /> 1800 123 456
               </a>
             </div>
@@ -221,7 +221,7 @@ function HelpCenter({ search }: { search: string }) {
   }
   if (filtered.length === 0) {
     return (
-      <Card className="p-10 text-center border-zinc-800" data-testid="empty-search">
+      <Card className="p-10 text-center border-border" data-testid="empty-search">
         <Search className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
         <div className="font-semibold">No articles match "{search}"</div>
         <div className="text-xs text-muted-foreground mt-1">Try the AI chat — Zara can answer custom questions.</div>
@@ -234,17 +234,17 @@ function HelpCenter({ search }: { search: string }) {
       {filtered.map((cat) => {
         const Icon = ICONS[cat.icon] ?? LifeBuoy;
         return (
-          <Card key={cat.category} className="p-5 border-zinc-800" data-testid={`faq-cat-${cat.category.toLowerCase()}`}>
+          <Card key={cat.category} className="p-5 border-border" data-testid={`faq-cat-${cat.category.toLowerCase()}`}>
             <div className="flex items-center gap-2 mb-3">
               <div className="h-8 w-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
                 <Icon className="h-4 w-4 text-amber-400" />
               </div>
               <h3 className="font-bold">{cat.category}</h3>
-              <Badge variant="outline" className="ml-auto text-[10px] border-zinc-700">{cat.questions.length}</Badge>
+              <Badge variant="outline" className="ml-auto text-[10px] border-border">{cat.questions.length}</Badge>
             </div>
             <Accordion type="single" collapsible>
               {cat.questions.map((q, i) => (
-                <AccordionItem key={i} value={`${cat.category}-${i}`} className="border-zinc-800/60">
+                <AccordionItem key={i} value={`${cat.category}-${i}`} className="border-border/60">
                   <AccordionTrigger className="text-sm font-medium text-left hover:text-amber-400">{q.q}</AccordionTrigger>
                   <AccordionContent className="text-xs text-muted-foreground leading-relaxed">{q.a}</AccordionContent>
                 </AccordionItem>
@@ -298,8 +298,8 @@ function LiveChat() {
   }
 
   return (
-    <Card className="border-zinc-800 overflow-hidden" data-testid="live-chat">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-gradient-to-r from-amber-500/10 to-transparent">
+    <Card className="border-border overflow-hidden" data-testid="live-chat">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-gradient-to-r from-amber-500/10 to-transparent">
         <div className="flex items-center gap-2">
           <div className="relative">
             <div className="h-9 w-9 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-black">
@@ -327,7 +327,7 @@ function LiveChat() {
       </div>
 
       {messages.length <= 1 && (
-        <div className="px-4 py-2 border-t border-zinc-800 bg-zinc-950/50">
+        <div className="px-4 py-2 border-t border-border bg-zinc-950/50">
           <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1.5">Suggested</div>
           <div className="flex flex-wrap gap-1.5">
             {SUGGESTIONS.map((s) => (
@@ -335,7 +335,7 @@ function LiveChat() {
                 key={s}
                 onClick={() => send(s)}
                 disabled={sending}
-                className="text-[11px] px-2.5 py-1 rounded-full border border-zinc-800 hover:border-amber-500/40 hover:bg-amber-500/5 text-zinc-300 transition-colors"
+                className="text-[11px] px-2.5 py-1 rounded-full border border-border hover:border-amber-500/40 hover:bg-amber-500/5 text-foreground/80 transition-colors"
                 data-testid={`suggest-${s.slice(0, 12)}`}
               >
                 {s}
@@ -347,7 +347,7 @@ function LiveChat() {
 
       <form
         onSubmit={(e) => { e.preventDefault(); send(input); }}
-        className="flex items-end gap-2 px-3 py-3 border-t border-zinc-800 bg-zinc-950/50"
+        className="flex items-end gap-2 px-3 py-3 border-t border-border bg-zinc-950/50"
       >
         <Textarea
           value={input}
@@ -360,7 +360,7 @@ function LiveChat() {
           }}
           placeholder="Type your question…"
           rows={1}
-          className="min-h-[40px] max-h-32 resize-none bg-zinc-900 border-zinc-800"
+          className="min-h-[40px] max-h-32 resize-none bg-card border-border"
           disabled={sending}
           data-testid="input-chat-message"
         />
@@ -401,7 +401,7 @@ function Bubble({ role, content, typing }: { role: "user" | "assistant"; content
           <Bot className="h-3.5 w-3.5" />
         </div>
       )}
-      <div className={`max-w-[78%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${isAi ? "bg-zinc-900 border border-zinc-800 text-zinc-100 rounded-tl-sm" : "bg-gradient-to-br from-amber-400 to-orange-500 text-black font-medium rounded-tr-sm shadow-md shadow-amber-500/10"}`}>
+      <div className={`max-w-[78%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${isAi ? "bg-card border border-border text-zinc-100 rounded-tl-sm" : "bg-gradient-to-br from-amber-400 to-orange-500 text-black font-medium rounded-tr-sm shadow-md shadow-amber-500/10"}`}>
         {typing ? (
           <span className="inline-flex gap-1.5 py-0.5 items-center">
             <span className="h-2 w-2 rounded-full bg-amber-400/70 animate-bounce" style={{ animationDelay: "0ms" }} />
@@ -411,7 +411,7 @@ function Bubble({ role, content, typing }: { role: "user" | "assistant"; content
         ) : isAi ? renderMsgContent(content) : content}
       </div>
       {!isAi && (
-        <div className="h-7 w-7 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center flex-shrink-0 mt-0.5 text-[10px] font-bold text-zinc-400">U</div>
+        <div className="h-7 w-7 rounded-full bg-muted border border-border flex items-center justify-center flex-shrink-0 mt-0.5 text-[10px] font-bold text-muted-foreground">U</div>
       )}
     </div>
   );
@@ -433,7 +433,7 @@ function Tickets() {
 
   return (
     <div className="grid lg:grid-cols-[340px_1fr] gap-4">
-      <Card className="border-zinc-800 p-3" data-testid="ticket-list">
+      <Card className="border-border p-3" data-testid="ticket-list">
         <div className="flex items-center justify-between mb-2">
           <div className="font-bold text-sm">Your tickets</div>
           <Button size="sm" className="bg-gradient-to-r from-amber-500 to-orange-500 text-black hover:from-amber-400 hover:to-orange-400 h-7" onClick={() => setCreateOpen(true)} data-testid="button-new-ticket">
@@ -457,12 +457,12 @@ function Tickets() {
                 <button
                   key={t.id}
                   onClick={() => setOpenId(t.id)}
-                  className={`w-full text-left p-2.5 rounded-lg border transition-colors ${openId === t.id ? "border-amber-500/40 bg-amber-500/5" : "border-zinc-800 hover:border-zinc-700"}`}
+                  className={`w-full text-left p-2.5 rounded-lg border transition-colors ${openId === t.id ? "border-amber-500/40 bg-amber-500/5" : "border-border hover:border-border"}`}
                   data-testid={`ticket-${t.id}`}
                 >
                   <div className="flex items-center justify-between gap-2 mb-0.5">
                     <div className="font-semibold text-sm truncate">{t.subject}</div>
-                    <Badge variant="outline" className={`text-[9px] flex-shrink-0 ${t.status === "open" ? "border-emerald-500/30 text-emerald-300" : "border-zinc-700 text-muted-foreground"}`}>
+                    <Badge variant="outline" className={`text-[9px] flex-shrink-0 ${t.status === "open" ? "border-emerald-500/30 text-emerald-300" : "border-border text-muted-foreground"}`}>
                       {t.status}
                     </Badge>
                   </div>
@@ -477,10 +477,10 @@ function Tickets() {
         )}
       </Card>
 
-      <Card className="border-zinc-800 min-h-[520px]" data-testid="ticket-pane">
+      <Card className="border-border min-h-[520px]" data-testid="ticket-pane">
         {openId == null ? (
           <div className="h-full flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-3">
+            <div className="w-14 h-14 rounded-2xl bg-card border border-border flex items-center justify-center mb-3">
               <MessageSquare className="h-6 w-6 text-muted-foreground" />
             </div>
             <div className="font-semibold">Select a ticket to view</div>
@@ -560,13 +560,13 @@ function ThreadView({ id, onClose }: { id: number; onClose: () => void }) {
 
   return (
     <div className="flex flex-col h-[560px]">
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-800">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
         <Button variant="ghost" size="icon" className="h-7 w-7 lg:hidden" onClick={onClose}><X className="h-4 w-4" /></Button>
         <div className="flex-1 min-w-0">
           <div className="font-semibold text-sm truncate">{t.subject}</div>
           <div className="text-[10px] text-muted-foreground">Ticket #{t.id} · {timeAgo(t.createdAt)}</div>
         </div>
-        <Badge variant="outline" className={`text-[10px] ${t.status === "open" ? "border-emerald-500/30 text-emerald-300" : "border-zinc-700 text-muted-foreground"}`}>{t.status}</Badge>
+        <Badge variant="outline" className={`text-[10px] ${t.status === "open" ? "border-emerald-500/30 text-emerald-300" : "border-border text-muted-foreground"}`}>{t.status}</Badge>
         {t.status === "open" && (
           <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground hover:text-rose-400" onClick={() => closeM.mutate()} data-testid="button-close-ticket">
             <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Close
@@ -583,7 +583,7 @@ function ThreadView({ id, onClose }: { id: number; onClose: () => void }) {
             <div className="h-7 w-7 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-black flex-shrink-0 mr-2">
               <Bot className="h-3.5 w-3.5" />
             </div>
-            <div className="px-3.5 py-2 rounded-2xl bg-zinc-900 border border-zinc-800">
+            <div className="px-3.5 py-2 rounded-2xl bg-card border border-border">
               <span className="inline-flex gap-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: "0ms" }} />
                 <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: "150ms" }} />
@@ -595,7 +595,7 @@ function ThreadView({ id, onClose }: { id: number; onClose: () => void }) {
       </div>
 
       {t.status === "open" ? (
-        <form onSubmit={(e) => { e.preventDefault(); send(); }} className="flex items-end gap-2 px-3 py-3 border-t border-zinc-800 bg-zinc-950/50">
+        <form onSubmit={(e) => { e.preventDefault(); send(); }} className="flex items-end gap-2 px-3 py-3 border-t border-border bg-zinc-950/50">
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -604,7 +604,7 @@ function ThreadView({ id, onClose }: { id: number; onClose: () => void }) {
             }}
             placeholder="Reply to this ticket…"
             rows={1}
-            className="min-h-[40px] max-h-32 resize-none bg-zinc-900 border-zinc-800"
+            className="min-h-[40px] max-h-32 resize-none bg-card border-border"
             disabled={sending}
             data-testid="input-ticket-message"
           />
@@ -618,7 +618,7 @@ function ThreadView({ id, onClose }: { id: number; onClose: () => void }) {
           </Button>
         </form>
       ) : (
-        <div className="px-4 py-3 border-t border-zinc-800 text-center text-xs text-muted-foreground">
+        <div className="px-4 py-3 border-t border-border text-center text-xs text-muted-foreground">
           This ticket is closed. Open a new one if you need further help.
         </div>
       )}
@@ -644,7 +644,7 @@ function ThreadBubble({ m }: { m: Message }) {
             {isAi ? "Zara · AI" : isSupport ? "Support agent" : m.senderRole}
           </div>
         )}
-        <div className={`px-3.5 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${isUser ? "bg-gradient-to-br from-amber-500 to-orange-500 text-black font-medium rounded-tr-sm" : "bg-zinc-900 border border-zinc-800 text-zinc-100 rounded-tl-sm"}`}>
+        <div className={`px-3.5 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${isUser ? "bg-gradient-to-br from-amber-500 to-orange-500 text-black font-medium rounded-tr-sm" : "bg-card border border-border text-zinc-100 rounded-tl-sm"}`}>
           {m.message}
         </div>
         <div className={`text-[9px] text-muted-foreground mt-0.5 px-1 ${isUser ? "text-right" : ""}`}>{timeAgo(m.createdAt)}</div>

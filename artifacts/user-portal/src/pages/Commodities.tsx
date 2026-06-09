@@ -47,12 +47,12 @@ const COMMODITY_ICONS: Record<string, typeof Gem> = {
 const COMMODITY_COLORS: Record<string, string> = {
   "Precious Metals": "text-yellow-400",
   Energy: "text-orange-400",
-  "Base Metals": "text-gray-300",
+  "Base Metals": "text-foreground/80",
 };
 const COMMODITY_SECTOR_BADGE: Record<string, string> = {
   "Precious Metals": "border-yellow-500/40 text-yellow-400",
   Energy: "border-orange-500/40 text-orange-400",
-  "Base Metals": "border-gray-500/40 text-gray-300",
+  "Base Metals": "border-gray-500/40 text-foreground/80",
 };
 
 export default function Commodities() {
@@ -73,9 +73,9 @@ export default function Commodities() {
             Trade Gold, Silver, Crude Oil and more — real-time commodity markets coming soon to Zebvix.
           </p>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-800/60 border border-zinc-700/50">
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/60 border border-border/50">
           <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-          <span className="text-xs text-zinc-400 font-medium">Launching soon on Zebvix</span>
+          <span className="text-xs text-muted-foreground font-medium">Launching soon on Zebvix</span>
         </div>
       </div>
     );
@@ -176,15 +176,15 @@ export default function Commodities() {
   const Icon = selectedSymbol ? (COMMODITY_ICONS[selectedSymbol] ?? BarChart3) : BarChart3;
 
   return (
-    <div className="min-h-screen bg-[#0b0e17] text-white">
-      <div className="border-b border-white/10 bg-[#0d1117] px-4 py-3 flex items-center gap-3">
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="border-b border-border bg-card px-4 py-3 flex items-center gap-3">
         <Gem className="w-5 h-5 text-yellow-400" />
         <span className="font-bold text-lg tracking-tight">Commodities</span>
         <div className="flex gap-1.5 ml-1">
           <Badge variant="outline" className="border-yellow-500/40 text-yellow-400 text-[10px]">Gold</Badge>
           <Badge variant="outline" className="border-yellow-500/40 text-yellow-400 text-[10px]">Silver</Badge>
           <Badge variant="outline" className="border-orange-500/40 text-orange-400 text-[10px]">Oil</Badge>
-          <Badge variant="outline" className="border-gray-500/40 text-gray-400 text-[10px]">MCX</Badge>
+          <Badge variant="outline" className="border-gray-500/40 text-muted-foreground text-[10px]">MCX</Badge>
         </div>
         <div className="ml-auto text-xs text-muted-foreground flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block" />Live MCX
@@ -193,19 +193,19 @@ export default function Commodities() {
 
       <div className="flex h-[calc(100vh-112px)] overflow-hidden">
         {/* Sidebar */}
-        <div className="w-60 border-r border-white/10 bg-[#0d1117] flex flex-col">
-          <div className="p-2 border-b border-white/10 flex flex-wrap gap-1">
+        <div className="w-60 border-r border-border bg-card flex flex-col">
+          <div className="p-2 border-b border-border flex flex-wrap gap-1">
             {sectors.map((s) => (
               <button key={s} onClick={() => setSector(s)}
                 className={cn("text-[11px] py-0.5 px-2 rounded transition-colors",
-                  sector === s ? "bg-yellow-500/20 text-yellow-400 font-semibold" : "text-muted-foreground hover:text-white")}>
+                  sector === s ? "bg-yellow-500/20 text-yellow-400 font-semibold" : "text-muted-foreground hover:text-foreground")}>
                 {s === "all" ? "All" : s}
               </button>
             ))}
           </div>
           <div className="flex-1 overflow-y-auto">
             {isLoading ? Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="px-3 py-3 border-b border-white/5"><Skeleton className="h-4 w-20 mb-1" /><Skeleton className="h-3 w-28" /></div>
+              <div key={i} className="px-3 py-3 border-b border-border/40"><Skeleton className="h-4 w-20 mb-1" /><Skeleton className="h-3 w-28" /></div>
             )) : filtered.map((inst) => {
               const chg = Number(inst.change24h);
               const isUp = chg >= 0;
@@ -213,7 +213,7 @@ export default function Commodities() {
               const CIcon = COMMODITY_ICONS[inst.symbol] ?? BarChart3;
               return (
                 <button key={inst.symbol} onClick={() => setSelectedSymbol(inst.symbol)}
-                  className={cn("w-full px-3 py-3 border-b border-white/5 text-left hover:bg-white/5 transition-colors",
+                  className={cn("w-full px-3 py-3 border-b border-border/40 text-left hover:bg-muted/30 transition-colors",
                     isActive && "bg-yellow-500/10 border-l-2 border-l-yellow-500")}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -240,7 +240,7 @@ export default function Commodities() {
         {/* Main */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {selected && (
-            <div className="border-b border-white/10 bg-[#0d1117] px-4 py-2.5 flex items-center gap-6 flex-shrink-0">
+            <div className="border-b border-border bg-card px-4 py-2.5 flex items-center gap-6 flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center">
                   <Icon className="w-5 h-5 text-yellow-400" />
@@ -257,12 +257,12 @@ export default function Commodities() {
                 <div className={cn("text-xs", changePct >= 0 ? "text-emerald-400" : "text-red-400")}>{fmtChange(changePct)}</div>
               </div>
               <div className="text-xs space-y-0.5">
-                <div className="text-muted-foreground">High <span className="text-white">₹{Number(selected.high24h).toLocaleString("en-IN")}</span></div>
-                <div className="text-muted-foreground">Low <span className="text-white">₹{Number(selected.low24h).toLocaleString("en-IN")}</span></div>
+                <div className="text-muted-foreground">High <span className="text-foreground">₹{Number(selected.high24h).toLocaleString("en-IN")}</span></div>
+                <div className="text-muted-foreground">Low <span className="text-foreground">₹{Number(selected.low24h).toLocaleString("en-IN")}</span></div>
               </div>
               <div className="text-xs">
-                <div className="text-muted-foreground">Lot Size <span className="text-white">{selected.lotSize}</span></div>
-                <div className="text-muted-foreground">Exchange <span className="text-white">{selected.exchange}</span></div>
+                <div className="text-muted-foreground">Lot Size <span className="text-foreground">{selected.lotSize}</span></div>
+                <div className="text-muted-foreground">Exchange <span className="text-foreground">{selected.exchange}</span></div>
               </div>
               {selected.sector && (
                 <Badge variant="outline" className={cn("text-[10px]", COMMODITY_SECTOR_BADGE[selected.sector] ?? "")}>
@@ -273,7 +273,7 @@ export default function Commodities() {
           )}
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-            <TabsList className="border-b border-white/10 bg-transparent rounded-none px-4 flex-shrink-0 justify-start h-10">
+            <TabsList className="border-b border-border bg-transparent rounded-none px-4 flex-shrink-0 justify-start h-10">
               <TabsTrigger value="chart" className="data-[state=active]:border-b-2 data-[state=active]:border-yellow-400 rounded-none text-xs">Chart</TabsTrigger>
               <TabsTrigger value="positions" className="data-[state=active]:border-b-2 data-[state=active]:border-yellow-400 rounded-none text-xs">
                 Positions {positions.length > 0 && <Badge className="ml-1 bg-yellow-500/20 text-yellow-400 text-[10px]">{positions.length}</Badge>}
@@ -282,7 +282,7 @@ export default function Commodities() {
             </TabsList>
 
             <TabsContent value="chart" className="flex-1 overflow-auto m-0">
-              <div className="h-64 bg-[#0b0e17] border-b border-white/10 flex items-center justify-center relative">
+              <div className="h-64 bg-background border-b border-border flex items-center justify-center relative">
                 <div className="text-center z-10">
                   <Gem className="w-10 h-10 text-yellow-400/30 mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">MCX Live Chart</p>
@@ -306,7 +306,7 @@ export default function Commodities() {
                     ["Taker Fee", `${(Number(selected.takerFee) * 100).toFixed(3)}%`],
                     ["Tick Size", `₹${selected.pricePrecision === 0 ? "1" : "0.25"}`],
                   ].map(([label, val]) => (
-                    <div key={label} className="bg-white/5 rounded p-2">
+                    <div key={label} className="bg-muted/30 rounded p-2">
                       <div className="text-muted-foreground mb-1">{label}</div>
                       <div className="font-semibold">{val}</div>
                     </div>
@@ -325,7 +325,7 @@ export default function Commodities() {
                   {positions.map((p) => {
                     const pnl = Number(p.unrealizedPnl ?? 0);
                     return (
-                      <div key={p.id} className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-4">
+                      <div key={p.id} className="bg-muted/30 border border-border rounded-lg p-3 flex items-center gap-4">
                         <div>
                           <div className="font-bold text-sm">{p.symbol}</div>
                           <Badge variant="outline" className={cn("text-[10px] mt-0.5", p.side === "buy" ? "border-emerald-500/40 text-emerald-400" : "border-red-500/40 text-red-400")}>
@@ -333,8 +333,8 @@ export default function Commodities() {
                           </Badge>
                         </div>
                         <div className="text-xs space-y-0.5">
-                          <div className="text-muted-foreground">Qty <span className="text-white">{p.qty}</span></div>
-                          <div className="text-muted-foreground">Entry <span className="text-white">₹{Number(p.avgEntryPrice).toLocaleString("en-IN")}</span></div>
+                          <div className="text-muted-foreground">Qty <span className="text-foreground">{p.qty}</span></div>
+                          <div className="text-muted-foreground">Entry <span className="text-foreground">₹{Number(p.avgEntryPrice).toLocaleString("en-IN")}</span></div>
                         </div>
                         <div className="ml-auto text-right">
                           <div className={cn("font-bold", pnl >= 0 ? "text-emerald-400" : "text-red-400")}>
@@ -360,7 +360,7 @@ export default function Commodities() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-white/10 text-muted-foreground">
+                      <tr className="border-b border-border text-muted-foreground">
                         <th className="text-left py-2 px-2">Symbol</th><th className="text-left py-2 px-2">Side</th>
                         <th className="text-right py-2 px-2">Qty</th><th className="text-right py-2 px-2">Fill Price</th>
                         <th className="text-left py-2 px-2">Status</th><th className="text-left py-2 px-2">Time</th>
@@ -368,7 +368,7 @@ export default function Commodities() {
                     </thead>
                     <tbody>
                       {orders.map((o) => (
-                        <tr key={o.id} className="border-b border-white/5">
+                        <tr key={o.id} className="border-b border-border/40">
                           <td className="py-2 px-2 font-medium">{o.symbol}</td>
                           <td className={cn("py-2 px-2 font-semibold", o.side === "buy" ? "text-emerald-400" : "text-red-400")}>{o.side.toUpperCase()}</td>
                           <td className="py-2 px-2 text-right">{o.filledQty}/{o.qty}</td>
@@ -392,19 +392,19 @@ export default function Commodities() {
         </div>
 
         {/* Order Form */}
-        <div className="w-72 border-l border-white/10 bg-[#0d1117] p-4 flex flex-col gap-4 overflow-y-auto flex-shrink-0">
+        <div className="w-72 border-l border-border bg-card p-4 flex flex-col gap-4 overflow-y-auto flex-shrink-0">
           <div className="text-sm font-semibold">Place Order</div>
-          <div className="flex rounded-lg overflow-hidden border border-white/10">
-            <button onClick={() => setSide("buy")} className={cn("flex-1 py-2 text-sm font-semibold transition-colors", side === "buy" ? "bg-emerald-600 text-white" : "text-muted-foreground hover:text-white")}>Buy</button>
-            <button onClick={() => setSide("sell")} className={cn("flex-1 py-2 text-sm font-semibold transition-colors", side === "sell" ? "bg-red-600 text-white" : "text-muted-foreground hover:text-white")}>Sell</button>
+          <div className="flex rounded-lg overflow-hidden border border-border">
+            <button onClick={() => setSide("buy")} className={cn("flex-1 py-2 text-sm font-semibold transition-colors", side === "buy" ? "bg-emerald-600 text-foreground" : "text-muted-foreground hover:text-foreground")}>Buy</button>
+            <button onClick={() => setSide("sell")} className={cn("flex-1 py-2 text-sm font-semibold transition-colors", side === "sell" ? "bg-red-600 text-foreground" : "text-muted-foreground hover:text-foreground")}>Sell</button>
           </div>
           <div className="flex gap-1">
             {(["MARKET", "LIMIT"] as const).map((t) => (
-              <button key={t} onClick={() => setOrderType(t)} className={cn("flex-1 py-1 text-xs rounded transition-colors", orderType === t ? "bg-yellow-500/20 text-yellow-400 font-semibold" : "text-muted-foreground hover:text-white")}>{t}</button>
+              <button key={t} onClick={() => setOrderType(t)} className={cn("flex-1 py-1 text-xs rounded transition-colors", orderType === t ? "bg-yellow-500/20 text-yellow-400 font-semibold" : "text-muted-foreground hover:text-foreground")}>{t}</button>
             ))}
           </div>
           {selected && (
-            <div className="bg-white/5 rounded p-2 text-xs">
+            <div className="bg-muted/30 rounded p-2 text-xs">
               <div className="flex items-center gap-2">
                 <Icon className={cn("w-4 h-4", COMMODITY_COLORS[selected.sector ?? ""] ?? "text-yellow-400")} />
                 <span className="font-bold">{selected.name}</span>
@@ -424,13 +424,13 @@ export default function Commodities() {
           <div>
             <label className="text-xs text-muted-foreground block mb-1">Quantity (lots)</label>
             <Input type="number" value={qty} onChange={(e) => setQty(e.target.value)} placeholder={`Min ${selected?.minQty ?? "1"}`}
-              className="bg-white/5 border-white/20 text-sm h-9" />
+              className="bg-muted/30 border-white/20 text-sm h-9" />
           </div>
           {orderType === "LIMIT" && (
             <div>
               <label className="text-xs text-muted-foreground block mb-1">Limit Price (₹)</label>
               <Input type="number" value={limitPrice} onChange={(e) => setLimitPrice(e.target.value)}
-                placeholder={ltp.toString()} className="bg-white/5 border-white/20 text-sm h-9" />
+                placeholder={ltp.toString()} className="bg-muted/30 border-white/20 text-sm h-9" />
             </div>
           )}
           {notional > 0 && (
@@ -476,7 +476,7 @@ export default function Commodities() {
                     <Link2 className="w-3 h-3" /> Connect
                   </Link>
                   <Link href="/broker/onboarding"
-                    className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded bg-white/10 hover:bg-white/15 text-white text-xs transition-colors">
+                    className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded bg-muted/50 hover:bg-muted/60 text-foreground text-xs transition-colors">
                     Open Account <ChevronRight className="w-3 h-3" />
                   </Link>
                 </div>

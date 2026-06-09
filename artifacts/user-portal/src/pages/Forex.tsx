@@ -267,15 +267,15 @@ function MT5ConnectModal({ onClose, onConnected }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-[#0f1623] border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+      <div className="bg-card border border-border rounded-2xl shadow-2xl overflow-hidden"
         style={{ width: step === 1 ? 560 : 440 }}
         onClick={e => e.stopPropagation()}>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/8 bg-[#111827]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border/60 bg-card">
           <div className="flex items-center gap-3">
             {step === 2 && (
-              <button onClick={() => setStep(1)} className="text-white/30 hover:text-white transition-colors mr-1">
+              <button onClick={() => setStep(1)} className="text-foreground/30 hover:text-foreground transition-colors mr-1">
                 <ChevronDown size={18} className="rotate-90" />
               </button>
             )}
@@ -283,27 +283,27 @@ function MT5ConnectModal({ onClose, onConnected }: {
               <Terminal size={17} className="text-blue-400" />
             </div>
             <div>
-              <div className="font-bold text-sm text-white">Connect MetaTrader 5</div>
-              <div className="text-[10px] text-white/30">
+              <div className="font-bold text-sm text-foreground">Connect MetaTrader 5</div>
+              <div className="text-[10px] text-foreground/30">
                 {step === 1 ? "Step 1 of 2 — Choose your broker" : `Step 2 of 2 — ${selectedBroker?.label ?? "Enter credentials"}`}
               </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
             {/* Demo / Live toggle */}
-            <div className="flex bg-white/5 rounded-lg p-0.5 gap-0.5">
+            <div className="flex bg-muted/30 rounded-lg p-0.5 gap-0.5">
               <button onClick={() => setIsDemo(true)}
                 className={cn("px-3 py-1 text-[11px] font-semibold rounded-md transition-colors",
-                  isDemo ? "bg-amber-500/20 text-amber-400" : "text-white/25 hover:text-white/50")}>
+                  isDemo ? "bg-amber-500/20 text-amber-400" : "text-foreground/25 hover:text-foreground/50")}>
                 Demo
               </button>
               <button onClick={() => setIsDemo(false)}
                 className={cn("px-3 py-1 text-[11px] font-semibold rounded-md transition-colors",
-                  !isDemo ? "bg-blue-500/20 text-blue-400" : "text-white/25 hover:text-white/50")}>
+                  !isDemo ? "bg-blue-500/20 text-blue-400" : "text-foreground/25 hover:text-foreground/50")}>
                 Live
               </button>
             </div>
-            <button onClick={onClose} className="text-white/30 hover:text-white transition-colors">
+            <button onClick={onClose} className="text-foreground/30 hover:text-foreground transition-colors">
               <X size={18} />
             </button>
           </div>
@@ -312,20 +312,20 @@ function MT5ConnectModal({ onClose, onConnected }: {
         {/* Step 1 — Broker Grid */}
         {step === 1 && (
           <div className="p-5 space-y-4">
-            <div className="text-[11px] text-white/35 font-medium uppercase tracking-wide">
+            <div className="text-[11px] text-foreground/35 font-medium uppercase tracking-wide">
               Popular Brokers
             </div>
             <div className="grid grid-cols-4 gap-2.5">
               {MT5_BROKERS.filter(b => b.popular).map(b => (
                 <button key={b.id} onClick={() => pickBroker(b)}
-                  className="flex flex-col items-center gap-2 p-3 rounded-xl border border-white/8 bg-white/3 hover:bg-white/8 hover:border-white/15 transition-all group">
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border/60 bg-white/3 hover:bg-muted/40 hover:border-white/15 transition-all group">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
                     style={{ background: b.color + "22", color: b.color }}>
                     {b.label.slice(0, 2).toUpperCase()}
                   </div>
                   <div className="text-center">
-                    <div className="text-[11px] font-semibold text-white/80 group-hover:text-white leading-tight">{b.label}</div>
-                    <div className="text-[9px] text-white/25 mt-0.5">
+                    <div className="text-[11px] font-semibold text-foreground/80 group-hover:text-foreground leading-tight">{b.label}</div>
+                    <div className="text-[9px] text-foreground/25 mt-0.5">
                       {b.region === "IN" ? "🇮🇳" : b.region === "AU" ? "🇦🇺" : b.region === "UK" ? "🇬🇧" : "🌐"} {isDemo ? "Demo" : "Live"}
                     </div>
                   </div>
@@ -333,23 +333,23 @@ function MT5ConnectModal({ onClose, onConnected }: {
               ))}
             </div>
 
-            <div className="text-[11px] text-white/35 font-medium uppercase tracking-wide mt-2">
+            <div className="text-[11px] text-foreground/35 font-medium uppercase tracking-wide mt-2">
               More Brokers
             </div>
             <div className="grid grid-cols-4 gap-2">
               {MT5_BROKERS.filter(b => !b.popular).map(b => (
                 <button key={b.id} onClick={() => pickBroker(b)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/6 bg-white/3 hover:bg-white/7 hover:border-white/12 transition-all text-left">
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/6 bg-white/3 hover:bg-white/7 hover:border-border transition-all text-left">
                   <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold flex-shrink-0"
                     style={{ background: b.color + "22", color: b.color }}>
                     {b.label.slice(0, 2).toUpperCase()}
                   </div>
-                  <div className="text-[11px] text-white/60 truncate">{b.label}</div>
+                  <div className="text-[11px] text-foreground/60 truncate">{b.label}</div>
                 </button>
               ))}
             </div>
 
-            <div className="bg-blue-500/6 border border-blue-500/15 rounded-xl p-3 flex gap-2 text-[11px] text-white/40">
+            <div className="bg-blue-500/6 border border-blue-500/15 rounded-xl p-3 flex gap-2 text-[11px] text-foreground/40">
               <Info size={12} className="text-blue-400 flex-shrink-0 mt-0.5" />
               <span>
                 Your Zebvix account works with any MT5 broker. Demo accounts are free — no real funds required.
@@ -364,14 +364,14 @@ function MT5ConnectModal({ onClose, onConnected }: {
           <div className="p-6 space-y-4">
             {/* Broker badge */}
             {selectedBroker && (
-              <div className="flex items-center gap-2.5 p-2.5 bg-white/5 rounded-xl">
+              <div className="flex items-center gap-2.5 p-2.5 bg-muted/30 rounded-xl">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
                   style={{ background: selectedBroker.color + "22", color: selectedBroker.color }}>
                   {selectedBroker.label.slice(0, 2).toUpperCase()}
                 </div>
                 <div>
-                  <div className="text-xs font-semibold text-white">{selectedBroker.label}</div>
-                  <div className="text-[10px] text-white/30">{server}</div>
+                  <div className="text-xs font-semibold text-foreground">{selectedBroker.label}</div>
+                  <div className="text-[10px] text-foreground/30">{server}</div>
                 </div>
                 <span className={cn("ml-auto text-[9px] px-2 py-0.5 rounded-full font-bold",
                   isDemo ? "bg-amber-500/15 text-amber-400" : "bg-blue-500/15 text-blue-400")}>
@@ -383,17 +383,17 @@ function MT5ConnectModal({ onClose, onConnected }: {
             {/* Server (editable if custom) */}
             <div className="relative">
               <div className="flex justify-between mb-1">
-                <div className="text-[10px] text-white/35 font-medium">Broker Server Address</div>
+                <div className="text-[10px] text-foreground/35 font-medium">Broker Server Address</div>
               </div>
               <input value={server} onChange={e => { setServer(e.target.value); setServerSuggest(true); }}
                 onBlur={() => setTimeout(() => setServerSuggest(false), 200)}
                 placeholder="e.g. ICMarkets-Demo, Pepperstone-MT5"
-                className="w-full bg-white/5 border border-white/10 px-3 h-10 text-sm rounded-xl text-white placeholder-white/20 focus:border-blue-500/50 focus:outline-none font-mono text-xs" />
+                className="w-full bg-muted/30 border border-border px-3 h-10 text-sm rounded-xl text-foreground placeholder-white/20 focus:border-blue-500/50 focus:outline-none font-mono text-xs" />
               {serverSuggest && filtered.length > 0 && (
-                <div className="absolute top-full mt-1 left-0 right-0 bg-[#1a2035] border border-white/12 rounded-xl overflow-hidden z-10 shadow-2xl max-h-40 overflow-y-auto">
+                <div className="absolute top-full mt-1 left-0 right-0 bg-popover border border-border rounded-xl overflow-hidden z-10 shadow-2xl max-h-40 overflow-y-auto">
                   {filtered.slice(0, 8).map(s => (
                     <button key={s} onClick={() => { setServer(s); setServerSuggest(false); }}
-                      className="w-full text-left px-3 py-2 text-xs hover:bg-white/8 transition-colors text-white/70 flex items-center gap-2">
+                      className="w-full text-left px-3 py-2 text-xs hover:bg-muted/40 transition-colors text-foreground/70 flex items-center gap-2">
                       <Terminal size={10} className="text-blue-400 flex-shrink-0" />
                       <span className="flex-1 truncate">{s}</span>
                       {s.toLowerCase().includes("demo") || s.toLowerCase().includes("trial")
@@ -407,21 +407,21 @@ function MT5ConnectModal({ onClose, onConnected }: {
 
             {/* Login */}
             <div>
-              <div className="text-[10px] text-white/35 mb-1 font-medium">MT5 Account Login Number</div>
+              <div className="text-[10px] text-foreground/35 mb-1 font-medium">MT5 Account Login Number</div>
               <input value={login} onChange={e => setLogin(e.target.value)}
                 placeholder="e.g. 12345678"
-                className="w-full bg-white/5 border border-white/10 px-3 h-10 text-sm rounded-xl text-white placeholder-white/20 focus:border-blue-500/50 focus:outline-none font-mono" />
+                className="w-full bg-muted/30 border border-border px-3 h-10 text-sm rounded-xl text-foreground placeholder-white/20 focus:border-blue-500/50 focus:outline-none font-mono" />
             </div>
 
             {/* Password */}
             <div>
               <div className="flex justify-between mb-1">
-                <div className="text-[10px] text-white/35 font-medium">Password</div>
-                <div className="flex bg-white/5 rounded-md overflow-hidden">
+                <div className="text-[10px] text-foreground/35 font-medium">Password</div>
+                <div className="flex bg-muted/30 rounded-md overflow-hidden">
                   {(["investor", "master"] as const).map(t => (
                     <button key={t} onClick={() => setConnType(t)}
                       className={cn("px-2 py-0.5 text-[9px] font-semibold transition-colors",
-                        connType === t ? "bg-blue-500/25 text-blue-300" : "text-white/25 hover:text-white/50")}>
+                        connType === t ? "bg-blue-500/25 text-blue-300" : "text-foreground/25 hover:text-foreground/50")}>
                       {t === "investor" ? "Investor" : "Master"}
                     </button>
                   ))}
@@ -430,9 +430,9 @@ function MT5ConnectModal({ onClose, onConnected }: {
               <div className="relative">
                 <input type={showPw ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)}
                   placeholder={connType === "investor" ? "Investor (read-only) password" : "Master password"}
-                  className="w-full bg-white/5 border border-white/10 px-3 pr-10 h-10 text-sm rounded-xl text-white placeholder-white/20 focus:border-blue-500/50 focus:outline-none" />
+                  className="w-full bg-muted/30 border border-border px-3 pr-10 h-10 text-sm rounded-xl text-foreground placeholder-white/20 focus:border-blue-500/50 focus:outline-none" />
                 <button onClick={() => setShowPw(s => !s)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/25 hover:text-foreground/60">
                   {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
               </div>
@@ -446,7 +446,7 @@ function MT5ConnectModal({ onClose, onConnected }: {
             {/* Connect button */}
             <button onClick={() => connectMutation.mutate()}
               disabled={!server || !login || !password || connectMutation.isPending}
-              className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition-colors disabled:opacity-40 flex items-center justify-center gap-2">
+              className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-foreground font-bold text-sm transition-colors disabled:opacity-40 flex items-center justify-center gap-2">
               {connectMutation.isPending ? (
                 <><RefreshCw size={14} className="animate-spin" /> Authenticating with MT5...</>
               ) : (
@@ -454,7 +454,7 @@ function MT5ConnectModal({ onClose, onConnected }: {
               )}
             </button>
 
-            <div className="text-[10px] text-white/20 text-center">
+            <div className="text-[10px] text-foreground/20 text-center">
               {isDemo
                 ? "Demo: No real funds. Free practice account from your broker."
                 : "Live: Connects to real broker account. All trades are real."}
@@ -490,7 +490,7 @@ function MT5AccountCard({ account, onDisconnect, compact = false }: {
         ? account.isDemo
           ? "bg-amber-500/5 border-amber-500/20"
           : "bg-blue-500/5 border-blue-500/20"
-        : "bg-white/3 border-white/8")}>
+        : "bg-white/3 border-border/60")}>
 
       {/* Account header */}
       <div className="flex items-center justify-between px-3 pt-2.5 pb-2">
@@ -501,14 +501,14 @@ function MT5AccountCard({ account, onDisconnect, compact = false }: {
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="font-bold text-[11px] text-white">{account.login}</span>
+              <span className="font-bold text-[11px] text-foreground">{account.login}</span>
               <span className={cn("px-1.5 py-0.5 rounded text-[8px] font-bold uppercase",
-                !isConnected ? "bg-white/5 text-white/20" :
+                !isConnected ? "bg-muted/30 text-foreground/20" :
                 account.isDemo ? "bg-amber-500/15 text-amber-400" : "bg-blue-500/15 text-blue-400")}>
                 {!isConnected ? "Offline" : account.isDemo ? "Demo" : "Live"}
               </span>
             </div>
-            <div className="text-[9px] text-white/30 mt-0.5 truncate max-w-[160px]">{account.server}</div>
+            <div className="text-[9px] text-foreground/30 mt-0.5 truncate max-w-[160px]">{account.server}</div>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -519,7 +519,7 @@ function MT5AccountCard({ account, onDisconnect, compact = false }: {
             </div>
           )}
           <button onClick={onDisconnect}
-            className="text-white/15 hover:text-red-400 transition-colors p-1 rounded">
+            className="text-foreground/15 hover:text-red-400 transition-colors p-1 rounded">
             <X size={11} />
           </button>
         </div>
@@ -535,10 +535,10 @@ function MT5AccountCard({ account, onDisconnect, compact = false }: {
               { label: "Equity", value: fmt(equity), sub: floatingPnl >= 0 ? `+${fmt(floatingPnl)}` : fmt(floatingPnl), subColor: floatingPnl >= 0 ? "text-emerald-400" : "text-red-400" },
               { label: "Free Margin", value: fmt(freeMargin), sub: cur },
             ].map(stat => (
-              <div key={stat.label} className="bg-white/5 rounded-lg p-2 text-center">
-                <div className="text-white/30 text-[9px] mb-0.5">{stat.label}</div>
-                <div className="font-mono font-bold text-[11px] text-white">{stat.value}</div>
-                {stat.sub && <div className={cn("text-[9px] mt-0.5", stat.subColor ?? "text-white/25")}>{stat.sub}</div>}
+              <div key={stat.label} className="bg-muted/30 rounded-lg p-2 text-center">
+                <div className="text-foreground/30 text-[9px] mb-0.5">{stat.label}</div>
+                <div className="font-mono font-bold text-[11px] text-foreground">{stat.value}</div>
+                {stat.sub && <div className={cn("text-[9px] mt-0.5", stat.subColor ?? "text-foreground/25")}>{stat.sub}</div>}
               </div>
             ))}
           </div>
@@ -546,15 +546,15 @@ function MT5AccountCard({ account, onDisconnect, compact = false }: {
           {/* Margin / Leverage / Level */}
           <div className="grid grid-cols-3 gap-1.5 text-[10px]">
             <div className="bg-white/3 rounded-lg p-1.5">
-              <div className="text-white/25 text-[9px]">Margin Used</div>
-              <div className="font-mono font-semibold text-white mt-0.5">{fmt(margin)}</div>
+              <div className="text-foreground/25 text-[9px]">Margin Used</div>
+              <div className="font-mono font-semibold text-foreground mt-0.5">{fmt(margin)}</div>
             </div>
             <div className="bg-white/3 rounded-lg p-1.5">
-              <div className="text-white/25 text-[9px]">Leverage</div>
-              <div className="font-semibold text-white mt-0.5">1:{account.leverage ?? "—"}</div>
+              <div className="text-foreground/25 text-[9px]">Leverage</div>
+              <div className="font-semibold text-foreground mt-0.5">1:{account.leverage ?? "—"}</div>
             </div>
             <div className="bg-white/3 rounded-lg p-1.5">
-              <div className="text-white/25 text-[9px]">Margin Level</div>
+              <div className="text-foreground/25 text-[9px]">Margin Level</div>
               <div className={cn("font-semibold mt-0.5", marginLevel > 200 ? "text-emerald-400" : marginLevel > 100 ? "text-amber-400" : "text-red-400")}>
                 {margin > 0 ? marginLevel.toFixed(0) + "%" : "—"}
               </div>
@@ -563,11 +563,11 @@ function MT5AccountCard({ account, onDisconnect, compact = false }: {
 
           {/* Margin bar */}
           <div>
-            <div className="flex justify-between text-[9px] text-white/25 mb-1">
+            <div className="flex justify-between text-[9px] text-foreground/25 mb-1">
               <span>Margin utilization</span>
               <span>{marginUsedPct.toFixed(1)}%</span>
             </div>
-            <div className="w-full bg-white/8 rounded-full h-1.5">
+            <div className="w-full bg-muted/40 rounded-full h-1.5">
               <div className={cn("h-1.5 rounded-full transition-all",
                 marginUsedPct > 80 ? "bg-red-500" : marginUsedPct > 50 ? "bg-amber-500" : "bg-blue-500")}
                 style={{ width: `${Math.min(marginUsedPct, 100)}%` }} />
@@ -578,7 +578,7 @@ function MT5AccountCard({ account, onDisconnect, compact = false }: {
           {floatingPnl !== 0 && (
             <div className={cn("flex items-center justify-between rounded-lg px-2 py-1.5",
               floatingPnl >= 0 ? "bg-emerald-500/8" : "bg-red-500/8")}>
-              <span className="text-white/40 text-[10px]">Floating P&L</span>
+              <span className="text-foreground/40 text-[10px]">Floating P&L</span>
               <span className={cn("font-mono font-bold text-[11px]", floatingPnl >= 0 ? "text-emerald-400" : "text-red-400")}>
                 {floatingPnl >= 0 ? "+" : ""}{fmt(floatingPnl)} {cur}
               </span>
@@ -590,7 +590,7 @@ function MT5AccountCard({ account, onDisconnect, compact = false }: {
       {/* Compact mode: just balance + equity inline */}
       {isConnected && compact && (
         <div className="px-3 pb-2.5 flex items-center justify-between">
-          <span className="text-white/30 text-[10px]">Balance <span className="text-white font-mono font-semibold">{fmt(balance)} {cur}</span></span>
+          <span className="text-foreground/30 text-[10px]">Balance <span className="text-foreground font-mono font-semibold">{fmt(balance)} {cur}</span></span>
           <span className={cn("text-[10px] font-mono font-semibold", floatingPnl >= 0 ? "text-emerald-400" : "text-red-400")}>
             {floatingPnl >= 0 ? "+" : ""}{fmt(floatingPnl)}
           </span>
@@ -612,7 +612,7 @@ function SessionBadges() {
         return (
           <div key={s.name} className={cn(
             "flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border",
-            active ? `${s.color} border-current bg-current/10` : "text-white/20 border-white/10",
+            active ? `${s.color} border-current bg-current/10` : "text-foreground/20 border-border",
           )}>
             <span className={cn("w-1.5 h-1.5 rounded-full", active ? "bg-current animate-pulse" : "bg-white/20")} />
             {s.name}
@@ -640,15 +640,15 @@ function OrderBook({ ltp, pp }: { ltp: number; pp: number }) {
 
   return (
     <div className="h-full overflow-hidden">
-      <div className="grid grid-cols-3 text-[10px] text-white/40 px-2 py-1 border-b border-white/5">
+      <div className="grid grid-cols-3 text-[10px] text-foreground/40 px-2 py-1 border-b border-border/40">
         <span>Size</span><span className="text-center">Price</span><span className="text-right">Size</span>
       </div>
       {levels.map((l, i) => (
-        <div key={i} className="grid grid-cols-3 text-[11px] px-2 py-0.5 relative hover:bg-white/5">
+        <div key={i} className="grid grid-cols-3 text-[11px] px-2 py-0.5 relative hover:bg-muted/30">
           <div className="relative z-10 text-emerald-400 tabular-nums">{l.bidQty.toFixed(2)}</div>
           <div className="relative z-10 text-center">
             <span className="text-emerald-400">{l.bidPrice.toFixed(pp)}</span>
-            <span className="text-white/20 mx-1">|</span>
+            <span className="text-foreground/20 mx-1">|</span>
             <span className="text-red-400">{l.askPrice.toFixed(pp)}</span>
           </div>
           <div className="relative z-10 text-right text-red-400 tabular-nums">{l.askQty.toFixed(2)}</div>
@@ -658,9 +658,9 @@ function OrderBook({ ltp, pp }: { ltp: number; pp: number }) {
             style={{ width: `${(l.askQty / maxQty) * 40}%` }} />
         </div>
       ))}
-      <div className="border-t border-white/10 mt-1 px-2 py-1.5 flex justify-between text-xs">
+      <div className="border-t border-border mt-1 px-2 py-1.5 flex justify-between text-xs">
         <div className="text-emerald-400 font-bold">{bid.toFixed(pp)}</div>
-        <div className="text-white/40 text-[10px]">Spread: {(spread * Math.pow(10, pp)).toFixed(1)} pips</div>
+        <div className="text-foreground/40 text-[10px]">Spread: {(spread * Math.pow(10, pp)).toFixed(1)} pips</div>
         <div className="text-red-400 font-bold">{ask.toFixed(pp)}</div>
       </div>
     </div>
@@ -669,7 +669,7 @@ function OrderBook({ ltp, pp }: { ltp: number; pp: number }) {
 
 // ─── Analysis Panel ──────────────────────────────────────────────────────────
 function AnalysisPanel({ inst, ltp }: { inst: Instrument | null; ltp: number }) {
-  if (!inst) return <div className="p-4 text-white/30 text-sm text-center">Select a pair</div>;
+  if (!inst) return <div className="p-4 text-foreground/30 text-sm text-center">Select a pair</div>;
   const prev = Number(inst.previousClose) || ltp;
   const chg = prev ? ((ltp - prev) / prev) * 100 : 0;
   const high = Number(inst.high24h) || ltp * 1.005;
@@ -686,32 +686,32 @@ function AnalysisPanel({ inst, ltp }: { inst: Instrument | null; ltp: number }) 
   return (
     <div className="p-4 space-y-4 overflow-auto h-full">
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white/5 rounded-lg p-3">
-          <div className="text-[10px] text-white/40 mb-1">Overall Sentiment</div>
+        <div className="bg-muted/30 rounded-lg p-3">
+          <div className="text-[10px] text-foreground/40 mb-1">Overall Sentiment</div>
           <div className={cn("font-bold text-sm flex items-center gap-1.5",
             chg >= 0 ? "text-emerald-400" : "text-red-400")}>
             {chg >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
             {sentiment}
           </div>
-          <div className="text-[10px] text-white/40 mt-1">{chg.toFixed(3)}% today</div>
+          <div className="text-[10px] text-foreground/40 mt-1">{chg.toFixed(3)}% today</div>
         </div>
-        <div className="bg-white/5 rounded-lg p-3">
-          <div className="text-[10px] text-white/40 mb-1">RSI (14)</div>
-          <div className={cn("font-bold text-sm", rsi > 70 ? "text-red-400" : rsi < 30 ? "text-emerald-400" : "text-white")}>
+        <div className="bg-muted/30 rounded-lg p-3">
+          <div className="text-[10px] text-foreground/40 mb-1">RSI (14)</div>
+          <div className={cn("font-bold text-sm", rsi > 70 ? "text-red-400" : rsi < 30 ? "text-emerald-400" : "text-foreground")}>
             {rsi.toFixed(1)}
           </div>
-          <div className="text-[10px] text-white/40 mt-1">
+          <div className="text-[10px] text-foreground/40 mt-1">
             {rsi > 70 ? "Overbought" : rsi < 30 ? "Oversold" : "Neutral"}
           </div>
-          <div className="w-full bg-white/10 rounded-full h-1 mt-1.5">
+          <div className="w-full bg-muted/50 rounded-full h-1 mt-1.5">
             <div className={cn("h-1 rounded-full", rsi > 70 ? "bg-red-400" : rsi < 30 ? "bg-emerald-400" : "bg-amber-400")}
               style={{ width: `${rsi}%` }} />
           </div>
         </div>
       </div>
 
-      <div className="bg-white/5 rounded-lg p-3">
-        <div className="text-[10px] text-white/40 mb-2">Pivot Points (Classic)</div>
+      <div className="bg-muted/30 rounded-lg p-3">
+        <div className="text-[10px] text-foreground/40 mb-2">Pivot Points (Classic)</div>
         <div className="space-y-1.5 text-xs">
           {[
             ["R2", (r1 + (pivot - s1)).toFixed(inst.pricePrecision), "text-red-300"],
@@ -721,23 +721,23 @@ function AnalysisPanel({ inst, ltp }: { inst: Instrument | null; ltp: number }) 
             ["S2", (s1 - (pivot - s1)).toFixed(inst.pricePrecision), "text-emerald-300"],
           ].map(([label, val, cls]) => (
             <div key={label} className="flex justify-between items-center">
-              <span className="text-white/40">{label}</span>
+              <span className="text-foreground/40">{label}</span>
               <span className={cn("tabular-nums font-mono", cls)}>{val}</span>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="bg-white/5 rounded-lg p-3 space-y-2">
-        <div className="text-[10px] text-white/40 mb-1">Technical Indicators</div>
+      <div className="bg-muted/30 rounded-lg p-3 space-y-2">
+        <div className="text-[10px] text-foreground/40 mb-1">Technical Indicators</div>
         {[
           { name: "MACD (12,26,9)", signal: macdSignal, color: macdSignal === "Buy" ? "text-emerald-400" : "text-red-400" },
           { name: "MA (50)", signal: ltp > maValue ? "Buy" : "Sell", color: ltp > maValue ? "text-emerald-400" : "text-red-400" },
-          { name: "Bollinger Bands", signal: rsi > 60 ? "Upper Band" : rsi < 40 ? "Lower Band" : "Middle", color: "text-white/60" },
-          { name: "Stochastic (14,3)", signal: rsi > 65 ? "Overbought" : rsi < 35 ? "Oversold" : "Neutral", color: "text-white/60" },
+          { name: "Bollinger Bands", signal: rsi > 60 ? "Upper Band" : rsi < 40 ? "Lower Band" : "Middle", color: "text-foreground/60" },
+          { name: "Stochastic (14,3)", signal: rsi > 65 ? "Overbought" : rsi < 35 ? "Oversold" : "Neutral", color: "text-foreground/60" },
         ].map(ind => (
           <div key={ind.name} className="flex justify-between text-xs">
-            <span className="text-white/40">{ind.name}</span>
+            <span className="text-foreground/40">{ind.name}</span>
             <span className={ind.color}>{ind.signal}</span>
           </div>
         ))}
@@ -750,8 +750,8 @@ function AnalysisPanel({ inst, ltp }: { inst: Instrument | null; ltp: number }) 
           ["Tick Value", `${(ltp * 0.00001 * 1000).toFixed(2)} ${inst.quoteCurrency}`],
           ["Lot Size", inst.lotSize],
         ].map(([k, v]) => (
-          <div key={k} className="bg-white/5 rounded p-2">
-            <div className="text-white/30">{k}</div>
+          <div key={k} className="bg-muted/30 rounded p-2">
+            <div className="text-foreground/30">{k}</div>
             <div className="font-mono mt-0.5">{v}</div>
           </div>
         ))}
@@ -790,7 +790,7 @@ function MT5Dashboard({ accounts, positions, orders, onDisconnect, onAddAccount,
   return (
     <div className="flex h-full">
       {/* Sub-tab sidebar */}
-      <div className="flex flex-col border-r border-white/8 px-1.5 py-2 gap-0.5 w-24 flex-shrink-0">
+      <div className="flex flex-col border-r border-border/60 px-1.5 py-2 gap-0.5 w-24 flex-shrink-0">
         {([
           { id: "positions", label: "Positions", count: positions.length },
           { id: "accounts", label: "Accounts", count: connected.length },
@@ -798,18 +798,18 @@ function MT5Dashboard({ accounts, positions, orders, onDisconnect, onAddAccount,
         ] as const).map(tab => (
           <button key={tab.id} onClick={() => setSubTab(tab.id)}
             className={cn("flex flex-col items-center gap-0.5 py-1.5 px-1 rounded-lg text-center transition-colors",
-              subTab === tab.id ? "bg-blue-500/15 text-blue-300" : "text-white/25 hover:text-white/50 hover:bg-white/5")}>
+              subTab === tab.id ? "bg-blue-500/15 text-blue-300" : "text-foreground/25 hover:text-foreground/50 hover:bg-muted/30")}>
             <span className="text-[10px] font-semibold">{tab.label}</span>
             {tab.count > 0 && (
               <span className={cn("text-[9px] px-1.5 py-0.5 rounded-full font-bold",
-                subTab === tab.id ? "bg-blue-500/25 text-blue-300" : "bg-white/10 text-white/30")}>
+                subTab === tab.id ? "bg-blue-500/25 text-blue-300" : "bg-muted/50 text-foreground/30")}>
                 {tab.count}
               </span>
             )}
           </button>
         ))}
         <div className="flex-1" />
-        <button onClick={onRefresh} className="p-1.5 rounded-lg text-white/20 hover:text-white/50 hover:bg-white/5 transition-colors">
+        <button onClick={onRefresh} className="p-1.5 rounded-lg text-foreground/20 hover:text-foreground/50 hover:bg-muted/30 transition-colors">
           <RefreshCw size={12} />
         </button>
         <button onClick={onAddAccount} className="p-1.5 rounded-lg text-blue-400/40 hover:text-blue-400 hover:bg-blue-500/10 transition-colors">
@@ -825,23 +825,23 @@ function MT5Dashboard({ accounts, positions, orders, onDisconnect, onAddAccount,
           <>
             {/* Summary strip */}
             {positions.length > 0 && (
-              <div className="flex items-center gap-4 px-3 py-1.5 border-b border-white/5 bg-white/2">
-                <div className="text-[10px] text-white/30">{positions.length} open position{positions.length !== 1 ? "s" : ""}</div>
+              <div className="flex items-center gap-4 px-3 py-1.5 border-b border-border/40 bg-white/2">
+                <div className="text-[10px] text-foreground/30">{positions.length} open position{positions.length !== 1 ? "s" : ""}</div>
                 <div className={cn("text-[10px] font-bold tabular-nums ml-auto", totalPnl >= 0 ? "text-emerald-400" : "text-red-400")}>
                   Float P&L: {totalPnl >= 0 ? "+" : ""}{totalPnl.toFixed(2)}
                 </div>
               </div>
             )}
             {positions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-28 gap-2 text-white/20">
+              <div className="flex flex-col items-center justify-center h-28 gap-2 text-foreground/20">
                 <Activity size={20} />
                 <div className="text-xs">No open MT5 positions</div>
-                <div className="text-[10px] text-white/15">Place a trade to see positions here</div>
+                <div className="text-[10px] text-foreground/15">Place a trade to see positions here</div>
               </div>
             ) : (
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="text-white/25 border-b border-white/5 text-[10px]">
+                  <tr className="text-foreground/25 border-b border-border/40 text-[10px]">
                     {["Ticket", "Account", "Symbol", "Side", "Vol", "Open Price", "Current", "SL", "TP", "Pips", "Profit / Loss", ""].map(h => (
                       <th key={h} className="px-2 py-1.5 text-left font-medium whitespace-nowrap">{h}</th>
                     ))}
@@ -852,28 +852,28 @@ function MT5Dashboard({ accounts, positions, orders, onDisconnect, onAddAccount,
                     <tr key={pos.ticket}
                       className={cn("border-b border-white/4 hover:bg-white/3 transition-colors",
                         closingTicket === pos.ticket && "opacity-50")}>
-                      <td className="px-2 py-2 font-mono text-white/30 text-[10px]">{pos.ticket?.slice(-8)}</td>
+                      <td className="px-2 py-2 font-mono text-foreground/30 text-[10px]">{pos.ticket?.slice(-8)}</td>
                       <td className="px-2 py-2">
                         <div className="flex items-center gap-1">
                           <span className={cn("text-[9px] px-1 py-0.5 rounded font-bold",
                             pos.isDemo ? "bg-amber-500/15 text-amber-400" : "bg-blue-500/15 text-blue-400")}>
                             {pos.isDemo ? "D" : "L"}
                           </span>
-                          <span className="text-white/35 text-[10px] font-mono">{pos.accountLogin}</span>
+                          <span className="text-foreground/35 text-[10px] font-mono">{pos.accountLogin}</span>
                         </div>
                       </td>
-                      <td className="px-2 py-2 font-bold text-white">{pos.symbol}</td>
+                      <td className="px-2 py-2 font-bold text-foreground">{pos.symbol}</td>
                       <td className="px-2 py-2">
                         <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-bold",
                           pos.side === "buy" ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400")}>
                           {pos.side.toUpperCase()}
                         </span>
                       </td>
-                      <td className="px-2 py-2 tabular-nums text-white/60">{pos.volume}</td>
-                      <td className="px-2 py-2 tabular-nums font-mono text-white/50 text-[10px]">{pos.openPrice.toFixed(5)}</td>
-                      <td className="px-2 py-2 tabular-nums font-mono text-white text-[10px]">{pos.currentPrice.toFixed(5)}</td>
-                      <td className="px-2 py-2 tabular-nums font-mono text-red-400/50 text-[10px]">{pos.stopLoss?.toFixed(5) ?? <span className="text-white/15">—</span>}</td>
-                      <td className="px-2 py-2 tabular-nums font-mono text-emerald-400/50 text-[10px]">{pos.takeProfit?.toFixed(5) ?? <span className="text-white/15">—</span>}</td>
+                      <td className="px-2 py-2 tabular-nums text-foreground/60">{pos.volume}</td>
+                      <td className="px-2 py-2 tabular-nums font-mono text-foreground/50 text-[10px]">{pos.openPrice.toFixed(5)}</td>
+                      <td className="px-2 py-2 tabular-nums font-mono text-foreground text-[10px]">{pos.currentPrice.toFixed(5)}</td>
+                      <td className="px-2 py-2 tabular-nums font-mono text-red-400/50 text-[10px]">{pos.stopLoss?.toFixed(5) ?? <span className="text-foreground/15">—</span>}</td>
+                      <td className="px-2 py-2 tabular-nums font-mono text-emerald-400/50 text-[10px]">{pos.takeProfit?.toFixed(5) ?? <span className="text-foreground/15">—</span>}</td>
 
                       {/* Pips */}
                       <td className="px-2 py-2">
@@ -935,14 +935,14 @@ function MT5Dashboard({ accounts, positions, orders, onDisconnect, onAddAccount,
         {/* ── History sub-tab ── */}
         {subTab === "history" && (
           orders.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-28 gap-2 text-white/20">
+            <div className="flex flex-col items-center justify-center h-28 gap-2 text-foreground/20">
               <BookOpen size={20} />
               <div className="text-xs">No MT5 order history yet</div>
             </div>
           ) : (
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-white/25 border-b border-white/5 text-[10px]">
+                <tr className="text-foreground/25 border-b border-border/40 text-[10px]">
                   {["Ticket", "Symbol", "Side", "Type", "Vol", "Open Price", "SL", "TP", "Status", "Time"].map(h => (
                     <th key={h} className="px-2 py-1.5 text-left font-medium whitespace-nowrap">{h}</th>
                   ))}
@@ -951,12 +951,12 @@ function MT5Dashboard({ accounts, positions, orders, onDisconnect, onAddAccount,
               <tbody>
                 {orders.map(o => (
                   <tr key={o.id} className="border-b border-white/4 hover:bg-white/3">
-                    <td className="px-2 py-1.5 font-mono text-white/30 text-[10px]">{o.mt5Ticket?.slice(-8) ?? "—"}</td>
+                    <td className="px-2 py-1.5 font-mono text-foreground/30 text-[10px]">{o.mt5Ticket?.slice(-8) ?? "—"}</td>
                     <td className="px-2 py-1.5 font-semibold">{o.symbol}</td>
                     <td className={cn("px-2 py-1.5 font-bold", o.side === "buy" ? "text-emerald-400" : "text-red-400")}>
                       {o.side.toUpperCase()}
                     </td>
-                    <td className="px-2 py-1.5 text-white/40 uppercase text-[10px]">{o.orderType}</td>
+                    <td className="px-2 py-1.5 text-foreground/40 uppercase text-[10px]">{o.orderType}</td>
                     <td className="px-2 py-1.5 tabular-nums">{o.volume}</td>
                     <td className="px-2 py-1.5 tabular-nums font-mono">{o.openPrice ? Number(o.openPrice).toFixed(5) : "—"}</td>
                     <td className="px-2 py-1.5 tabular-nums font-mono text-red-400/60">{o.stopLoss ? Number(o.stopLoss).toFixed(5) : "—"}</td>
@@ -967,7 +967,7 @@ function MT5Dashboard({ accounts, positions, orders, onDisconnect, onAddAccount,
                         {o.status}
                       </span>
                     </td>
-                    <td className="px-2 py-1.5 text-white/25 whitespace-nowrap">
+                    <td className="px-2 py-1.5 text-foreground/25 whitespace-nowrap">
                       {o.openedAt ? new Date(o.openedAt).toLocaleTimeString() : "—"}
                     </td>
                   </tr>
@@ -1278,29 +1278,29 @@ export default function Forex() {
             Trade 8+ currency pairs with up to 50× leverage — EURINR, USDINR and more. Coming soon to Zebvix.
           </p>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-800/60 border border-zinc-700/50">
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/60 border border-border/50">
           <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-          <span className="text-xs text-zinc-400 font-medium">Launching soon on Zebvix</span>
+          <span className="text-xs text-muted-foreground font-medium">Launching soon on Zebvix</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0b0e17] text-white flex flex-col overflow-hidden" style={{ height: "100vh" }}>
+    <div className="min-h-screen bg-background text-foreground flex flex-col overflow-hidden" style={{ height: "100vh" }}>
 
       {/* ── Top Header ─────────────────────────────────────────────────────── */}
-      <div className="border-b border-white/8 bg-[#0c0f1a] px-4 py-2 flex items-center gap-4 flex-shrink-0">
+      <div className="border-b border-border/60 bg-card px-4 py-2 flex items-center gap-4 flex-shrink-0">
         <div className="flex items-center gap-2">
           <Globe className="w-4 h-4 text-amber-400" />
           <span className="font-bold text-sm tracking-tight">Forex CFD</span>
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[10px] text-white/40">Live</span>
+          <span className="text-[10px] text-foreground/40">Live</span>
         </div>
 
         {/* Selected pair ticker */}
         {selected && ltp > 0 && (
-          <div className="flex items-center gap-4 pl-3 border-l border-white/10">
+          <div className="flex items-center gap-4 pl-3 border-l border-border">
             <div className="flex items-center gap-2">
               <span className="text-sm font-bold">{selected.symbol}</span>
               <span className={cn("text-lg font-bold tabular-nums",
@@ -1311,12 +1311,12 @@ export default function Forex() {
                 {pct(changePct)}
               </span>
             </div>
-            <div className="flex items-center gap-3 text-[11px] text-white/40">
+            <div className="flex items-center gap-3 text-[11px] text-foreground/40">
               <span>Bid: <span className="text-emerald-400 font-mono">{p(bid, pp)}</span></span>
               <span>Ask: <span className="text-red-400 font-mono">{p(ask, pp)}</span></span>
               <span>Spread: <span className="text-amber-400">{spreadPips.toFixed(1)} pips</span></span>
-              <span>H: <span className="text-white">{quote?.high ? p(quote.high, pp) : "—"}</span></span>
-              <span>L: <span className="text-white">{quote?.low ? p(quote.low, pp) : "—"}</span></span>
+              <span>H: <span className="text-foreground">{quote?.high ? p(quote.high, pp) : "—"}</span></span>
+              <span>L: <span className="text-foreground">{quote?.low ? p(quote.low, pp) : "—"}</span></span>
             </div>
           </div>
         )}
@@ -1345,12 +1345,12 @@ export default function Forex() {
             </div>
           ) : user && (
             <button onClick={() => setShowMt5Modal(true)}
-              className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-full border border-white/15 text-white/30 hover:text-white/60 hover:border-white/30 transition-colors">
+              className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-full border border-white/15 text-foreground/30 hover:text-foreground/60 hover:border-white/30 transition-colors">
               <PlugZap size={10} /> MT5
             </button>
           )}
 
-          <button onClick={() => refetchQuote()} className="text-white/30 hover:text-white transition-colors">
+          <button onClick={() => refetchQuote()} className="text-foreground/30 hover:text-foreground transition-colors">
             <RefreshCw className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -1360,22 +1360,22 @@ export default function Forex() {
       <div className="flex flex-1 overflow-hidden">
 
         {/* ── LEFT: Watchlist ─────────────────────────────────────────────── */}
-        <div className="w-56 border-r border-white/8 flex flex-col bg-[#0c0f1a] flex-shrink-0">
+        <div className="w-56 border-r border-border/60 flex flex-col bg-card flex-shrink-0">
           {/* Search */}
-          <div className="p-2 border-b border-white/8">
+          <div className="p-2 border-b border-border/60">
             <input
               value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Search pairs..."
-              className="w-full bg-white/5 text-xs px-2.5 py-1.5 rounded-md text-white placeholder-white/25 border border-white/10 focus:border-amber-500/40 focus:outline-none"
+              className="w-full bg-muted/30 text-xs px-2.5 py-1.5 rounded-md text-foreground placeholder-white/25 border border-border focus:border-amber-500/40 focus:outline-none"
             />
           </div>
 
           {/* Category tabs */}
-          <div className="flex flex-wrap gap-0.5 p-1.5 border-b border-white/8">
+          <div className="flex flex-wrap gap-0.5 p-1.5 border-b border-border/60">
             {CATEGORIES.map(cat => (
               <button key={cat} onClick={() => { setCategory(cat); setSearch(""); }}
                 className={cn("px-2 py-0.5 text-[10px] rounded transition-colors font-medium",
-                  category === cat && !search ? "bg-amber-500/20 text-amber-400" : "text-white/30 hover:text-white/60")}>
+                  category === cat && !search ? "bg-amber-500/20 text-amber-400" : "text-foreground/30 hover:text-foreground/60")}>
                 {cat}
               </button>
             ))}
@@ -1384,12 +1384,12 @@ export default function Forex() {
           {/* Instrument list */}
           <div className="flex-1 overflow-y-auto">
             {isLoading ? Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="px-3 py-2.5 border-b border-white/5 animate-pulse">
-                <div className="h-3 bg-white/10 rounded w-16 mb-1" />
-                <div className="h-2.5 bg-white/5 rounded w-12" />
+              <div key={i} className="px-3 py-2.5 border-b border-border/40 animate-pulse">
+                <div className="h-3 bg-muted/50 rounded w-16 mb-1" />
+                <div className="h-2.5 bg-muted/30 rounded w-12" />
               </div>
             )) : filtered.length === 0 ? (
-              <div className="text-center py-8 text-white/20 text-xs">No pairs found</div>
+              <div className="text-center py-8 text-foreground/20 text-xs">No pairs found</div>
             ) : filtered.map(inst => {
               const chg = Number(inst.change24h);
               const isUp = chg >= 0;
@@ -1399,12 +1399,12 @@ export default function Forex() {
               const quote2 = inst.symbol.slice(3, 6);
               return (
                 <div key={inst.symbol}
-                  className={cn("flex items-center gap-1 px-2 py-2 border-b border-white/5 cursor-pointer hover:bg-white/4 transition-colors group",
+                  className={cn("flex items-center gap-1 px-2 py-2 border-b border-border/40 cursor-pointer hover:bg-white/4 transition-colors group",
                     isActive && "bg-amber-500/8 border-l-2 border-l-amber-500")}>
                   <button onClick={() => toggleFav(inst.symbol)}
                     className={cn("opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0",
                       isFav && "opacity-100")}>
-                    {isFav ? <Star size={10} className="text-amber-400 fill-amber-400" /> : <StarOff size={10} className="text-white/30" />}
+                    {isFav ? <Star size={10} className="text-amber-400 fill-amber-400" /> : <StarOff size={10} className="text-foreground/30" />}
                   </button>
                   <button className="flex-1 text-left" onClick={() => setSelectedSymbol(inst.symbol)}>
                     <div className="flex items-center justify-between">
@@ -1418,8 +1418,8 @@ export default function Forex() {
                       </span>
                     </div>
                     <div className="flex justify-between mt-0.5">
-                      <span className="text-[10px] text-white/30">{PAIR_FLAGS[quote2] ?? ""} {quote2}</span>
-                      <span className="text-[11px] tabular-nums text-white/70 font-mono">
+                      <span className="text-[10px] text-foreground/30">{PAIR_FLAGS[quote2] ?? ""} {quote2}</span>
+                      <span className="text-[11px] tabular-nums text-foreground/70 font-mono">
                         {Number(inst.currentPrice).toFixed(pp)}
                       </span>
                     </div>
@@ -1430,15 +1430,15 @@ export default function Forex() {
           </div>
 
           {/* Account summary mini */}
-          <div className="border-t border-white/8 p-2 space-y-1">
-            <div className="text-[10px] text-white/30 mb-1.5">Open Positions ({positions.length})</div>
+          <div className="border-t border-border/60 p-2 space-y-1">
+            <div className="text-[10px] text-foreground/30 mb-1.5">Open Positions ({positions.length})</div>
             {positions.length > 0 && (
               <div className={cn("text-xs font-bold",
                 totalUnrealizedPnl >= 0 ? "text-emerald-400" : "text-red-400")}>
                 {totalUnrealizedPnl >= 0 ? "+" : ""}{totalUnrealizedPnl.toFixed(2)} P&L
               </div>
             )}
-            <div className="text-[10px] text-white/25 flex justify-between">
+            <div className="text-[10px] text-foreground/25 flex justify-between">
               <span>Margin used</span>
               <span>{positions.reduce((s, p) => s + Number(p.marginUsed), 0).toFixed(2)}</span>
             </div>
@@ -1449,34 +1449,34 @@ export default function Forex() {
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
 
           {/* Timeframe + tabs bar */}
-          <div className="flex items-center gap-0 border-b border-white/8 bg-[#0c0f1a] px-3 flex-shrink-0">
+          <div className="flex items-center gap-0 border-b border-border/60 bg-card px-3 flex-shrink-0">
             <div className="flex items-center gap-0 mr-4">
               {TF_OPTIONS.map(t => (
                 <button key={t.label} onClick={() => setTf(t.label)}
                   className={cn("px-2.5 py-2 text-[11px] font-semibold transition-colors",
-                    tf === t.label ? "text-amber-400 border-b-2 border-amber-400" : "text-white/30 hover:text-white/60")}>
+                    tf === t.label ? "text-amber-400 border-b-2 border-amber-400" : "text-foreground/30 hover:text-foreground/60")}>
                   {t.label}
                 </button>
               ))}
             </div>
-            <div className="h-4 w-px bg-white/10 mr-3" />
+            <div className="h-4 w-px bg-muted/50 mr-3" />
             {(["chart", "depth", "analysis"] as const).map(tab => (
               <button key={tab} onClick={() => setCenterTab(tab)}
                 className={cn("px-3 py-2 text-[11px] capitalize transition-colors",
-                  centerTab === tab ? "text-amber-400 border-b-2 border-amber-400" : "text-white/30 hover:text-white/60")}>
+                  centerTab === tab ? "text-amber-400 border-b-2 border-amber-400" : "text-foreground/30 hover:text-foreground/60")}>
                 {tab === "depth" ? "Order Book" : tab === "analysis" ? "Analysis" : "Chart"}
               </button>
             ))}
           </div>
 
           {/* Chart area */}
-          <div className="flex-1 overflow-hidden relative bg-[#0b0e17]" style={{ minHeight: 0 }}>
+          <div className="flex-1 overflow-hidden relative bg-background" style={{ minHeight: 0 }}>
             {centerTab === "chart" && (
               <div className="w-full h-full overflow-hidden">
                 {ltp > 0 && selected ? (
                   <CandlestickChart bars={chartBars} symbol={selected.symbol} tf={tf} pp={pp} />
                 ) : (
-                  <div className="flex items-center justify-center h-full text-white/20 text-sm">
+                  <div className="flex items-center justify-center h-full text-foreground/20 text-sm">
                     Select a pair to view chart
                   </div>
                 )}
@@ -1491,11 +1491,11 @@ export default function Forex() {
           </div>
 
           {/* ── Bottom: positions / history ─────────────────────────────── */}
-          <div className="border-t border-white/8 bg-[#0c0f1a]" style={{ height: "200px" }}>
-            <div className="flex items-center gap-0 border-b border-white/8 px-3">
+          <div className="border-t border-border/60 bg-card" style={{ height: "200px" }}>
+            <div className="flex items-center gap-0 border-b border-border/60 px-3">
               <button onClick={() => setBottomTab("positions")}
                 className={cn("px-3 py-2 text-[11px] flex items-center gap-1.5 transition-colors",
-                  bottomTab === "positions" ? "text-amber-400 border-b-2 border-amber-400" : "text-white/30 hover:text-white/60")}>
+                  bottomTab === "positions" ? "text-amber-400 border-b-2 border-amber-400" : "text-foreground/30 hover:text-foreground/60")}>
                 Open Positions
                 {positions.length > 0 && (
                   <span className="bg-amber-500/20 text-amber-400 text-[9px] px-1.5 py-0.5 rounded-full">{positions.length}</span>
@@ -1503,12 +1503,12 @@ export default function Forex() {
               </button>
               <button onClick={() => setBottomTab("history")}
                 className={cn("px-3 py-2 text-[11px] flex items-center gap-1.5 transition-colors",
-                  bottomTab === "history" ? "text-amber-400 border-b-2 border-amber-400" : "text-white/30 hover:text-white/60")}>
+                  bottomTab === "history" ? "text-amber-400 border-b-2 border-amber-400" : "text-foreground/30 hover:text-foreground/60")}>
                 Order History
               </button>
               <button onClick={() => setBottomTab("mt5")}
                 className={cn("px-3 py-2 text-[11px] flex items-center gap-1.5 transition-colors",
-                  bottomTab === "mt5" ? "text-blue-400 border-b-2 border-blue-400" : "text-white/30 hover:text-white/60")}>
+                  bottomTab === "mt5" ? "text-blue-400 border-b-2 border-blue-400" : "text-foreground/30 hover:text-foreground/60")}>
                 <Terminal size={10} /> MT5
                 {connectedMt5 && (
                   <span className={cn("text-[9px] px-1.5 py-0.5 rounded-full",
@@ -1528,13 +1528,13 @@ export default function Forex() {
             <div className="overflow-y-auto" style={{ height: "152px" }}>
               {bottomTab === "positions" && (
                 !user ? (
-                  <div className="text-center py-8 text-white/20 text-xs">Login to view positions</div>
+                  <div className="text-center py-8 text-foreground/20 text-xs">Login to view positions</div>
                 ) : positions.length === 0 ? (
-                  <div className="text-center py-8 text-white/20 text-xs">No open forex positions</div>
+                  <div className="text-center py-8 text-foreground/20 text-xs">No open forex positions</div>
                 ) : (
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="text-white/25 border-b border-white/5">
+                      <tr className="text-foreground/25 border-b border-border/40">
                         {["Symbol", "Side", "Lots", "Open Price", "Current", "P&L", "Margin", "Leverage", "Time", ""].map(h => (
                           <th key={h} className="px-3 py-1.5 text-left font-medium whitespace-nowrap">{h}</th>
                         ))}
@@ -1546,7 +1546,7 @@ export default function Forex() {
                         const isProfit = pnl >= 0;
                         const pnlPips = pos.avgEntryPrice ? Math.abs(pos.currentPrice - pos.avgEntryPrice) * Math.pow(10, pp) : 0;
                         return (
-                          <tr key={pos.id} className="border-b border-white/5 hover:bg-white/3">
+                          <tr key={pos.id} className="border-b border-border/40 hover:bg-white/3">
                             <td className="px-3 py-1.5 font-semibold">{pos.symbol}</td>
                             <td className={cn("px-3 py-1.5 font-bold", pos.side === "buy" ? "text-emerald-400" : "text-red-400")}>
                               {pos.side === "buy" ? "▲ BUY" : "▼ SELL"}
@@ -1556,11 +1556,11 @@ export default function Forex() {
                             <td className="px-3 py-1.5 tabular-nums font-mono">{pos.currentPrice.toFixed(pp)}</td>
                             <td className={cn("px-3 py-1.5 font-bold tabular-nums", isProfit ? "text-emerald-400" : "text-red-400")}>
                               {isProfit ? "+" : ""}{pnl.toFixed(2)} {pos.quoteCurrency}
-                              <span className="text-white/30 font-normal ml-1">({pnlPips.toFixed(1)} pips)</span>
+                              <span className="text-foreground/30 font-normal ml-1">({pnlPips.toFixed(1)} pips)</span>
                             </td>
-                            <td className="px-3 py-1.5 tabular-nums text-white/50">{Number(pos.marginUsed).toFixed(2)}</td>
+                            <td className="px-3 py-1.5 tabular-nums text-foreground/50">{Number(pos.marginUsed).toFixed(2)}</td>
                             <td className="px-3 py-1.5 text-amber-400">{pos.leverage}×</td>
-                            <td className="px-3 py-1.5 text-white/30 whitespace-nowrap">{new Date(pos.createdAt).toLocaleTimeString()}</td>
+                            <td className="px-3 py-1.5 text-foreground/30 whitespace-nowrap">{new Date(pos.createdAt).toLocaleTimeString()}</td>
                             <td className="px-3 py-1.5">
                               <button onClick={() => closeMutation.mutate(pos.id)}
                                 disabled={closeMutation.isPending}
@@ -1578,13 +1578,13 @@ export default function Forex() {
 
               {bottomTab === "history" && (
                 !user ? (
-                  <div className="text-center py-8 text-white/20 text-xs">Login to view orders</div>
+                  <div className="text-center py-8 text-foreground/20 text-xs">Login to view orders</div>
                 ) : orders.length === 0 ? (
-                  <div className="text-center py-8 text-white/20 text-xs">No forex orders yet</div>
+                  <div className="text-center py-8 text-foreground/20 text-xs">No forex orders yet</div>
                 ) : (
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="text-white/25 border-b border-white/5">
+                      <tr className="text-foreground/25 border-b border-border/40">
                         {["Symbol", "Side", "Type", "Qty", "Fill Price", "Fee", "P&L", "Status", "Time"].map(h => (
                           <th key={h} className="px-3 py-1.5 text-left font-medium whitespace-nowrap">{h}</th>
                         ))}
@@ -1592,15 +1592,15 @@ export default function Forex() {
                     </thead>
                     <tbody>
                       {orders.map(o => (
-                        <tr key={o.id} className="border-b border-white/5 hover:bg-white/3">
+                        <tr key={o.id} className="border-b border-border/40 hover:bg-white/3">
                           <td className="px-3 py-1.5 font-semibold">{o.symbol}</td>
                           <td className={cn("px-3 py-1.5 font-bold", o.side === "buy" ? "text-emerald-400" : "text-red-400")}>
                             {o.side.toUpperCase()}
                           </td>
-                          <td className="px-3 py-1.5 text-white/40">{o.type}</td>
+                          <td className="px-3 py-1.5 text-foreground/40">{o.type}</td>
                           <td className="px-3 py-1.5 tabular-nums">{o.filledQty}/{o.qty}</td>
                           <td className="px-3 py-1.5 tabular-nums font-mono">{o.avgFillPrice ? Number(o.avgFillPrice).toFixed(pp) : "—"}</td>
-                          <td className="px-3 py-1.5 tabular-nums text-white/40">{Number(o.fee).toFixed(4)}</td>
+                          <td className="px-3 py-1.5 tabular-nums text-foreground/40">{Number(o.fee).toFixed(4)}</td>
                           <td className={cn("px-3 py-1.5 tabular-nums font-bold",
                             Number(o.pnl) >= 0 ? "text-emerald-400" : "text-red-400")}>
                             {Number(o.pnl) !== 0 ? (Number(o.pnl) >= 0 ? "+" : "") + Number(o.pnl).toFixed(2) : "—"}
@@ -1613,7 +1613,7 @@ export default function Forex() {
                               {o.status}
                             </span>
                           </td>
-                          <td className="px-3 py-1.5 text-white/30 whitespace-nowrap">
+                          <td className="px-3 py-1.5 text-foreground/30 whitespace-nowrap">
                             {new Date(o.createdAt).toLocaleTimeString()}
                           </td>
                         </tr>
@@ -1628,21 +1628,21 @@ export default function Forex() {
                 !user ? (
                   <div className="flex flex-col items-center justify-center py-8 gap-3">
                     <Terminal size={24} className="text-blue-400/30" />
-                    <div className="text-white/20 text-xs">Login to connect MT5</div>
+                    <div className="text-foreground/20 text-xs">Login to connect MT5</div>
                   </div>
                 ) : mt5Accounts.length === 0 ? (
                   /* No accounts: show broker grid CTA */
                   <div className="p-4 space-y-3">
-                    <div className="text-[10px] text-white/30 font-medium uppercase tracking-wide">Popular Brokers — Connect Free Demo</div>
+                    <div className="text-[10px] text-foreground/30 font-medium uppercase tracking-wide">Popular Brokers — Connect Free Demo</div>
                     <div className="grid grid-cols-5 gap-2">
                       {MT5_BROKERS.filter(b => b.popular).map(b => (
                         <button key={b.id} onClick={() => setShowMt5Modal(true)}
-                          className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl border border-white/8 bg-white/3 hover:bg-white/8 transition-all">
+                          className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl border border-border/60 bg-white/3 hover:bg-muted/40 transition-all">
                           <div className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold"
                             style={{ background: b.color + "22", color: b.color }}>
                             {b.label.slice(0, 2)}
                           </div>
-                          <div className="text-[10px] text-white/50 text-center leading-tight">{b.label}</div>
+                          <div className="text-[10px] text-foreground/50 text-center leading-tight">{b.label}</div>
                         </button>
                       ))}
                     </div>
@@ -1669,11 +1669,11 @@ export default function Forex() {
         </div>
 
         {/* ── RIGHT: Order panel ──────────────────────────────────────────── */}
-        <div className="w-72 border-l border-white/8 bg-[#0c0f1a] flex flex-col flex-shrink-0 overflow-y-auto">
+        <div className="w-72 border-l border-border/60 bg-card flex flex-col flex-shrink-0 overflow-y-auto">
 
           {/* Pair header */}
           {selected && ltp > 0 && (
-            <div className="px-4 pt-4 pb-3 border-b border-white/8">
+            <div className="px-4 pt-4 pb-3 border-b border-border/60">
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-2">
@@ -1683,10 +1683,10 @@ export default function Forex() {
                       {pct(changePct)}
                     </span>
                   </div>
-                  <div className="text-[10px] text-white/30 mt-0.5">{selected.name}</div>
+                  <div className="text-[10px] text-foreground/30 mt-0.5">{selected.name}</div>
                 </div>
                 <button onClick={() => setShowCalc(s => !s)}
-                  className={cn("p-1.5 rounded transition-colors", showCalc ? "bg-amber-500/20 text-amber-400" : "text-white/20 hover:text-white/50")}>
+                  className={cn("p-1.5 rounded transition-colors", showCalc ? "bg-amber-500/20 text-amber-400" : "text-foreground/20 hover:text-foreground/50")}>
                   <Calculator size={13} />
                 </button>
               </div>
@@ -1706,7 +1706,7 @@ export default function Forex() {
                   <div className="text-lg font-bold text-emerald-400 tabular-nums font-mono leading-none">{p(ask, pp)}</div>
                 </button>
               </div>
-              <div className="text-center text-[10px] text-white/25 mt-1">
+              <div className="text-center text-[10px] text-foreground/25 mt-1">
                 Spread {spreadPips.toFixed(1)} pips · {selected.exchange}
               </div>
             </div>
@@ -1715,11 +1715,11 @@ export default function Forex() {
           <div className="flex-1 p-3 space-y-3">
 
             {/* Order type */}
-            <div className="flex gap-0.5 bg-white/5 rounded-lg p-0.5">
+            <div className="flex gap-0.5 bg-muted/30 rounded-lg p-0.5">
               {(["MARKET", "LIMIT", "STOP"] as const).map(t => (
                 <button key={t} onClick={() => setOrderType(t)}
                   className={cn("flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-colors",
-                    orderType === t ? "bg-amber-500/20 text-amber-400" : "text-white/30 hover:text-white/60")}>
+                    orderType === t ? "bg-amber-500/20 text-amber-400" : "text-foreground/30 hover:text-foreground/60")}>
                   {t}
                 </button>
               ))}
@@ -1727,23 +1727,23 @@ export default function Forex() {
 
             {/* Lot size */}
             <div>
-              <div className="flex justify-between text-[10px] text-white/35 mb-1">
+              <div className="flex justify-between text-[10px] text-foreground/35 mb-1">
                 <span>Volume (lots)</span>
                 <span>Min: {selected?.minQty ?? "0.01"}</span>
               </div>
               <div className="flex gap-1">
                 <button onClick={() => setQty(q => Math.max(0.01, parseFloat(q) - 0.01).toFixed(2))}
-                  className="w-8 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-lg text-white/50 text-lg">−</button>
+                  className="w-8 h-9 flex items-center justify-center bg-muted/30 hover:bg-muted/50 rounded-lg text-foreground/50 text-lg">−</button>
                 <input type="number" value={qty} onChange={e => setQty(e.target.value)} step="0.01"
-                  className="flex-1 bg-white/5 border border-white/10 text-center text-sm font-bold rounded-lg h-9 text-white focus:border-amber-500/50 focus:outline-none tabular-nums" />
+                  className="flex-1 bg-muted/30 border border-border text-center text-sm font-bold rounded-lg h-9 text-foreground focus:border-amber-500/50 focus:outline-none tabular-nums" />
                 <button onClick={() => setQty(q => (parseFloat(q) + 0.01).toFixed(2))}
-                  className="w-8 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-lg text-white/50 text-lg">+</button>
+                  className="w-8 h-9 flex items-center justify-center bg-muted/30 hover:bg-muted/50 rounded-lg text-foreground/50 text-lg">+</button>
               </div>
               <div className="flex gap-1.5 mt-1.5">
                 {["0.01", "0.05", "0.1", "0.5", "1.0"].map(v => (
                   <button key={v} onClick={() => setQty(v)}
                     className={cn("flex-1 py-0.5 text-[10px] rounded border transition-colors",
-                      qty === v ? "border-amber-500/50 text-amber-400 bg-amber-500/10" : "border-white/10 text-white/30 hover:text-white/50")}>
+                      qty === v ? "border-amber-500/50 text-amber-400 bg-amber-500/10" : "border-border text-foreground/30 hover:text-foreground/50")}>
                     {v}
                   </button>
                 ))}
@@ -1753,22 +1753,22 @@ export default function Forex() {
             {/* Limit/Stop price */}
             {orderType !== "MARKET" && (
               <div>
-                <div className="text-[10px] text-white/35 mb-1">{orderType === "LIMIT" ? "Limit" : "Stop"} Price</div>
+                <div className="text-[10px] text-foreground/35 mb-1">{orderType === "LIMIT" ? "Limit" : "Stop"} Price</div>
                 <input type="number" value={limitPrice} onChange={e => setLimitPrice(e.target.value)}
                   placeholder={p(side === "buy" ? ask : bid, pp)}
-                  className="w-full bg-white/5 border border-white/10 px-3 h-9 text-sm font-mono rounded-lg text-white focus:border-amber-500/50 focus:outline-none" />
+                  className="w-full bg-muted/30 border border-border px-3 h-9 text-sm font-mono rounded-lg text-foreground focus:border-amber-500/50 focus:outline-none" />
               </div>
             )}
 
             {/* SL / TP */}
-            <div className="bg-white/3 rounded-xl p-3 space-y-2 border border-white/8">
+            <div className="bg-white/3 rounded-xl p-3 space-y-2 border border-border/60">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] text-white/35 font-semibold">Risk Management</span>
-                <div className="flex gap-0.5 bg-white/5 rounded-md p-0.5">
+                <span className="text-[10px] text-foreground/35 font-semibold">Risk Management</span>
+                <div className="flex gap-0.5 bg-muted/30 rounded-md p-0.5">
                   {(["pips", "price"] as const).map(m => (
                     <button key={m} onClick={() => setSlMode(m)}
                       className={cn("px-1.5 py-0.5 text-[9px] rounded transition-colors",
-                        slMode === m ? "bg-white/10 text-white" : "text-white/25")}>
+                        slMode === m ? "bg-muted/50 text-foreground" : "text-foreground/25")}>
                       {m}
                     </button>
                   ))}
@@ -1776,35 +1776,35 @@ export default function Forex() {
               </div>
 
               <div>
-                <div className="flex justify-between text-[10px] text-white/30 mb-0.5">
+                <div className="flex justify-between text-[10px] text-foreground/30 mb-0.5">
                   <span className="flex items-center gap-1"><Shield size={9} className="text-red-400" /> Stop Loss</span>
                   {slPrice && <span className="font-mono text-red-400">{p(slPrice, pp)}</span>}
                 </div>
                 <div className="flex gap-1.5">
                   <input type="number" value={stopLoss} onChange={e => setStopLoss(e.target.value)}
                     placeholder={slMode === "pips" ? "e.g. 20" : p(bid * 0.998, pp)}
-                    className="flex-1 bg-white/5 border border-red-500/20 px-2 h-8 text-xs font-mono rounded-md text-white focus:border-red-500/50 focus:outline-none" />
-                  {stopLoss && <button onClick={() => setStopLoss("")} className="text-white/20 hover:text-white/50"><X size={12} /></button>}
+                    className="flex-1 bg-muted/30 border border-red-500/20 px-2 h-8 text-xs font-mono rounded-md text-foreground focus:border-red-500/50 focus:outline-none" />
+                  {stopLoss && <button onClick={() => setStopLoss("")} className="text-foreground/20 hover:text-foreground/50"><X size={12} /></button>}
                 </div>
                 {slPnl && <div className="text-[10px] text-red-400/70 mt-0.5">Risk: −{fmtCurrency(slPnl, selected?.quoteCurrency)}</div>}
               </div>
 
               <div>
-                <div className="flex justify-between text-[10px] text-white/30 mb-0.5">
+                <div className="flex justify-between text-[10px] text-foreground/30 mb-0.5">
                   <span className="flex items-center gap-1"><Zap size={9} className="text-emerald-400" /> Take Profit</span>
                   {tpPrice && <span className="font-mono text-emerald-400">{p(tpPrice, pp)}</span>}
                 </div>
                 <div className="flex gap-1.5">
                   <input type="number" value={takeProfit} onChange={e => setTakeProfit(e.target.value)}
                     placeholder={slMode === "pips" ? "e.g. 40" : p(ask * 1.002, pp)}
-                    className="flex-1 bg-white/5 border border-emerald-500/20 px-2 h-8 text-xs font-mono rounded-md text-white focus:border-emerald-500/50 focus:outline-none" />
-                  {takeProfit && <button onClick={() => setTakeProfit("")} className="text-white/20 hover:text-white/50"><X size={12} /></button>}
+                    className="flex-1 bg-muted/30 border border-emerald-500/20 px-2 h-8 text-xs font-mono rounded-md text-foreground focus:border-emerald-500/50 focus:outline-none" />
+                  {takeProfit && <button onClick={() => setTakeProfit("")} className="text-foreground/20 hover:text-foreground/50"><X size={12} /></button>}
                 </div>
                 {tpPnl && <div className="text-[10px] text-emerald-400/70 mt-0.5">Reward: +{fmtCurrency(tpPnl, selected?.quoteCurrency)}</div>}
               </div>
 
               {stopLoss && takeProfit && slPnl && tpPnl && (
-                <div className="text-[10px] text-white/30 flex justify-between pt-1 border-t border-white/5">
+                <div className="text-[10px] text-foreground/30 flex justify-between pt-1 border-t border-border/40">
                   <span>R:R Ratio</span>
                   <span className={cn("font-semibold", tpPnl / slPnl >= 2 ? "text-emerald-400" : tpPnl / slPnl >= 1 ? "text-amber-400" : "text-red-400")}>
                     1:{(tpPnl / slPnl).toFixed(2)}
@@ -1827,7 +1827,7 @@ export default function Forex() {
                   ["Margin Req.", fmtCurrency(margin, selected?.quoteCurrency ?? "INR")],
                 ].map(([k, v]) => (
                   <div key={k} className="flex justify-between text-xs">
-                    <span className="text-white/30">{k}</span>
+                    <span className="text-foreground/30">{k}</span>
                     <span className="font-mono text-amber-300/80">{v}</span>
                   </div>
                 ))}
@@ -1847,7 +1847,7 @@ export default function Forex() {
                   </div>
                   <div>
                     <div className="text-xs font-semibold text-blue-300">Connect MetaTrader 5</div>
-                    <div className="text-[10px] text-white/25 mt-0.5">Route orders via your MT5 broker account</div>
+                    <div className="text-[10px] text-foreground/25 mt-0.5">Route orders via your MT5 broker account</div>
                   </div>
                   <PlugZap size={12} className="ml-auto text-blue-400/50" />
                 </button>
@@ -1890,7 +1890,7 @@ export default function Forex() {
                   <div className="text-xs font-semibold text-amber-300 mb-1.5 flex items-center gap-1.5">
                     <Link2 size={11} /> Connect Angel One
                   </div>
-                  <div className="text-[10px] text-white/35 mb-2.5 leading-relaxed">
+                  <div className="text-[10px] text-foreground/35 mb-2.5 leading-relaxed">
                     Link your Angel One account to execute live Forex CFD orders via our AP license.
                   </div>
                   <div className="flex gap-2">
@@ -1899,7 +1899,7 @@ export default function Forex() {
                       <Link2 size={10} /> Connect
                     </Link>
                     <Link href="/broker/onboarding"
-                      className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-white/8 hover:bg-white/12 text-white text-[11px] transition-colors">
+                      className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-muted/40 hover:bg-white/12 text-foreground text-[11px] transition-colors">
                       Open Account <ChevronRight size={10} />
                     </Link>
                   </div>
@@ -1909,11 +1909,11 @@ export default function Forex() {
 
             {/* One-click toggle */}
             {user && (
-              <div className="flex items-center justify-between text-[10px] text-white/30 px-1">
+              <div className="flex items-center justify-between text-[10px] text-foreground/30 px-1">
                 <span>One-click trading</span>
                 <button onClick={() => setOneClick(s => !s)}
                   className={cn("w-8 h-4 rounded-full transition-colors relative",
-                    oneClick ? "bg-amber-500" : "bg-white/15")}>
+                    oneClick ? "bg-amber-500" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform",
                     oneClick ? "translate-x-4" : "translate-x-0.5")} />
                 </button>
@@ -1930,7 +1930,7 @@ export default function Forex() {
                 {/* Sell button */}
                 <button onClick={() => handlePlace("sell")}
                   disabled={!selectedSymbol || !qty || placeMutation.isPending || mt5PlaceMutation.isPending}
-                  className="w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm transition-colors disabled:opacity-40 flex items-center justify-center gap-2">
+                  className="w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-foreground font-bold text-sm transition-colors disabled:opacity-40 flex items-center justify-center gap-2">
                   <TrendingDown size={14} />
                   {connectedMt5 ? "MT5 " : ""}Sell {qty} {selectedSymbol ?? "—"}
                   <span className="font-mono text-xs opacity-80">{p(bid, pp)}</span>
@@ -1939,7 +1939,7 @@ export default function Forex() {
                 {/* Buy button */}
                 <button onClick={() => handlePlace("buy")}
                   disabled={!selectedSymbol || !qty || placeMutation.isPending || mt5PlaceMutation.isPending}
-                  className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition-colors disabled:opacity-40 flex items-center justify-center gap-2">
+                  className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-foreground font-bold text-sm transition-colors disabled:opacity-40 flex items-center justify-center gap-2">
                   <TrendingUp size={14} />
                   {connectedMt5 ? "MT5 " : ""}Buy {qty} {selectedSymbol ?? "—"}
                   <span className="font-mono text-xs opacity-80">{p(ask, pp)}</span>
@@ -1957,7 +1957,7 @@ export default function Forex() {
             )}
 
             {/* Risk notice */}
-            <div className="flex items-start gap-1.5 text-[10px] text-white/20 pb-2">
+            <div className="flex items-start gap-1.5 text-[10px] text-foreground/20 pb-2">
               <AlertTriangle size={10} className="flex-shrink-0 mt-0.5 text-amber-500/40" />
               <span>
                 {connectedMt5

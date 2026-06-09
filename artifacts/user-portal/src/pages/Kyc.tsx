@@ -526,7 +526,7 @@ function LevelStatusBadge({ status }: { status: "achieved" | "pending" | "reject
     pending: { label: "Pending", cls: "bg-amber-500/15 text-amber-400 border-amber-500/30", Icon: Clock },
     rejected: { label: "Rejected", cls: "bg-rose-500/15 text-rose-400 border-rose-500/30", Icon: XCircle },
     available: { label: "Available", cls: "bg-sky-500/15 text-sky-400 border-sky-500/30", Icon: ArrowRight },
-    locked: { label: "Locked", cls: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30", Icon: Lock },
+    locked: { label: "Locked", cls: "bg-zinc-500/15 text-muted-foreground border-zinc-500/30", Icon: Lock },
   };
   const m = map[status];
   const Icon = m.Icon;

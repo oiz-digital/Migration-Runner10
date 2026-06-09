@@ -221,7 +221,7 @@ function RankBadge({ rank }: { rank: number }) {
     return <span className="inline-flex h-7 w-7 rounded-full bg-amber-500/20 text-amber-400 font-bold text-xs items-center justify-center">🥇</span>;
   }
   if (rank === 2) {
-    return <span className="inline-flex h-7 w-7 rounded-full bg-zinc-400/20 text-zinc-300 font-bold text-xs items-center justify-center">🥈</span>;
+    return <span className="inline-flex h-7 w-7 rounded-full bg-zinc-400/20 text-foreground/80 font-bold text-xs items-center justify-center">🥈</span>;
   }
   if (rank === 3) {
     return <span className="inline-flex h-7 w-7 rounded-full bg-orange-500/20 text-orange-400 font-bold text-xs items-center justify-center">🥉</span>;

@@ -132,20 +132,20 @@ export default function SupportChatWidget() {
           <Bot className="h-6 w-6 group-hover:rotate-12 transition-transform duration-200" />
         </button>
         {open && (
-          <div className="fixed bottom-6 right-6 z-50 w-80 rounded-2xl border border-white/10 bg-[#0d0f16] shadow-2xl shadow-black/60 overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/8 bg-gradient-to-r from-amber-500/15 to-transparent">
+          <div className="fixed bottom-6 right-6 z-50 w-80 rounded-2xl border border-border bg-card shadow-2xl shadow-foreground/10 overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 bg-gradient-to-r from-amber-500/15 to-transparent">
               <div className="flex items-center gap-2.5">
                 <div className="h-9 w-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-black shadow-lg">
                   <Bot className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="font-semibold text-sm text-white leading-none mb-0.5">Zara · AI Support</div>
+                  <div className="font-semibold text-sm text-foreground leading-none mb-0.5">Zara · AI Support</div>
                   <div className="text-[10px] text-emerald-400 flex items-center gap-1 leading-none">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" /> Online
                   </div>
                 </div>
               </div>
-              <button onClick={() => setOpen(false)} className="h-7 w-7 rounded-md hover:bg-white/8 flex items-center justify-center text-zinc-500 hover:text-zinc-300 transition-colors">
+              <button onClick={() => setOpen(false)} className="h-7 w-7 rounded-md hover:bg-muted/60 flex items-center justify-center text-muted-foreground hover:text-foreground/80 transition-colors">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -153,8 +153,8 @@ export default function SupportChatWidget() {
               <div className="h-12 w-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-3">
                 <Bot className="h-6 w-6 text-amber-400" />
               </div>
-              <p className="text-sm text-zinc-300 font-medium mb-1">Sign in to chat with Zara</p>
-              <p className="text-xs text-zinc-500 mb-4">Get instant AI support for KYC, deposits, withdrawals, and more.</p>
+              <p className="text-sm text-foreground/80 font-medium mb-1">Sign in to chat with Zara</p>
+              <p className="text-xs text-muted-foreground mb-4">Get instant AI support for KYC, deposits, withdrawals, and more.</p>
               <Link
                 href="/login"
                 onClick={() => setOpen(false)}
@@ -217,7 +217,7 @@ export default function SupportChatWidget() {
         >
           <Bot className="h-6 w-6 group-hover:rotate-12 transition-transform duration-200" />
           {hasUnread && unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-rose-500 border-2 border-white text-white text-[10px] font-bold flex items-center justify-center animate-bounce">
+            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-rose-500 border-2 border-background text-white text-[10px] font-bold flex items-center justify-center animate-bounce">
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}
@@ -228,22 +228,22 @@ export default function SupportChatWidget() {
       {open && (
         <div
           className={cn(
-            "fixed bottom-6 right-6 z-50 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)] rounded-2xl border border-white/10 bg-[#0d0f16] shadow-2xl shadow-black/60 flex flex-col overflow-hidden transition-all duration-200",
+            "fixed bottom-6 right-6 z-50 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)] rounded-2xl border border-border bg-card shadow-2xl shadow-foreground/10 flex flex-col overflow-hidden transition-all duration-200",
             panelW, panelH,
           )}
           data-testid="floating-chat-panel"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/8 bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent flex-shrink-0">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent flex-shrink-0">
             <div className="flex items-center gap-2.5">
               <div className="relative">
                 <div className="h-9 w-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-black shadow-lg shadow-amber-500/30">
                   <Bot className="h-5 w-5" />
                 </div>
-                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-[#0d0f16]" />
+                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-card" />
               </div>
               <div>
-                <div className="font-semibold text-sm text-white leading-none mb-0.5">Zara · AI Support</div>
+                <div className="font-semibold text-sm text-foreground leading-none mb-0.5">Zara · AI Support</div>
                 <div className="text-[10px] text-emerald-400 flex items-center gap-1 leading-none">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   Online · typically replies instantly
@@ -257,21 +257,21 @@ export default function SupportChatWidget() {
               </div>
               <button
                 onClick={clearChat}
-                className="h-7 w-7 rounded-md hover:bg-white/8 flex items-center justify-center text-zinc-500 hover:text-zinc-300 transition-colors"
+                className="h-7 w-7 rounded-md hover:bg-muted/60 flex items-center justify-center text-muted-foreground hover:text-foreground/80 transition-colors"
                 title="Clear chat"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
               </button>
               <button
                 onClick={() => setExpanded((v) => !v)}
-                className="h-7 w-7 rounded-md hover:bg-white/8 hidden sm:flex items-center justify-center text-zinc-500 hover:text-zinc-300 transition-colors"
+                className="h-7 w-7 rounded-md hover:bg-muted/60 hidden sm:flex items-center justify-center text-muted-foreground hover:text-foreground/80 transition-colors"
                 title={expanded ? "Collapse" : "Expand"}
               >
                 {expanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
               </button>
               <button
                 onClick={() => setOpen(false)}
-                className="h-7 w-7 rounded-md hover:bg-white/8 flex items-center justify-center text-zinc-500 hover:text-zinc-300 transition-colors"
+                className="h-7 w-7 rounded-md hover:bg-muted/60 flex items-center justify-center text-muted-foreground hover:text-foreground/80 transition-colors"
                 aria-label="Close chat"
                 data-testid="floating-chat-close"
               >
@@ -309,7 +309,7 @@ export default function SupportChatWidget() {
                   <button
                     key={q}
                     onClick={() => send(q)}
-                    className="text-[11px] px-2.5 py-1 rounded-full border border-zinc-800 hover:border-amber-500/50 hover:bg-amber-500/8 hover:text-amber-300 text-zinc-400 transition-all duration-150"
+                    className="text-[11px] px-2.5 py-1 rounded-full border border-border hover:border-amber-500/50 hover:bg-amber-500/8 hover:text-amber-300 text-muted-foreground transition-all duration-150"
                     data-testid={`floating-quick-${q.slice(0, 8)}`}
                   >
                     {q}
@@ -320,7 +320,7 @@ export default function SupportChatWidget() {
           )}
 
           {/* Input */}
-          <div className="flex-shrink-0 border-t border-white/8 bg-[#0a0c12]/80 px-3 py-2.5">
+          <div className="flex-shrink-0 border-t border-border/50 bg-card/90 px-3 py-2.5">
             <form
               onSubmit={(e) => { e.preventDefault(); send(input); }}
               className="flex items-end gap-2"
@@ -334,7 +334,7 @@ export default function SupportChatWidget() {
                 }}
                 placeholder="Ask anything…"
                 rows={1}
-                className="min-h-[36px] max-h-28 resize-none bg-zinc-900/80 border-zinc-800 text-sm text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-amber-500/30 focus-visible:border-amber-500/40 rounded-xl"
+                className="min-h-[36px] max-h-28 resize-none bg-card/80 border-border text-sm text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-amber-500/30 focus-visible:border-amber-500/40 rounded-xl"
                 disabled={sending}
                 data-testid="floating-chat-input"
               />
@@ -383,8 +383,8 @@ function MessageBubble({ msg, copied, onCopy }: { msg: Msg; copied: boolean; onC
             "px-3.5 py-2.5 rounded-2xl text-[13px] leading-relaxed",
             isAi
               ? cn(
-                  "bg-zinc-900 border rounded-tl-sm text-zinc-100",
-                  msg.error ? "border-rose-500/30 bg-rose-950/20" : "border-zinc-800",
+                  "bg-card border rounded-tl-sm text-zinc-100",
+                  msg.error ? "border-rose-500/30 bg-rose-950/20" : "border-border",
                 )
               : "bg-gradient-to-br from-amber-400 to-orange-500 text-black font-medium rounded-tr-sm shadow-md shadow-amber-500/10",
           )}
@@ -396,7 +396,7 @@ function MessageBubble({ msg, copied, onCopy }: { msg: Msg; copied: boolean; onC
           {isAi && (
             <button
               onClick={onCopy}
-              className="opacity-0 group-hover:opacity-100 transition-opacity text-zinc-600 hover:text-zinc-400"
+              className="opacity-0 group-hover:opacity-100 transition-opacity text-zinc-600 hover:text-muted-foreground"
               title="Copy"
             >
               {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
@@ -405,7 +405,7 @@ function MessageBubble({ msg, copied, onCopy }: { msg: Msg; copied: boolean; onC
         </div>
       </div>
       {!isAi && (
-        <div className="h-7 w-7 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center flex-shrink-0 mt-0.5 text-[10px] font-bold text-zinc-400">
+        <div className="h-7 w-7 rounded-full bg-muted border border-border flex items-center justify-center flex-shrink-0 mt-0.5 text-[10px] font-bold text-muted-foreground">
           U
         </div>
       )}
@@ -419,7 +419,7 @@ function TypingIndicator() {
       <div className="h-7 w-7 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-black flex-shrink-0 shadow-md shadow-amber-500/20">
         <Bot className="h-3.5 w-3.5" />
       </div>
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl rounded-tl-sm px-4 py-3">
+      <div className="bg-card border border-border rounded-2xl rounded-tl-sm px-4 py-3">
         <div className="flex gap-1.5 items-center">
           <span className="h-2 w-2 rounded-full bg-amber-400/60 animate-bounce" style={{ animationDelay: "0ms" }} />
           <span className="h-2 w-2 rounded-full bg-amber-400/60 animate-bounce" style={{ animationDelay: "160ms" }} />

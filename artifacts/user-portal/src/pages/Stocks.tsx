@@ -145,7 +145,7 @@ const SECTOR_COLORS: Record<string, string> = {
   Banking: "text-green-400",
   Finance: "text-emerald-400",
   Automobile: "text-orange-400",
-  Metals: "text-gray-400",
+  Metals: "text-muted-foreground",
   Conglomerate: "text-purple-400",
   Energy: "text-yellow-400",
 };
@@ -275,22 +275,22 @@ export default function Stocks() {
             NSE India & US NASDAQ stocks — Reliance, TCS, AAPL, NVDA and more. Coming soon to Zebvix.
           </p>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-800/60 border border-zinc-700/50">
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/60 border border-border/50">
           <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-          <span className="text-xs text-zinc-400 font-medium">Launching soon on Zebvix</span>
+          <span className="text-xs text-muted-foreground font-medium">Launching soon on Zebvix</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0b0e17] text-white">
-      <div className="border-b border-white/10 bg-[#0d1117] px-4 py-3 flex items-center gap-3">
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="border-b border-border bg-card px-4 py-3 flex items-center gap-3">
         <Building2 className="w-5 h-5 text-blue-400" />
         <span className="font-bold text-lg tracking-tight">Stocks</span>
         <Badge variant="outline" className="border-blue-400/40 text-blue-400 text-[10px]">NSE · NASDAQ</Badge>
         <div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
-          <button onClick={() => refetch()} className="hover:text-white transition-colors flex items-center gap-1">
+          <button onClick={() => refetch()} className="hover:text-foreground transition-colors flex items-center gap-1">
             <RefreshCw className="w-3.5 h-3.5" /> Refresh
           </button>
           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />Live</span>
@@ -299,21 +299,21 @@ export default function Stocks() {
 
       <div className="flex h-[calc(100vh-112px)] overflow-hidden">
         {/* Sidebar */}
-        <div className="w-64 border-r border-white/10 bg-[#0d1117] flex flex-col">
-          <div className="p-2 border-b border-white/10 space-y-2">
+        <div className="w-64 border-r border-border bg-card flex flex-col">
+          <div className="p-2 border-b border-border space-y-2">
             <div className="relative">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
               <input
                 type="text" value={search} onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search stocks..."
-                className="w-full bg-white/5 border border-white/10 rounded text-xs pl-7 pr-3 py-1.5 text-white placeholder-muted-foreground focus:outline-none focus:border-blue-500/50"
+                className="w-full bg-muted/30 border border-border rounded text-xs pl-7 pr-3 py-1.5 text-foreground placeholder-muted-foreground focus:outline-none focus:border-blue-500/50"
               />
             </div>
             <div className="flex gap-1">
               {(["all", "IN", "US"] as const).map((c) => (
                 <button key={c} onClick={() => setCountry(c)}
                   className={cn("flex-1 text-[11px] py-1 rounded flex items-center justify-center gap-1 transition-colors",
-                    country === c ? "bg-blue-500/20 text-blue-400 font-semibold" : "text-muted-foreground hover:text-white",
+                    country === c ? "bg-blue-500/20 text-blue-400 font-semibold" : "text-muted-foreground hover:text-foreground",
                   )}>
                   {c === "IN" ? "🇮🇳" : c === "US" ? "🇺🇸" : "🌐"} {c === "all" ? "All" : c}
                 </button>
@@ -324,7 +324,7 @@ export default function Stocks() {
           <div className="flex-1 overflow-y-auto">
             {isLoading ? (
               Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="px-3 py-2.5 border-b border-white/5">
+                <div key={i} className="px-3 py-2.5 border-b border-border/40">
                   <Skeleton className="h-4 w-20 mb-1" /><Skeleton className="h-3 w-28" />
                 </div>
               ))
@@ -337,7 +337,7 @@ export default function Stocks() {
               const currency = inst.quoteCurrency;
               return (
                 <button key={inst.symbol} onClick={() => setSelectedSymbol(inst.symbol)}
-                  className={cn("w-full px-3 py-2.5 border-b border-white/5 text-left hover:bg-white/5 transition-colors",
+                  className={cn("w-full px-3 py-2.5 border-b border-border/40 text-left hover:bg-muted/30 transition-colors",
                     isActive && "bg-blue-500/10 border-l-2 border-l-blue-500")}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
@@ -364,7 +364,7 @@ export default function Stocks() {
         {/* Main */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {selected && (
-            <div className="border-b border-white/10 bg-[#0d1117] px-4 py-2.5 flex items-center gap-6 flex-shrink-0 flex-wrap">
+            <div className="border-b border-border bg-card px-4 py-2.5 flex items-center gap-6 flex-shrink-0 flex-wrap">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-base font-bold">{selected.symbol}</span>
@@ -382,18 +382,18 @@ export default function Stocks() {
                 <div className={cn("text-xs", changePct >= 0 ? "text-emerald-400" : "text-red-400")}>{fmtChange(changePct)}</div>
               </div>
               <div className="text-xs space-y-0.5">
-                <div className="text-muted-foreground">High <span className="text-white">{fmtPrice(Number(selected.high24h), 2, selected.quoteCurrency)}</span></div>
-                <div className="text-muted-foreground">Low <span className="text-white">{fmtPrice(Number(selected.low24h), 2, selected.quoteCurrency)}</span></div>
+                <div className="text-muted-foreground">High <span className="text-foreground">{fmtPrice(Number(selected.high24h), 2, selected.quoteCurrency)}</span></div>
+                <div className="text-muted-foreground">Low <span className="text-foreground">{fmtPrice(Number(selected.low24h), 2, selected.quoteCurrency)}</span></div>
               </div>
               <div className="text-xs space-y-0.5">
-                <div className="text-muted-foreground">Volume <span className="text-white">{Number(selected.volume24h) > 0 ? Number(selected.volume24h).toLocaleString("en-IN") : "—"}</span></div>
-                <div className="text-muted-foreground">Country <span className="text-white">{selected.countryCode === "IN" ? "🇮🇳 India" : "🇺🇸 USA"}</span></div>
+                <div className="text-muted-foreground">Volume <span className="text-foreground">{Number(selected.volume24h) > 0 ? Number(selected.volume24h).toLocaleString("en-IN") : "—"}</span></div>
+                <div className="text-muted-foreground">Country <span className="text-foreground">{selected.countryCode === "IN" ? "🇮🇳 India" : "🇺🇸 USA"}</span></div>
               </div>
             </div>
           )}
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-            <TabsList className="border-b border-white/10 bg-transparent rounded-none px-4 flex-shrink-0 justify-start h-10">
+            <TabsList className="border-b border-border bg-transparent rounded-none px-4 flex-shrink-0 justify-start h-10">
               <TabsTrigger value="chart" className="data-[state=active]:border-b-2 data-[state=active]:border-blue-400 rounded-none text-xs">Chart</TabsTrigger>
               <TabsTrigger value="positions" className="data-[state=active]:border-b-2 data-[state=active]:border-blue-400 rounded-none text-xs">
                 Positions {positions.length > 0 && <Badge className="ml-1 bg-blue-500/20 text-blue-400 text-[10px]">{positions.length}</Badge>}
@@ -403,7 +403,7 @@ export default function Stocks() {
 
             <TabsContent value="chart" className="flex-1 overflow-auto m-0">
               {selected ? (
-                <div className="bg-[#0b0e17] border-b border-white/10">
+                <div className="bg-background border-b border-border">
                   <div className="flex items-center justify-between px-3 pt-2 pb-1">
                     <div className="flex gap-1">
                       {(["M5", "M15", "H1", "H4", "D1"] as TF[]).map((t) => (
@@ -411,18 +411,18 @@ export default function Stocks() {
                           key={t}
                           onClick={() => setTf(t)}
                           className={cn("px-2 py-0.5 rounded text-[10px] font-semibold transition-colors",
-                            tf === t ? "bg-blue-500 text-white" : "text-white/40 hover:text-white/70")}
+                            tf === t ? "bg-blue-500 text-foreground" : "text-foreground/40 hover:text-foreground/70")}
                         >{t}</button>
                       ))}
                     </div>
-                    <span className="text-[10px] text-white/30">Simulated OHLC · {selected.exchange}</span>
+                    <span className="text-[10px] text-foreground/30">Simulated OHLC · {selected.exchange}</span>
                   </div>
                   <div className="px-2 pb-1">
                     <CandlestickChart bars={bars} symbol={selected.symbol} tf={tf} pp={selected.pricePrecision} />
                   </div>
                 </div>
               ) : (
-                <div className="h-72 bg-[#0b0e17] border-b border-white/10 flex items-center justify-center">
+                <div className="h-72 bg-background border-b border-border flex items-center justify-center">
                   <div className="text-center">
                     <BarChart3 className="w-10 h-10 text-blue-400/20 mx-auto mb-2" />
                     <p className="text-sm text-muted-foreground">Select an instrument to view chart</p>
@@ -431,7 +431,7 @@ export default function Stocks() {
               )}
               {selected && (
                 <div className="p-4 grid grid-cols-2 gap-3 text-xs">
-                  <div className="col-span-2 text-sm font-semibold text-white/80 mb-1">Instrument Details</div>
+                  <div className="col-span-2 text-sm font-semibold text-foreground/80 mb-1">Instrument Details</div>
                   {[
                     ["Exchange", selected.exchange],
                     ["Quote Currency", selected.quoteCurrency],
@@ -440,7 +440,7 @@ export default function Stocks() {
                     ["Taker Fee", `${(Number(selected.takerFee) * 100).toFixed(3)}%`],
                     ["Sector", selected.sector ?? "—"],
                   ].map(([label, val]) => (
-                    <div key={label} className="bg-white/5 rounded p-2.5">
+                    <div key={label} className="bg-muted/30 rounded p-2.5">
                       <div className="text-muted-foreground mb-1">{label}</div>
                       <div className="font-semibold">{val}</div>
                     </div>
@@ -460,7 +460,7 @@ export default function Stocks() {
                     const pnl = Number(p.unrealizedPnl ?? 0);
                     const isProfit = pnl >= 0;
                     return (
-                      <div key={p.id} className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-4">
+                      <div key={p.id} className="bg-muted/30 border border-border rounded-lg p-3 flex items-center gap-4">
                         <div>
                           <div className="font-bold text-sm">{p.symbol}</div>
                           <Badge variant="outline" className={cn("text-[10px] mt-0.5", p.side === "buy" ? "border-emerald-500/40 text-emerald-400" : "border-red-500/40 text-red-400")}>
@@ -468,12 +468,12 @@ export default function Stocks() {
                           </Badge>
                         </div>
                         <div className="text-xs space-y-0.5">
-                          <div className="text-muted-foreground">Shares <span className="text-white">{p.qty}</span></div>
-                          <div className="text-muted-foreground">Entry <span className="text-white">{fmtPrice(Number(p.avgEntryPrice), 2, p.quoteCurrency)}</span></div>
+                          <div className="text-muted-foreground">Shares <span className="text-foreground">{p.qty}</span></div>
+                          <div className="text-muted-foreground">Entry <span className="text-foreground">{fmtPrice(Number(p.avgEntryPrice), 2, p.quoteCurrency)}</span></div>
                         </div>
                         <div className="text-xs space-y-0.5">
-                          <div className="text-muted-foreground">LTP <span className="text-white">{fmtPrice(Number(p.currentPrice), 2, p.quoteCurrency)}</span></div>
-                          <div className="text-muted-foreground">Margin <span className="text-white">{fmtPrice(Number(p.marginUsed), 2, p.quoteCurrency)}</span></div>
+                          <div className="text-muted-foreground">LTP <span className="text-foreground">{fmtPrice(Number(p.currentPrice), 2, p.quoteCurrency)}</span></div>
+                          <div className="text-muted-foreground">Margin <span className="text-foreground">{fmtPrice(Number(p.marginUsed), 2, p.quoteCurrency)}</span></div>
                         </div>
                         <div className="ml-auto text-right">
                           <div className={cn("font-bold text-sm", isProfit ? "text-emerald-400" : "text-red-400")}>
@@ -502,7 +502,7 @@ export default function Stocks() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-white/10 text-muted-foreground">
+                      <tr className="border-b border-border text-muted-foreground">
                         <th className="text-left py-2 px-2">Symbol</th>
                         <th className="text-left py-2 px-2">Side</th>
                         <th className="text-right py-2 px-2">Qty</th>
@@ -513,7 +513,7 @@ export default function Stocks() {
                     </thead>
                     <tbody>
                       {orders.map((o) => (
-                        <tr key={o.id} className="border-b border-white/5">
+                        <tr key={o.id} className="border-b border-border/40">
                           <td className="py-2 px-2 font-medium">{o.symbol}</td>
                           <td className={cn("py-2 px-2 font-semibold", o.side === "buy" ? "text-emerald-400" : "text-red-400")}>{o.side.toUpperCase()}</td>
                           <td className="py-2 px-2 text-right tabular-nums">{o.filledQty}/{o.qty}</td>
@@ -537,22 +537,22 @@ export default function Stocks() {
         </div>
 
         {/* Order form */}
-        <div className="w-72 border-l border-white/10 bg-[#0d1117] p-4 flex flex-col gap-4 overflow-y-auto flex-shrink-0">
+        <div className="w-72 border-l border-border bg-card p-4 flex flex-col gap-4 overflow-y-auto flex-shrink-0">
           <div className="text-sm font-semibold">Place Order</div>
-          <div className="flex rounded-lg overflow-hidden border border-white/10">
-            <button onClick={() => setSide("buy")} className={cn("flex-1 py-2 text-sm font-semibold transition-colors", side === "buy" ? "bg-emerald-600 text-white" : "text-muted-foreground hover:text-white")}>Buy</button>
-            <button onClick={() => setSide("sell")} className={cn("flex-1 py-2 text-sm font-semibold transition-colors", side === "sell" ? "bg-red-600 text-white" : "text-muted-foreground hover:text-white")}>Sell</button>
+          <div className="flex rounded-lg overflow-hidden border border-border">
+            <button onClick={() => setSide("buy")} className={cn("flex-1 py-2 text-sm font-semibold transition-colors", side === "buy" ? "bg-emerald-600 text-foreground" : "text-muted-foreground hover:text-foreground")}>Buy</button>
+            <button onClick={() => setSide("sell")} className={cn("flex-1 py-2 text-sm font-semibold transition-colors", side === "sell" ? "bg-red-600 text-foreground" : "text-muted-foreground hover:text-foreground")}>Sell</button>
           </div>
           <div className="flex gap-1">
             {(["MARKET", "LIMIT"] as const).map((t) => (
               <button key={t} onClick={() => setOrderType(t)}
-                className={cn("flex-1 py-1 text-xs rounded transition-colors", orderType === t ? "bg-blue-500/20 text-blue-400 font-semibold" : "text-muted-foreground hover:text-white")}>
+                className={cn("flex-1 py-1 text-xs rounded transition-colors", orderType === t ? "bg-blue-500/20 text-blue-400 font-semibold" : "text-muted-foreground hover:text-foreground")}>
                 {t}
               </button>
             ))}
           </div>
           {selected && (
-            <div className="bg-white/5 rounded p-2 text-xs">
+            <div className="bg-muted/30 rounded p-2 text-xs">
               <div className="font-bold">{selected.symbol}</div>
               <div className={cn("font-semibold", changePct >= 0 ? "text-emerald-400" : "text-red-400")}>
                 {fmtPrice(ltp, 2, selected.quoteCurrency)} {fmtChange(changePct)}
@@ -570,13 +570,13 @@ export default function Stocks() {
           <div>
             <label className="text-xs text-muted-foreground block mb-1">Quantity (shares)</label>
             <Input type="number" value={qty} onChange={(e) => setQty(e.target.value)} placeholder="0"
-              className="bg-white/5 border-white/20 text-sm h-9" />
+              className="bg-muted/30 border-white/20 text-sm h-9" />
           </div>
           {orderType === "LIMIT" && (
             <div>
               <label className="text-xs text-muted-foreground block mb-1">Limit Price</label>
               <Input type="number" value={limitPrice} onChange={(e) => setLimitPrice(e.target.value)}
-                placeholder={ltp.toFixed(2)} className="bg-white/5 border-white/20 text-sm h-9" />
+                placeholder={ltp.toFixed(2)} className="bg-muted/30 border-white/20 text-sm h-9" />
             </div>
           )}
           {notional > 0 && (
@@ -620,11 +620,11 @@ export default function Stocks() {
                 </div>
                 <div className="flex gap-2">
                   <Link href="/broker/onboarding"
-                    className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold transition-colors">
+                    className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded bg-blue-500 hover:bg-blue-600 text-foreground text-xs font-bold transition-colors">
                     <Link2 className="w-3 h-3" /> Connect
                   </Link>
                   <Link href="/broker/onboarding"
-                    className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded bg-white/10 hover:bg-white/15 text-white text-xs transition-colors">
+                    className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded bg-muted/50 hover:bg-muted/60 text-foreground text-xs transition-colors">
                     Open Account <ChevronRight className="w-3 h-3" />
                   </Link>
                 </div>
@@ -633,7 +633,7 @@ export default function Stocks() {
           )}
 
           {!user ? (
-            <Button className="bg-blue-500 hover:bg-blue-600 text-white font-bold" asChild><a href="/login">Login to Trade</a></Button>
+            <Button className="bg-blue-500 hover:bg-blue-600 text-foreground font-bold" asChild><a href="/login">Login to Trade</a></Button>
           ) : (
             <Button onClick={handlePlace} disabled={!selectedSymbol || !qty || placeMutation.isPending}
               className={cn("font-bold", side === "buy" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-red-600 hover:bg-red-700")}>

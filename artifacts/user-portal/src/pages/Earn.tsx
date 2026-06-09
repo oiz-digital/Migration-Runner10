@@ -654,7 +654,7 @@ function StatusBadge({ status, matured }: { status: string; matured?: boolean })
   if (status === "active" && matured) return <Badge className="bg-emerald-500/15 text-emerald-400 border-transparent text-[9px]">MATURED</Badge>;
   if (status === "active") return <Badge className="bg-sky-500/15 text-sky-400 border-transparent text-[9px]">ACTIVE</Badge>;
   if (status === "matured") return <Badge className="bg-emerald-500/15 text-emerald-400 border-transparent text-[9px]">MATURED</Badge>;
-  if (status === "redeemed") return <Badge className="bg-zinc-500/15 text-zinc-400 border-transparent text-[9px]">REDEEMED</Badge>;
+  if (status === "redeemed") return <Badge className="bg-zinc-500/15 text-muted-foreground border-transparent text-[9px]">REDEEMED</Badge>;
   if (status === "early_redeemed") return <Badge className="bg-amber-500/15 text-amber-400 border-transparent text-[9px]">EARLY EXIT</Badge>;
   if (status === "cancelled") return <Badge className="bg-rose-500/15 text-rose-400 border-transparent text-[9px]">CANCELLED</Badge>;
   return <Badge variant="outline" className="text-[9px]">{status.toUpperCase()}</Badge>;

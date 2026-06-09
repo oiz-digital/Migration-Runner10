@@ -509,7 +509,7 @@ export function AppHeader() {
                 item.badgeTone === "new"
                   ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20"
                   : item.badgeTone === "soon"
-                  ? "bg-zinc-500/15 text-zinc-400 border-zinc-500/30 hover:bg-zinc-500/20"
+                  ? "bg-zinc-500/15 text-muted-foreground border-zinc-500/30 hover:bg-zinc-500/20"
                   : "bg-rose-500/15 text-rose-400 border-rose-500/30 hover:bg-rose-500/20";
               const triggerCls = `relative ${visibility} items-center gap-1.5 px-2 xl:px-3 h-9 rounded-md font-medium whitespace-nowrap transition-colors ${
                 active
@@ -553,7 +553,7 @@ export function AppHeader() {
                             sub.badgeTone === "hot"
                               ? "bg-rose-500/15 text-rose-400 border-rose-500/30"
                               : sub.badgeTone === "soon"
-                              ? "bg-zinc-500/15 text-zinc-400 border-zinc-500/30"
+                              ? "bg-zinc-500/15 text-muted-foreground border-zinc-500/30"
                               : "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
                           return (
                             <DropdownMenuItem key={sub.href} asChild>

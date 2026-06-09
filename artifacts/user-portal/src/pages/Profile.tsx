@@ -36,7 +36,7 @@ type WalletItem = { type: string; currency: string; balance: number; inOrder: nu
 type ReferStats = { referralCode: string; referredCount: number; referredKycCount: number; estimatedEarnings: number; recent: Array<{ id: number; name: string; kycLevel: number; createdAt: string }> };
 
 const KYC_BENEFITS = [
-  { level: 0, label: "Unverified", color: "bg-zinc-500/20 text-zinc-300", desc: "Browse markets only" },
+  { level: 0, label: "Unverified", color: "bg-zinc-500/20 text-foreground/80", desc: "Browse markets only" },
   { level: 1, label: "Basic", color: "bg-sky-500/20 text-sky-400", desc: "Deposit & trade up to ₹1L/day" },
   { level: 2, label: "Intermediate", color: "bg-amber-500/20 text-amber-400", desc: "Withdraw, advanced earn up to ₹10L/day" },
   { level: 3, label: "Advanced", color: "bg-emerald-500/20 text-emerald-400", desc: "Full limits + futures + margin" },

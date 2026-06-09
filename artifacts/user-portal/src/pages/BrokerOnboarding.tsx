@@ -33,7 +33,7 @@ const KYC_DOCS = [
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { color: string; label: string; icon: any }> = {
-    draft: { color: "text-gray-400 bg-gray-800", label: "Draft", icon: Circle },
+    draft: { color: "text-muted-foreground bg-muted", label: "Draft", icon: Circle },
     submitted: { color: "text-blue-400 bg-blue-900/30", label: "Under Review", icon: Clock },
     under_review: { color: "text-yellow-400 bg-yellow-900/30", label: "Under Review", icon: Clock },
     approved: { color: "text-green-400 bg-green-900/30", label: "Approved", icon: CheckCircle },
@@ -124,10 +124,10 @@ function ConnectExistingAccount({ account, onConnected }: { account: any; onConn
                 <div className="text-green-400 font-bold text-sm flex items-center gap-2">
                   Angel One Account Connected
                   {simulated
-                    ? <span className="text-xs font-normal text-gray-400 bg-gray-800 px-2 py-0.5 rounded-full">Simulated</span>
+                    ? <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">Simulated</span>
                     : <span className="text-xs font-normal text-green-300 bg-green-900/30 px-2 py-0.5 rounded-full flex items-center gap-1"><Wifi size={10} />Live</span>}
                 </div>
-                <div className="text-white font-semibold mt-0.5">{account.fullName ?? "Account Holder"}</div>
+                <div className="text-foreground font-semibold mt-0.5">{account.fullName ?? "Account Holder"}</div>
               </div>
             </div>
             <button onClick={() => disconnectMutation.mutate()}
@@ -145,19 +145,19 @@ function ConnectExistingAccount({ account, onConnected }: { account: any; onConn
               { label: "Token", value: tokenData?.tokenValid ? "Valid" : "Expiring", color: tokenData?.tokenValid ? "text-green-400" : "text-yellow-400" },
             ].map(item => (
               <div key={item.label} className="bg-black/30 rounded-xl p-3">
-                <div className="text-xs text-gray-400 mb-1">{item.label}</div>
-                <div className={`text-sm font-bold font-mono ${item.color ?? "text-[#d4a017]"}`}>{item.value ?? "—"}</div>
+                <div className="text-xs text-muted-foreground mb-1">{item.label}</div>
+                <div className={`text-sm font-bold font-mono ${item.color ?? "text-primary"}`}>{item.value ?? "—"}</div>
               </div>
             ))}
           </div>
 
           {tokenData && (
-            <div className="flex items-center justify-between mt-3 text-xs text-gray-400">
+            <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
               <span>
                 Token expires: {tokenData.expiresAt ? new Date(tokenData.expiresAt).toLocaleString("en-IN") : "—"}
                 {tokenData.expiresInMinutes > 0 && ` (${Math.floor(tokenData.expiresInMinutes / 60)}h ${tokenData.expiresInMinutes % 60}m)`}
               </span>
-              <button onClick={() => refreshToken()} className="flex items-center gap-1 text-[#d4a017] hover:text-[#b8860b]">
+              <button onClick={() => refreshToken()} className="flex items-center gap-1 text-primary hover:text-primary/80">
                 <RefreshCw size={10} /> Refresh
               </button>
             </div>
@@ -170,11 +170,11 @@ function ConnectExistingAccount({ account, onConnected }: { account: any; onConn
             <WifiOff size={16} className="text-yellow-400 flex-shrink-0 mt-0.5" />
             <div>
               <div className="text-yellow-300 font-semibold text-sm">Running in Simulated Mode</div>
-              <div className="text-gray-400 text-xs mt-1">
+              <div className="text-muted-foreground text-xs mt-1">
                 Orders are filled using live price data but not sent to Angel One. To enable live trading,
                 provide your Angel One SmartAPI key below and reconnect.
               </div>
-              <button onClick={() => setShowAdvanced(true)} className="text-[#d4a017] text-xs hover:underline mt-1.5 inline-block">
+              <button onClick={() => setShowAdvanced(true)} className="text-primary text-xs hover:underline mt-1.5 inline-block">
                 Add API Key for Live Trading →
               </button>
             </div>
@@ -182,32 +182,32 @@ function ConnectExistingAccount({ account, onConnected }: { account: any; onConn
         )}
 
         {simulated && showAdvanced && (
-          <div className="bg-[#0d0d0d] border border-[#2a2a2a] rounded-xl p-4 space-y-3">
-            <div className="text-sm font-semibold text-white mb-2">Reconnect with SmartAPI Key</div>
+          <div className="bg-background border border-border rounded-xl p-4 space-y-3">
+            <div className="text-sm font-semibold text-foreground mb-2">Reconnect with SmartAPI Key</div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">SmartAPI Key <span className="text-gray-600">(from smartapi.angelbroking.com)</span></label>
+              <label className="block text-xs text-muted-foreground mb-1">SmartAPI Key <span className="text-muted-foreground/60">(from smartapi.angelbroking.com)</span></label>
               <input value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="Your Angel One SmartAPI key"
-                className="w-full bg-[#111] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-white text-sm font-mono focus:border-[#d4a017] focus:outline-none" />
+                className="w-full bg-card border border-border rounded-lg px-3 py-2.5 text-foreground text-sm font-mono focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 focus:outline-none" />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">MPIN / Password</label>
+              <label className="block text-xs text-muted-foreground mb-1">MPIN / Password</label>
               <div className="relative">
                 <input type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)}
                   placeholder="Angel One MPIN or password"
-                  className="w-full bg-[#111] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-white text-sm focus:border-[#d4a017] focus:outline-none pr-10" />
-                <button onClick={() => setShowPass(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                  className="w-full bg-card border border-border rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 focus:outline-none pr-10" />
+                <button onClick={() => setShowPass(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                   {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
               </div>
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">TOTP <span className="text-gray-600">(if 2FA enabled)</span></label>
+              <label className="block text-xs text-muted-foreground mb-1">TOTP <span className="text-muted-foreground/60">(if 2FA enabled)</span></label>
               <input value={totp} onChange={e => setTotp(e.target.value)} placeholder="6-digit TOTP code"
-                maxLength={6} className="w-full bg-[#111] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-white text-sm font-mono focus:border-[#d4a017] focus:outline-none" />
+                maxLength={6} className="w-full bg-card border border-border rounded-lg px-3 py-2.5 text-foreground text-sm font-mono focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 focus:outline-none" />
             </div>
             <button onClick={() => connectMutation.mutate()}
               disabled={connectMutation.isPending || !password}
-              className="w-full bg-[#d4a017] text-black py-2.5 rounded-xl font-bold text-sm hover:bg-[#b8860b] disabled:opacity-50">
+              className="w-full bg-primary text-black py-2.5 rounded-xl font-bold text-sm hover:bg-primary/80 disabled:opacity-50">
               {connectMutation.isPending ? "Reconnecting..." : "Reconnect with Live Trading"}
             </button>
             {connectMutation.isError && (
@@ -218,10 +218,10 @@ function ConnectExistingAccount({ account, onConnected }: { account: any; onConn
 
         {/* Quick links */}
         <div className="flex gap-3 pt-2">
-          <Link href="/broker/dashboard" className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-[#d4a017] text-black font-bold text-sm hover:bg-[#b8860b]">
+          <Link href="/broker/dashboard" className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-black font-bold text-sm hover:bg-primary/80">
             <Zap size={14} /> Go to Dashboard
           </Link>
-          <Link href="/forex" className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-[#1a1a1a] text-white font-semibold text-sm hover:bg-[#222]">
+          <Link href="/forex" className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-card text-foreground font-semibold text-sm hover:bg-muted">
             Start Trading →
           </Link>
         </div>
@@ -243,70 +243,70 @@ function ConnectExistingAccount({ account, onConnected }: { account: any; onConn
       {/* Fields */}
       <div className="space-y-4">
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Angel One Client ID <span className="text-red-400">*</span></label>
+          <label className="block text-xs text-muted-foreground mb-1">Angel One Client ID <span className="text-red-400">*</span></label>
           <input value={clientId} onChange={e => setClientId(e.target.value.toUpperCase())}
             placeholder="e.g. A123456"
-            className="w-full bg-[#111] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-white text-sm font-mono focus:border-[#d4a017] focus:outline-none uppercase" />
-          <div className="text-xs text-gray-500 mt-1">Find your Client ID on the Angel One app → Profile → My Account</div>
+            className="w-full bg-card border border-border rounded-lg px-3 py-2.5 text-foreground text-sm font-mono focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 focus:outline-none uppercase" />
+          <div className="text-xs text-muted-foreground mt-1">Find your Client ID on the Angel One app → Profile → My Account</div>
         </div>
 
         <div>
-          <label className="block text-xs text-gray-400 mb-1">MPIN / Password <span className="text-red-400">*</span></label>
+          <label className="block text-xs text-muted-foreground mb-1">MPIN / Password <span className="text-red-400">*</span></label>
           <div className="relative">
             <input type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)}
               placeholder="Your Angel One MPIN or password"
-              className="w-full bg-[#111] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-white text-sm focus:border-[#d4a017] focus:outline-none pr-10" />
-            <button onClick={() => setShowPass(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
+              className="w-full bg-card border border-border rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 focus:outline-none pr-10" />
+            <button onClick={() => setShowPass(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground/80">
               {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
             </button>
           </div>
         </div>
 
         <div>
-          <label className="block text-xs text-gray-400 mb-1">TOTP Code <span className="text-gray-500">(if 2FA is enabled on your account)</span></label>
+          <label className="block text-xs text-muted-foreground mb-1">TOTP Code <span className="text-muted-foreground">(if 2FA is enabled on your account)</span></label>
           <input value={totp} onChange={e => setTotp(e.target.value)}
             placeholder="6-digit code from authenticator app"
             maxLength={6}
-            className="w-full bg-[#111] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-white text-sm font-mono focus:border-[#d4a017] focus:outline-none" />
+            className="w-full bg-card border border-border rounded-lg px-3 py-2.5 text-foreground text-sm font-mono focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 focus:outline-none" />
         </div>
 
         {/* Profile prefill */}
-        <div className="border-t border-[#1a1a1a] pt-4">
-          <button onClick={() => setShowAdvanced(s => !s)} className="text-xs text-gray-400 hover:text-white flex items-center gap-1.5">
+        <div className="border-t border-border pt-4">
+          <button onClick={() => setShowAdvanced(s => !s)} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1.5">
             <ChevronRight size={12} className={`transition-transform ${showAdvanced ? "rotate-90" : ""}`} />
             Profile &amp; API Key (optional)
           </button>
           {showAdvanced && (
             <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-gray-400 mb-1">SmartAPI Key</label>
+                <label className="block text-xs text-muted-foreground mb-1">SmartAPI Key</label>
                 <input value={apiKey} onChange={e => setApiKey(e.target.value)}
                   placeholder="For live order execution"
-                  className="w-full bg-[#111] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white text-xs font-mono focus:border-[#d4a017] focus:outline-none" />
+                  className="w-full bg-card border border-border rounded-lg px-3 py-2 text-foreground text-xs font-mono focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 focus:outline-none" />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Full Name</label>
+                <label className="block text-xs text-muted-foreground mb-1">Full Name</label>
                 <input value={fullName} onChange={e => setFullName(e.target.value)}
                   placeholder="As per Angel One KYC"
-                  className="w-full bg-[#111] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white text-xs focus:border-[#d4a017] focus:outline-none" />
+                  className="w-full bg-card border border-border rounded-lg px-3 py-2 text-foreground text-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 focus:outline-none" />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Mobile</label>
+                <label className="block text-xs text-muted-foreground mb-1">Mobile</label>
                 <input value={mobile} onChange={e => setMobile(e.target.value)}
                   placeholder="Registered mobile"
-                  className="w-full bg-[#111] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white text-xs focus:border-[#d4a017] focus:outline-none" />
+                  className="w-full bg-card border border-border rounded-lg px-3 py-2 text-foreground text-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 focus:outline-none" />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Email</label>
+                <label className="block text-xs text-muted-foreground mb-1">Email</label>
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)}
                   placeholder="Registered email"
-                  className="w-full bg-[#111] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white text-xs focus:border-[#d4a017] focus:outline-none" />
+                  className="w-full bg-card border border-border rounded-lg px-3 py-2 text-foreground text-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 focus:outline-none" />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">PAN Number</label>
+                <label className="block text-xs text-muted-foreground mb-1">PAN Number</label>
                 <input value={panNumber} onChange={e => setPanNumber(e.target.value.toUpperCase())}
                   placeholder="e.g. ABCDE1234F"
-                  className="w-full bg-[#111] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white text-xs font-mono focus:border-[#d4a017] focus:outline-none" />
+                  className="w-full bg-card border border-border rounded-lg px-3 py-2 text-foreground text-xs font-mono focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 focus:outline-none" />
               </div>
             </div>
           )}
@@ -315,7 +315,7 @@ function ConnectExistingAccount({ account, onConnected }: { account: any; onConn
 
       <button onClick={() => connectMutation.mutate()}
         disabled={connectMutation.isPending || !clientId || !password}
-        className="w-full bg-[#d4a017] text-black py-3.5 rounded-xl font-bold text-sm hover:bg-[#b8860b] disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+        className="w-full bg-primary text-black py-3.5 rounded-xl font-bold text-sm hover:bg-primary/80 disabled:opacity-50 transition-all flex items-center justify-center gap-2">
         <Link2 size={16} />
         {connectMutation.isPending ? "Connecting..." : "Connect Angel One Account"}
       </button>
@@ -332,15 +332,15 @@ function ConnectExistingAccount({ account, onConnected }: { account: any; onConn
         </div>
       )}
 
-      <div className="bg-[#111] rounded-xl p-4 border border-[#1a1a1a]">
-        <div className="text-xs font-semibold text-gray-300 mb-2 flex items-center gap-2">
-          <AlertCircle size={12} className="text-[#d4a017]" /> Where to find your credentials
+      <div className="bg-card rounded-xl p-4 border border-border">
+        <div className="text-xs font-semibold text-foreground/80 mb-2 flex items-center gap-2">
+          <AlertCircle size={12} className="text-primary" /> Where to find your credentials
         </div>
-        <ul className="text-xs text-gray-400 space-y-1.5">
-          <li>• <b className="text-gray-300">Client ID</b>: Angel One app → Profile icon → My Account Details</li>
-          <li>• <b className="text-gray-300">MPIN</b>: 4-digit MPIN used to log in to Angel One app</li>
-          <li>• <b className="text-gray-300">TOTP</b>: 6-digit code from Google Authenticator (if enabled)</li>
-          <li>• <b className="text-gray-300">SmartAPI Key</b>: <a href="https://smartapi.angelbroking.com" target="_blank" rel="noreferrer" className="text-[#d4a017] hover:underline">smartapi.angelbroking.com</a> → Create App</li>
+        <ul className="text-xs text-muted-foreground space-y-1.5">
+          <li>• <b className="text-foreground/80">Client ID</b>: Angel One app → Profile icon → My Account Details</li>
+          <li>• <b className="text-foreground/80">MPIN</b>: 4-digit MPIN used to log in to Angel One app</li>
+          <li>• <b className="text-foreground/80">TOTP</b>: 6-digit code from Google Authenticator (if enabled)</li>
+          <li>• <b className="text-foreground/80">SmartAPI Key</b>: <a href="https://smartapi.angelbroking.com" target="_blank" rel="noreferrer" className="text-primary hover:underline">smartapi.angelbroking.com</a> → Create App</li>
         </ul>
       </div>
     </div>
@@ -430,20 +430,20 @@ export default function BrokerOnboarding() {
     return (
       <input type={type} value={form[key] ?? ""} onChange={e => set(key, e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-[#111] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-white text-sm focus:border-[#d4a017] focus:outline-none" />
+        className="w-full bg-card border border-border rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 focus:outline-none" />
     );
   }
   function sel(key: string, opts: string[], placeholder = "Select") {
     return (
       <select value={form[key] ?? ""} onChange={e => set(key, e.target.value)}
-        className="w-full bg-[#111] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-white text-sm focus:border-[#d4a017] focus:outline-none">
+        className="w-full bg-card border border-border rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 focus:outline-none">
         <option value="">{placeholder}</option>
         {opts.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
     );
   }
   function lbl(text: string, required = false) {
-    return <label className="block text-xs text-gray-400 mb-1">{text}{required && <span className="text-red-400 ml-1">*</span>}</label>;
+    return <label className="block text-xs text-muted-foreground mb-1">{text}{required && <span className="text-red-400 ml-1">*</span>}</label>;
   }
 
   async function handleFileUpload(docType: string, file: File) {
@@ -466,21 +466,21 @@ export default function BrokerOnboarding() {
   const isActive = account?.status === "active";
 
   if (isLoading) return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-      <div className="text-gray-400 text-sm">Loading...</div>
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="text-muted-foreground text-sm">Loading...</div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <div className="border-b border-[#1a1a1a] bg-[#0d0d0d] px-4 py-3 flex items-center gap-3">
-        <Link href="/forex" className="text-gray-400 hover:text-white text-sm">← Trading</Link>
-        <span className="text-gray-600">/</span>
-        <span className="text-sm font-semibold text-[#d4a017]">Angel One Account</span>
+      <div className="border-b border-border bg-background px-4 py-3 flex items-center gap-3">
+        <Link href="/forex" className="text-muted-foreground hover:text-foreground text-sm">← Trading</Link>
+        <span className="text-muted-foreground/60">/</span>
+        <span className="text-sm font-semibold text-primary">Angel One Account</span>
         {account && <StatusBadge status={account.status} />}
         {mode !== "choose" && account?.status === "draft" && (
-          <button onClick={() => setMode("choose")} className="ml-auto text-xs text-gray-500 hover:text-gray-300">
+          <button onClick={() => setMode("choose")} className="ml-auto text-xs text-muted-foreground hover:text-foreground/80">
             ← Back to options
           </button>
         )}
@@ -492,11 +492,11 @@ export default function BrokerOnboarding() {
           <div className="flex items-center gap-3">
             <CheckCircle className="text-green-400" size={16} />
             <div className="text-green-300 text-sm font-semibold">
-              Connected: <span className="text-[#d4a017]">{account.angelClientId}</span>
-              {account.angelDemat && <> · Demat: <span className="text-white">{account.angelDemat}</span></>}
+              Connected: <span className="text-primary">{account.angelClientId}</span>
+              {account.angelDemat && <> · Demat: <span className="text-foreground">{account.angelDemat}</span></>}
             </div>
           </div>
-          <Link href="/broker/dashboard" className="bg-[#d4a017] text-black px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-[#b8860b]">
+          <Link href="/broker/dashboard" className="bg-primary text-black px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-primary/80">
             Dashboard →
           </Link>
         </div>
@@ -516,50 +516,50 @@ export default function BrokerOnboarding() {
         {mode === "choose" && (
           <div>
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#d4a017]/10 border border-[#d4a017]/30 mb-4">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 border border-primary/30 mb-4">
                 <img src="https://www.angelone.in/favicon.ico" alt="Angel One" className="w-7 h-7" onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
               </div>
-              <h1 className="text-2xl font-bold text-white">Angel One Sub-broker</h1>
-              <p className="text-gray-400 text-sm mt-2">Trade Stocks, Forex &amp; Commodities via your Angel One account</p>
+              <h1 className="text-2xl font-bold text-foreground">Angel One Sub-broker</h1>
+              <p className="text-muted-foreground text-sm mt-2">Trade Stocks, Forex &amp; Commodities via your Angel One account</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               {/* Connect existing */}
               <button onClick={() => setMode("connect")}
-                className="group p-6 bg-[#0d0d0d] border border-[#d4a017]/40 hover:border-[#d4a017] rounded-2xl text-left transition-all hover:bg-[#d4a017]/5">
-                <div className="w-10 h-10 rounded-xl bg-[#d4a017]/10 flex items-center justify-center mb-4 group-hover:bg-[#d4a017]/20 transition-all">
-                  <Link2 size={20} className="text-[#d4a017]" />
+                className="group p-6 bg-background border border-primary/40 hover:border-primary rounded-2xl text-left transition-all hover:bg-primary/5">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-all">
+                  <Link2 size={20} className="text-primary" />
                 </div>
-                <div className="text-white font-bold mb-1">Connect Existing Account</div>
-                <div className="text-gray-400 text-xs leading-relaxed">
+                <div className="text-foreground font-bold mb-1">Connect Existing Account</div>
+                <div className="text-muted-foreground text-xs leading-relaxed">
                   Already have an Angel One demat account? Link it instantly using your Client ID and MPIN.
                   Start trading in minutes.
                 </div>
-                <div className="mt-4 flex items-center gap-1 text-[#d4a017] text-xs font-semibold">
+                <div className="mt-4 flex items-center gap-1 text-primary text-xs font-semibold">
                   Connect now <ChevronRight size={12} />
                 </div>
               </button>
 
               {/* Open new */}
               <button onClick={() => setMode("new")}
-                className="group p-6 bg-[#0d0d0d] border border-[#1a1a1a] hover:border-[#3a3a3a] rounded-2xl text-left transition-all hover:bg-[#111]">
-                <div className="w-10 h-10 rounded-xl bg-[#1a1a1a] flex items-center justify-center mb-4 group-hover:bg-[#222] transition-all">
-                  <FileText size={20} className="text-gray-300" />
+                className="group p-6 bg-background border border-border hover:border-border rounded-2xl text-left transition-all hover:bg-card">
+                <div className="w-10 h-10 rounded-xl bg-card flex items-center justify-center mb-4 group-hover:bg-muted transition-all">
+                  <FileText size={20} className="text-foreground/80" />
                 </div>
-                <div className="text-white font-bold mb-1">Open New Account</div>
-                <div className="text-gray-400 text-xs leading-relaxed">
+                <div className="text-foreground font-bold mb-1">Open New Account</div>
+                <div className="text-muted-foreground text-xs leading-relaxed">
                   New to Angel One? Open a demat account through us as your Authorized Person (AP).
                   Takes 2-3 business days.
                 </div>
-                <div className="mt-4 flex items-center gap-1 text-gray-400 text-xs font-semibold group-hover:text-white transition-all">
+                <div className="mt-4 flex items-center gap-1 text-muted-foreground text-xs font-semibold group-hover:text-foreground transition-all">
                   Start application <ChevronRight size={12} />
                 </div>
               </button>
             </div>
 
             {/* Benefits strip */}
-            <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-4">
-              <div className="text-xs font-semibold text-gray-300 mb-3">What you get after connecting</div>
+            <div className="bg-background border border-border rounded-xl p-4">
+              <div className="text-xs font-semibold text-foreground/80 mb-3">What you get after connecting</div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
                   { icon: "📈", label: "Equity Trading", desc: "NSE/BSE stocks" },
@@ -569,8 +569,8 @@ export default function BrokerOnboarding() {
                 ].map(b => (
                   <div key={b.label} className="text-center">
                     <div className="text-2xl mb-1">{b.icon}</div>
-                    <div className="text-xs font-semibold text-white">{b.label}</div>
-                    <div className="text-xs text-gray-500">{b.desc}</div>
+                    <div className="text-xs font-semibold text-foreground">{b.label}</div>
+                    <div className="text-xs text-muted-foreground">{b.desc}</div>
                   </div>
                 ))}
               </div>
@@ -580,9 +580,9 @@ export default function BrokerOnboarding() {
 
         {/* ── CONNECT EXISTING ACCOUNT ─────────────────────────────────────── */}
         {mode === "connect" && (
-          <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-2xl p-6">
+          <div className="bg-background border border-border rounded-2xl p-6">
             <h2 className="text-lg font-bold mb-5 flex items-center gap-2">
-              <Link2 size={18} className="text-[#d4a017]" /> Connect Existing Angel One Account
+              <Link2 size={18} className="text-primary" /> Connect Existing Angel One Account
             </h2>
             <ConnectExistingAccount account={account} onConnected={() => {}} />
           </div>
@@ -600,21 +600,21 @@ export default function BrokerOnboarding() {
                 return (
                   <div key={s.id} className="flex items-center gap-1 flex-shrink-0">
                     <button onClick={() => !isReadonly && setStep(s.id)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${active ? "bg-[#d4a017] text-black" : done ? "bg-green-900/30 text-green-400" : "bg-[#1a1a1a] text-gray-500"}`}>
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${active ? "bg-primary text-black" : done ? "bg-green-900/30 text-green-400" : "bg-card text-muted-foreground"}`}>
                       <Icon size={12} />
                       {s.label}
                       {done && !active && <CheckCircle size={10} />}
                     </button>
-                    {i < STEPS.length - 1 && <ChevronRight size={14} className="text-gray-700 flex-shrink-0" />}
+                    {i < STEPS.length - 1 && <ChevronRight size={14} className="text-muted-foreground/50 flex-shrink-0" />}
                   </div>
                 );
               })}
             </div>
 
-            <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-2xl p-6">
+            <div className="bg-background border border-border rounded-2xl p-6">
               {step === 1 && (
                 <div>
-                  <h2 className="text-lg font-bold mb-6 flex items-center gap-2"><User size={18} className="text-[#d4a017]" /> Personal Information</h2>
+                  <h2 className="text-lg font-bold mb-6 flex items-center gap-2"><User size={18} className="text-primary" /> Personal Information</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">{lbl("Full Name (as per PAN)", true)}{inp("fullName", "e.g. Rahul Kumar")}</div>
                     <div>{lbl("Date of Birth", true)}{inp("dob", "YYYY-MM-DD", "date")}</div>
@@ -631,7 +631,7 @@ export default function BrokerOnboarding() {
               )}
               {step === 2 && (
                 <div>
-                  <h2 className="text-lg font-bold mb-6 flex items-center gap-2"><Building2 size={18} className="text-[#d4a017]" /> Contact & Address</h2>
+                  <h2 className="text-lg font-bold mb-6 flex items-center gap-2"><Building2 size={18} className="text-primary" /> Contact & Address</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>{lbl("Mobile Number", true)}{inp("mobile", "10-digit mobile number")}</div>
                     <div>{lbl("Email Address", true)}{inp("email", "your@email.com", "email")}</div>
@@ -639,7 +639,7 @@ export default function BrokerOnboarding() {
                       {lbl("Residential Address", true)}
                       <textarea value={form.address ?? ""} onChange={e => set("address", e.target.value)}
                         placeholder="Full address"
-                        className="w-full bg-[#111] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-white text-sm focus:border-[#d4a017] focus:outline-none resize-none h-20" />
+                        className="w-full bg-card border border-border rounded-lg px-3 py-2.5 text-foreground text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 focus:outline-none resize-none h-20" />
                     </div>
                     <div>{lbl("City", true)}{inp("city", "e.g. Mumbai")}</div>
                     <div>{lbl("State", true)}{sel("state", STATES, "Select State")}</div>
@@ -649,7 +649,7 @@ export default function BrokerOnboarding() {
               )}
               {step === 3 && (
                 <div>
-                  <h2 className="text-lg font-bold mb-6 flex items-center gap-2"><CreditCard size={18} className="text-[#d4a017]" /> Bank Account Details</h2>
+                  <h2 className="text-lg font-bold mb-6 flex items-center gap-2"><CreditCard size={18} className="text-primary" /> Bank Account Details</h2>
                   <div className="bg-blue-900/20 border border-blue-800/40 rounded-lg p-3 mb-5 flex items-center gap-2">
                     <AlertCircle size={14} className="text-blue-400 flex-shrink-0" />
                     <p className="text-blue-300 text-xs">Bank account must match your KYC name. Funds will be settled to this account.</p>
@@ -664,18 +664,18 @@ export default function BrokerOnboarding() {
               )}
               {step === 4 && (
                 <div>
-                  <h2 className="text-lg font-bold mb-2 flex items-center gap-2"><FileText size={18} className="text-[#d4a017]" /> KYC Documents</h2>
-                  <p className="text-gray-400 text-xs mb-6">Upload clear photos. Max 5MB each. JPG, PNG, PDF accepted.</p>
+                  <h2 className="text-lg font-bold mb-2 flex items-center gap-2"><FileText size={18} className="text-primary" /> KYC Documents</h2>
+                  <p className="text-muted-foreground text-xs mb-6">Upload clear photos. Max 5MB each. JPG, PNG, PDF accepted.</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {KYC_DOCS.map(doc => {
                       const st = uploadStatus[doc.type];
                       const existingDoc = data?.kyc?.find((d: any) => d.docType === doc.type);
                       return (
-                        <div key={doc.type} className={`border rounded-xl p-4 ${st === "verified" ? "border-green-700 bg-green-900/10" : st === "rejected" ? "border-red-700 bg-red-900/10" : st === "pending" || existingDoc ? "border-[#d4a017]/50 bg-[#d4a017]/5" : "border-[#2a2a2a]"}`}>
+                        <div key={doc.type} className={`border rounded-xl p-4 ${st === "verified" ? "border-green-700 bg-green-900/10" : st === "rejected" ? "border-red-700 bg-red-900/10" : st === "pending" || existingDoc ? "border-primary/50 bg-primary/5" : "border-border"}`}>
                           <div className="flex items-start justify-between mb-2">
                             <div>
-                              <div className="text-sm font-semibold text-white">{doc.label} {doc.required && <span className="text-red-400">*</span>}</div>
-                              <div className="text-xs text-gray-500">{doc.hint}</div>
+                              <div className="text-sm font-semibold text-foreground">{doc.label} {doc.required && <span className="text-red-400">*</span>}</div>
+                              <div className="text-xs text-muted-foreground">{doc.hint}</div>
                             </div>
                             {st === "verified" && <CheckCircle size={14} className="text-green-400 flex-shrink-0" />}
                             {st === "rejected" && <XCircle size={14} className="text-red-400 flex-shrink-0" />}
@@ -684,7 +684,7 @@ export default function BrokerOnboarding() {
                           {existingDoc?.rejectionNote && <div className="text-red-400 text-xs mb-2">Rejected: {existingDoc.rejectionNote}</div>}
                           {!isReadonly && (
                             <label className="cursor-pointer">
-                              <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${st === "uploading" ? "bg-gray-700 text-gray-400" : "bg-[#1a1a1a] hover:bg-[#222] text-gray-300"}`}>
+                              <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${st === "uploading" ? "bg-gray-700 text-muted-foreground" : "bg-card hover:bg-muted text-foreground/80"}`}>
                                 <Upload size={12} />
                                 {st === "uploading" ? "Uploading..." : existingDoc ? "Re-upload" : "Upload File"}
                               </div>
@@ -700,9 +700,9 @@ export default function BrokerOnboarding() {
               )}
               {step === 5 && (
                 <div>
-                  <h2 className="text-lg font-bold mb-6 flex items-center gap-2"><Shield size={18} className="text-[#d4a017]" /> Trading Segments & Nominee</h2>
+                  <h2 className="text-lg font-bold mb-6 flex items-center gap-2"><Shield size={18} className="text-primary" /> Trading Segments & Nominee</h2>
                   <div className="mb-6">
-                    <div className="text-sm font-semibold text-white mb-3">Select Trading Segments</div>
+                    <div className="text-sm font-semibold text-foreground mb-3">Select Trading Segments</div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {[
                         { key: "segmentEquity", label: "Equity (Stocks)", desc: "NSE/BSE cash" },
@@ -711,18 +711,18 @@ export default function BrokerOnboarding() {
                         { key: "segmentCurrency", label: "Currency", desc: "Forex USD/INR etc." },
                       ].map(seg => (
                         <button key={seg.key} onClick={() => !isReadonly && set(seg.key, !form[seg.key])}
-                          className={`p-3 rounded-xl border text-left transition-all ${form[seg.key] ? "border-[#d4a017] bg-[#d4a017]/10" : "border-[#2a2a2a] bg-[#111]"}`}>
-                          <div className={`w-4 h-4 rounded border mb-2 flex items-center justify-center ${form[seg.key] ? "bg-[#d4a017] border-[#d4a017]" : "border-gray-600"}`}>
+                          className={`p-3 rounded-xl border text-left transition-all ${form[seg.key] ? "border-primary bg-primary/10" : "border-border bg-card"}`}>
+                          <div className={`w-4 h-4 rounded border mb-2 flex items-center justify-center ${form[seg.key] ? "bg-primary border-primary" : "border-gray-600"}`}>
                             {form[seg.key] && <span className="text-black text-xs">✓</span>}
                           </div>
-                          <div className="text-xs font-semibold text-white">{seg.label}</div>
-                          <div className="text-xs text-gray-500">{seg.desc}</div>
+                          <div className="text-xs font-semibold text-foreground">{seg.label}</div>
+                          <div className="text-xs text-muted-foreground">{seg.desc}</div>
                         </button>
                       ))}
                     </div>
                   </div>
-                  <div className="border-t border-[#1a1a1a] pt-5">
-                    <div className="text-sm font-semibold text-white mb-3">Nominee Details (Optional)</div>
+                  <div className="border-t border-border pt-5">
+                    <div className="text-sm font-semibold text-foreground mb-3">Nominee Details (Optional)</div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>{lbl("Nominee Name")}{inp("nomineeName", "Full name")}</div>
                       <div>{lbl("Relationship")}{sel("nomineeRelation", ["Spouse","Father","Mother","Son","Daughter","Brother","Sister","Other"], "Select")}</div>
@@ -730,15 +730,15 @@ export default function BrokerOnboarding() {
                     </div>
                   </div>
                   {!isReadonly && (
-                    <div className="mt-6 bg-[#1a1a1a] rounded-xl p-4">
-                      <div className="text-xs text-gray-400 mb-3">By submitting, you agree to Angel One's terms and authorize us to act as your Authorized Person (AP).</div>
+                    <div className="mt-6 bg-card rounded-xl p-4">
+                      <div className="text-xs text-muted-foreground mb-3">By submitting, you agree to Angel One's terms and authorize us to act as your Authorized Person (AP).</div>
                       {submitMutation.isSuccess ? (
                         <div className="flex items-center gap-2 text-green-400 text-sm font-semibold">
                           <CheckCircle size={16} /> Application submitted! Review takes 2-3 business days.
                         </div>
                       ) : (
                         <button onClick={() => submitMutation.mutate()} disabled={submitMutation.isPending}
-                          className="w-full bg-[#d4a017] text-black py-3 rounded-xl font-bold text-sm hover:bg-[#b8860b] disabled:opacity-50">
+                          className="w-full bg-primary text-black py-3 rounded-xl font-bold text-sm hover:bg-primary/80 disabled:opacity-50">
                           {submitMutation.isPending ? "Submitting..." : "Submit Application for Review"}
                         </button>
                       )}
@@ -750,7 +750,7 @@ export default function BrokerOnboarding() {
                       <Clock size={20} className="text-blue-400 flex-shrink-0" />
                       <div>
                         <div className="text-blue-300 font-semibold text-sm">Application Under Review</div>
-                        <div className="text-gray-400 text-xs">Verifying your documents. Typically 2-3 business days. You'll be notified via email.</div>
+                        <div className="text-muted-foreground text-xs">Verifying your documents. Typically 2-3 business days. You'll be notified via email.</div>
                       </div>
                     </div>
                   )}
@@ -758,18 +758,18 @@ export default function BrokerOnboarding() {
               )}
 
               {/* Navigation */}
-              <div className="flex items-center justify-between mt-8 pt-4 border-t border-[#1a1a1a]">
+              <div className="flex items-center justify-between mt-8 pt-4 border-t border-border">
                 <button onClick={() => step === 1 ? setMode("choose") : setStep(s => Math.max(1, s - 1))}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1a1a1a] text-gray-300 text-sm font-semibold hover:bg-[#222]">
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card text-foreground/80 text-sm font-semibold hover:bg-muted">
                   <ChevronLeft size={14} /> {step === 1 ? "Back" : "Previous"}
                 </button>
                 {step < STEPS.length ? (
                   <button onClick={handleNext} disabled={saveMutation.isPending || !!isReadonly}
-                    className="flex items-center gap-2 px-5 py-2 rounded-lg bg-[#d4a017] text-black text-sm font-bold hover:bg-[#b8860b] disabled:opacity-50">
+                    className="flex items-center gap-2 px-5 py-2 rounded-lg bg-primary text-black text-sm font-bold hover:bg-primary/80 disabled:opacity-50">
                     {saveMutation.isPending ? "Saving..." : "Save & Continue"} <ChevronRight size={14} />
                   </button>
                 ) : (
-                  <Link href="/forex" className="px-5 py-2 rounded-lg bg-[#1a1a1a] text-gray-300 text-sm font-semibold hover:bg-[#222]">
+                  <Link href="/forex" className="px-5 py-2 rounded-lg bg-card text-foreground/80 text-sm font-semibold hover:bg-muted">
                     Go to Trading →
                   </Link>
                 )}

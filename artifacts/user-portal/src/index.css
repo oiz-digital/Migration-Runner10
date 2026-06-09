@@ -446,12 +446,26 @@
 }
 .premium-card {
   background:
+    radial-gradient(120% 120% at 100% 0%, hsla(45, 100%, 51%, 0.05) 0%, transparent 55%),
+    hsl(var(--card));
+  border: 1px solid hsl(var(--card-border));
+  box-shadow: 0 1px 0 hsla(0,0%,100%,0.03) inset, 0 4px 16px -8px rgba(0,0,0,0.15);
+}
+.dark .premium-card {
+  background:
     radial-gradient(120% 120% at 100% 0%, hsla(45, 100%, 51%, 0.06) 0%, transparent 55%),
     linear-gradient(180deg, hsl(222 16% 12%) 0%, hsl(222 18% 10%) 100%);
   border: 1px solid hsl(220 14% 18%);
   box-shadow: 0 1px 0 hsla(0,0%,100%,0.04) inset, 0 8px 24px -12px rgba(0,0,0,0.55);
 }
 .premium-card-hero {
+  background:
+    radial-gradient(80% 100% at 100% 0%, hsla(45, 100%, 51%, 0.1) 0%, transparent 60%),
+    hsl(var(--card));
+  border: 1px solid hsla(45, 100%, 51%, 0.15);
+  box-shadow: 0 2px 12px -6px rgba(0,0,0,0.12);
+}
+.dark .premium-card-hero {
   background:
     radial-gradient(80% 100% at 100% 0%, hsla(45, 100%, 51%, 0.18) 0%, transparent 60%),
     radial-gradient(60% 80% at 0% 100%, hsla(45, 100%, 51%, 0.08) 0%, transparent 60%),
@@ -463,6 +477,11 @@
   box-shadow: 0 0 0 1px hsla(45, 100%, 51%, 0.25), 0 0 24px -4px hsla(45, 100%, 51%, 0.35);
 }
 .stat-orb {
+  background: linear-gradient(135deg, hsla(45, 100%, 51%, 0.15), hsla(45, 100%, 51%, 0.05));
+  border: 1px solid hsla(45, 100%, 51%, 0.2);
+  box-shadow: 0 2px 8px -3px hsla(45, 100%, 51%, 0.2);
+}
+.dark .stat-orb {
   background: linear-gradient(135deg, hsla(45, 100%, 51%, 0.22), hsla(45, 100%, 51%, 0.06));
   border: 1px solid hsla(45, 100%, 51%, 0.25);
   box-shadow: 0 4px 14px -4px hsla(45, 100%, 51%, 0.3);

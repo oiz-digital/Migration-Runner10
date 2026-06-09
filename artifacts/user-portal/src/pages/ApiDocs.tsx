@@ -27,8 +27,8 @@ function CodeBlock({ code, lang = "bash", id }: { code: string; lang?: string; i
     }
   };
   return (
-    <div className="not-prose group relative my-3 rounded-lg border border-border bg-zinc-950/80 overflow-hidden">
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-border bg-black/40">
+    <div className="not-prose group relative my-3 rounded-lg border border-border bg-card dark:bg-zinc-950/80 overflow-hidden">
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-border bg-muted/50">
         <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">{lang}</span>
         <button
           type="button"
@@ -40,7 +40,7 @@ function CodeBlock({ code, lang = "bash", id }: { code: string; lang?: string; i
           {copied ? "Copied" : "Copy"}
         </button>
       </div>
-      <pre className="px-4 py-3 text-xs font-mono leading-relaxed text-zinc-200 overflow-x-auto"><code>{code}</code></pre>
+      <pre className="px-4 py-3 text-xs font-mono leading-relaxed text-foreground overflow-x-auto"><code>{code}</code></pre>
     </div>
   );
 }

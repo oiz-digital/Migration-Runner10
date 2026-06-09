@@ -147,7 +147,7 @@ export default function Invite() {
               </div>
               <div className="text-xs uppercase tracking-wide text-muted-foreground mt-4 mb-1.5">Invite link</div>
               <div className="flex items-stretch gap-2">
-                <Input readOnly value={inviteUrl} className="font-mono text-xs bg-zinc-900 border-zinc-800 h-11" data-testid="input-invite-link" />
+                <Input readOnly value={inviteUrl} className="font-mono text-xs bg-card border-border h-11" data-testid="input-invite-link" />
                 <Button variant="outline" size="icon" className="h-11 w-11" onClick={() => copy(inviteUrl, "link")} data-testid="button-copy-link">
                   {copiedLink ? <Check className="h-4 w-4 text-emerald-400" /> : <Link2 className="h-4 w-4" />}
                 </Button>
@@ -158,7 +158,7 @@ export default function Invite() {
             </div>
 
             {/* Share row */}
-            <div className="lg:border-l lg:border-zinc-800 lg:pl-5">
+            <div className="lg:border-l lg:border-border lg:pl-5">
               <div className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Share with friends</div>
               <div className="grid grid-cols-5 gap-2">
                 <ShareBtn href={shareLinks.whatsapp} label="WhatsApp" color="emerald" testId="share-whatsapp">
@@ -175,7 +175,7 @@ export default function Invite() {
                 </ShareBtn>
                 <button
                   onClick={shareNative}
-                  className="flex flex-col items-center justify-center gap-1 px-2 py-3 rounded-lg border border-zinc-800 hover:bg-amber-500/10 hover:border-amber-500/30 text-amber-400 transition-colors"
+                  className="flex flex-col items-center justify-center gap-1 px-2 py-3 rounded-lg border border-border hover:bg-amber-500/10 hover:border-amber-500/30 text-amber-400 transition-colors"
                   data-testid="share-more"
                 >
                   <Share2 className="h-5 w-5" />
@@ -259,7 +259,7 @@ export default function Invite() {
 
         {/* ──────── Two col: tier breakdown + invitee list ──────── */}
         <div className="grid lg:grid-cols-3 gap-4 mt-8">
-          <Card className="lg:col-span-1 p-5 border-zinc-800">
+          <Card className="lg:col-span-1 p-5 border-border">
             <div className="flex items-center gap-2 mb-3">
               <Award className="h-4 w-4 text-amber-400" />
               <h3 className="font-bold">Commission tiers</h3>
@@ -283,7 +283,7 @@ export default function Invite() {
           </Card>
 
           {/* Invitee list */}
-          <Card className="lg:col-span-2 p-5 border-zinc-800">
+          <Card className="lg:col-span-2 p-5 border-border">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-sky-400" />
@@ -312,9 +312,9 @@ export default function Invite() {
                 </Button>
               </div>
             ) : (
-              <div className="overflow-hidden rounded-lg border border-zinc-800/60">
+              <div className="overflow-hidden rounded-lg border border-border/60">
                 <table className="w-full text-sm">
-                  <thead className="bg-zinc-900/60">
+                  <thead className="bg-card/60">
                     <tr className="text-left text-[10px] uppercase tracking-wide text-muted-foreground">
                       <th className="px-3 py-2 font-medium">Friend</th>
                       <th className="px-3 py-2 font-medium">KYC</th>
@@ -324,7 +324,7 @@ export default function Invite() {
                   </thead>
                   <tbody>
                     {(referQ.data?.recent ?? []).map((u) => (
-                      <tr key={u.id} className="border-t border-zinc-800/60 hover:bg-zinc-900/40" data-testid={`row-invitee-${u.id}`}>
+                      <tr key={u.id} className="border-t border-border/60 hover:bg-card/40" data-testid={`row-invitee-${u.id}`}>
                         <td className="px-3 py-2.5">
                           <div className="flex items-center gap-2">
                             <div className="h-7 w-7 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-black text-xs font-bold flex items-center justify-center">
@@ -334,7 +334,7 @@ export default function Invite() {
                           </div>
                         </td>
                         <td className="px-3 py-2.5">
-                          <Badge variant="outline" className={`text-[10px] ${u.kycLevel >= 1 ? "border-emerald-500/30 text-emerald-300" : "border-zinc-700 text-muted-foreground"}`}>
+                          <Badge variant="outline" className={`text-[10px] ${u.kycLevel >= 1 ? "border-emerald-500/30 text-emerald-300" : "border-border text-muted-foreground"}`}>
                             L{u.kycLevel}
                           </Badge>
                         </td>
@@ -368,7 +368,7 @@ export default function Invite() {
               Full guide <ExternalLink className="h-3 w-3" />
             </a>
           </div>
-          <Card className="p-2 border-zinc-800">
+          <Card className="p-2 border-border">
             <Accordion type="single" collapsible className="w-full">
               <FaqItem
                 value="q1"
@@ -489,7 +489,7 @@ function ShareBtn({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={`flex flex-col items-center gap-1 px-2 py-2 rounded-lg border border-zinc-800 transition-colors ${colorMap[color]}`}
+      className={`flex flex-col items-center gap-1 px-2 py-2 rounded-lg border border-border transition-colors ${colorMap[color]}`}
       data-testid={`button-${testId}`}
     >
       {children}
@@ -532,7 +532,7 @@ function StepCard({
     emerald: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
   };
   return (
-    <Card className="p-5 border-zinc-800 relative overflow-hidden">
+    <Card className="p-5 border-border relative overflow-hidden">
       <div className="absolute top-3 right-4 text-5xl font-black text-zinc-900 select-none">{n}</div>
       <div className={`relative w-10 h-10 rounded-xl border flex items-center justify-center ${accents[accent]}`}>
         {icon}
@@ -549,9 +549,9 @@ function TierRow({
   name: string; range: string; pct: string; active: boolean; color: "amber" | "zinc"; highlight?: boolean;
 }) {
   return (
-    <div className={`flex items-center justify-between p-2.5 rounded-lg border ${active ? "border-amber-500/40 bg-amber-500/5" : "border-zinc-800/60"}`}>
+    <div className={`flex items-center justify-between p-2.5 rounded-lg border ${active ? "border-amber-500/40 bg-amber-500/5" : "border-border/60"}`}>
       <div className="flex items-center gap-2.5">
-        <div className={`h-7 w-7 rounded-md flex items-center justify-center ${highlight ? "bg-gradient-to-br from-amber-500 to-orange-500 text-black" : color === "amber" ? "bg-amber-500/15 text-amber-400" : "bg-zinc-700/30 text-zinc-300"}`}>
+        <div className={`h-7 w-7 rounded-md flex items-center justify-center ${highlight ? "bg-gradient-to-br from-amber-500 to-orange-500 text-black" : color === "amber" ? "bg-amber-500/15 text-amber-400" : "bg-zinc-700/30 text-foreground/80"}`}>
           <Award className="h-3.5 w-3.5" />
         </div>
         <div>
@@ -569,7 +569,7 @@ function TierRow({
 
 function FaqItem({ value, q, a }: { value: string; q: string; a: string }) {
   return (
-    <AccordionItem value={value} className="border-zinc-800/60">
+    <AccordionItem value={value} className="border-border/60">
       <AccordionTrigger className="px-3 text-sm font-semibold text-left hover:text-amber-400">{q}</AccordionTrigger>
       <AccordionContent className="px-3 text-xs text-muted-foreground leading-relaxed">{a}</AccordionContent>
     </AccordionItem>

@@ -93,7 +93,7 @@ function PayoffDiagram({
   const beX = ((bePrice - low) / (high - low)) * W;
 
   return (
-    <div className="rounded-lg bg-black/40 border border-border/30 p-3">
+    <div className="rounded-lg bg-muted/40 border border-border/30 p-3">
       <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
         <BarChart3 className="h-3 w-3" /> Payoff at Expiry
       </div>

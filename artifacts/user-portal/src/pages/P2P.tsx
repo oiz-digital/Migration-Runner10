@@ -148,9 +148,9 @@ export default function P2P() {
             Direct peer-to-peer crypto trading with INR/UPI escrow — launching soon on Zebvix.
           </p>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-800/60 border border-zinc-700/50">
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/60 border border-border/50">
           <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-          <span className="text-xs text-zinc-400 font-medium">Launching soon on Zebvix</span>
+          <span className="text-xs text-muted-foreground font-medium">Launching soon on Zebvix</span>
         </div>
       </div>
     );

@@ -138,7 +138,7 @@ function AssetIcon({ symbol, size = 9 }: { symbol: string; size?: 6 | 7 | 8 | 9 
     : size === 10 ? "h-10 w-10 text-sm"
     : "h-9 w-9 text-sm";
   return (
-    <div className={`${dim} rounded-full bg-gradient-to-br ${grad} text-white flex items-center justify-center font-bold shadow-md flex-shrink-0`}>
+    <div className={`${dim} rounded-full bg-gradient-to-br ${grad} text-foreground flex items-center justify-center font-bold shadow-md flex-shrink-0`}>
       {b.slice(0, 1)}
     </div>
   );
@@ -935,7 +935,7 @@ export default function Trade() {
                 onClick={() => setSide("buy")}
                 className={`relative py-2 rounded-md text-sm font-bold transition-all ${
                   side === "buy"
-                    ? "bg-gradient-to-b from-emerald-500 to-emerald-600 text-white shadow-sm shadow-emerald-500/30"
+                    ? "bg-gradient-to-b from-emerald-500 to-emerald-600 text-foreground shadow-sm shadow-emerald-500/30"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -948,7 +948,7 @@ export default function Trade() {
                 onClick={() => setSide("sell")}
                 className={`relative py-2 rounded-md text-sm font-bold transition-all ${
                   side === "sell"
-                    ? "bg-gradient-to-b from-rose-500 to-rose-600 text-white shadow-sm shadow-rose-500/30"
+                    ? "bg-gradient-to-b from-rose-500 to-rose-600 text-foreground shadow-sm shadow-rose-500/30"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -1097,8 +1097,8 @@ export default function Trade() {
             <Button
               className={`w-full font-bold h-11 text-sm transition-transform active:scale-[0.98] ${
                 side === "buy"
-                  ? "bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-md shadow-emerald-500/30"
-                  : "bg-gradient-to-b from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 text-white shadow-md shadow-rose-500/30"
+                  ? "bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-foreground shadow-md shadow-emerald-500/30"
+                  : "bg-gradient-to-b from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 text-foreground shadow-md shadow-rose-500/30"
               }`}
               onClick={handleOrder}
               disabled={orderMutation.isPending || !user}
@@ -1165,7 +1165,7 @@ export default function Trade() {
 
       {/* ── AI Trade Suggestion Dialog ───────────────────────────── */}
       <Dialog open={aiOpen} onOpenChange={setAiOpen}>
-        <DialogContent className="bg-[#0f1117] border border-violet-500/30 text-white max-w-md shadow-2xl shadow-violet-900/20">
+        <DialogContent className="bg-card border border-violet-500/30 text-foreground max-w-md shadow-2xl shadow-violet-900/20">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold">
               <Brain className="h-4 w-4 text-amber-400" />
@@ -1221,7 +1221,7 @@ export default function Trade() {
 
                 <div className="flex flex-col gap-2 flex-1">
                   {/* Confidence */}
-                  <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                  <div className="bg-muted/30 rounded-lg p-3 border border-border/40">
                     <div className="text-[10px] text-muted-foreground mb-1.5">Confidence</div>
                     <div className="flex items-center gap-2">
                       <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
@@ -1237,7 +1237,7 @@ export default function Trade() {
                     </div>
                   </div>
                   {/* Risk */}
-                  <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                  <div className="bg-muted/30 rounded-lg p-3 border border-border/40">
                     <div className="text-[10px] text-muted-foreground mb-1">Risk Level</div>
                     <div className={cn("text-sm font-bold flex items-center gap-1",
                       aiSuggestion.riskLevel === "Low"    && "text-emerald-400",
@@ -1255,18 +1255,18 @@ export default function Trade() {
 
               {/* Suggested entry */}
               <div className="grid grid-cols-2 gap-2">
-                <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                <div className="bg-muted/30 rounded-lg p-3 border border-border/40">
                   <div className="text-[10px] text-muted-foreground mb-1">Suggested Price</div>
                   <div className="text-sm font-bold font-mono text-foreground">{aiSuggestion.suggestedPrice} <span className="text-[10px] font-normal text-muted-foreground">{quote}</span></div>
                 </div>
-                <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                <div className="bg-muted/30 rounded-lg p-3 border border-border/40">
                   <div className="text-[10px] text-muted-foreground mb-1">Suggested Qty</div>
                   <div className="text-sm font-bold font-mono text-foreground">{aiSuggestion.suggestedAmount} <span className="text-[10px] font-normal text-muted-foreground">{base}</span></div>
                 </div>
               </div>
 
               {/* Reasoning */}
-              <div className="bg-white/3 rounded-lg p-3 border border-white/8 space-y-1.5">
+              <div className="bg-muted/20 rounded-lg p-3 border border-border/30 space-y-1.5">
                 <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">Analysis Signals</div>
                 {aiSuggestion.reasoning.map((r, i) => (
                   <div key={i} className="flex items-start gap-2 text-[12px] text-muted-foreground">
@@ -1283,8 +1283,8 @@ export default function Trade() {
                     className={cn(
                       "flex-1 h-10 font-bold text-sm",
                       aiSuggestion.action === "BUY"
-                        ? "bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-md shadow-emerald-500/30"
-                        : "bg-gradient-to-b from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 text-white shadow-md shadow-rose-500/30",
+                        ? "bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-foreground shadow-md shadow-emerald-500/30"
+                        : "bg-gradient-to-b from-rose-500 to-rose-600 hover:from-rose-400 hover:to-rose-500 text-foreground shadow-md shadow-rose-500/30",
                     )}
                     onClick={() => {
                       setSide(aiSuggestion.action === "BUY" ? "buy" : "sell");

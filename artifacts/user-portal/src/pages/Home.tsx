@@ -1623,7 +1623,7 @@ function PremiumPhoneMockup() {
                   <div className="text-xs font-bold text-white">Rohan Sharma</div>
                 </div>
               </div>
-              <div className="relative h-8 w-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+              <div className="relative h-8 w-8 rounded-full bg-muted/30 border border-border/50 flex items-center justify-center">
                 <Bell className="h-3.5 w-3.5 text-white/80" />
                 <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-rose-500 text-[8px] font-bold text-white flex items-center justify-center ring-2 ring-[#0b0d12]">3</span>
               </div>
@@ -1661,14 +1661,14 @@ function PremiumPhoneMockup() {
                 { label: "Earn", icon: <Sparkles className="h-3.5 w-3.5" />, color: "text-amber-400" },
               ].map((a) => (
                 <div key={a.label} className="flex flex-col items-center gap-1 rounded-xl bg-white/[0.04] border border-white/5 py-2">
-                  <div className={`h-7 w-7 rounded-lg bg-white/5 flex items-center justify-center ${a.color}`}>{a.icon}</div>
+                  <div className={`h-7 w-7 rounded-lg bg-muted/30 flex items-center justify-center ${a.color}`}>{a.icon}</div>
                   <span className="text-[10px] font-medium text-white/80">{a.label}</span>
                 </div>
               ))}
             </div>
 
             {/* Featured market: ZBX/USDT */}
-            <div className="mt-3 rounded-2xl bg-white/[0.04] border border-white/10 p-3">
+            <div className="mt-3 rounded-2xl bg-white/[0.04] border border-border/50 p-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="h-7 w-7 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white text-[11px] font-extrabold flex items-center justify-center">Z</div>
@@ -2177,7 +2177,7 @@ const { result } = await res.json();
 
         {/* Code card */}
         <Reveal delay={120}>
-        <Card className="relative overflow-hidden border-border/60 bg-[#0a0d14] shadow-2xl">
+        <Card className="relative overflow-hidden border-border/60 bg-card shadow-2xl">
           <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/60 bg-card/50">
             <div className="flex items-center gap-2">
               <span className="h-2.5 w-2.5 rounded-full bg-rose-500/70" />
@@ -2363,7 +2363,7 @@ function ChainComingSoonSection() {
                       <span>Development progress</span>
                       <span className="font-semibold text-foreground/70">{c.status === "coming" ? "72%" : "38%"}</span>
                     </div>
-                    <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-1 bg-muted/30 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full bg-gradient-to-r ${c.color} transition-all duration-1000`}
                         style={{ width: c.status === "coming" ? "72%" : "38%" }}
@@ -2453,7 +2453,7 @@ function AiTradingBanner() {
         <Reveal delay={120}>
           <div className="relative mx-auto max-w-sm">
             <div className="absolute -inset-4 bg-gradient-to-br from-violet-500/20 via-purple-500/10 to-amber-500/10 rounded-3xl blur-2xl" />
-            <Card className="relative border-violet-500/30 bg-[#0f1117]/80 backdrop-blur p-5 space-y-4">
+            <Card className="relative border-violet-500/30 bg-card/80 backdrop-blur p-5 space-y-4">
               {/* Header */}
               <div className="flex items-center gap-2">
                 <Brain className="h-5 w-5 text-amber-400" />
@@ -2468,7 +2468,7 @@ function AiTradingBanner() {
                   <span className="text-[10px] text-muted-foreground">AI Recommendation</span>
                 </div>
                 <div className="flex flex-col gap-2 flex-1">
-                  <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                  <div className="bg-muted/30 rounded-lg p-3 border border-border/50">
                     <div className="text-[10px] text-muted-foreground mb-1">Confidence</div>
                     <div className="flex items-center gap-2">
                       <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
@@ -2477,7 +2477,7 @@ function AiTradingBanner() {
                       <span className="text-xs font-bold">81%</span>
                     </div>
                   </div>
-                  <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                  <div className="bg-muted/30 rounded-lg p-3 border border-border/50">
                     <div className="text-[10px] text-muted-foreground mb-1">Risk Level</div>
                     <div className="text-xs font-bold text-emerald-400 flex items-center gap-1"><Shield className="h-3 w-3" /> Low</div>
                   </div>
