@@ -343,16 +343,17 @@ ok "Source code synced to $APP_DIR"
 
 cd "$APP_DIR"
 
-set -a; source "$ENV_FILE"; set +a
-
-# pnpm install — run as root so pnpm store resolves correctly in /root/.local/share/pnpm
-(HOME=/root pnpm install --no-frozen-lockfile > /tmp/zbx_pnpm.log 2>&1) &
+# pnpm install — run BEFORE sourcing .env so NODE_ENV=production doesn't skip devDependencies
+(HOME=/root NODE_ENV=development pnpm install --no-frozen-lockfile > /tmp/zbx_pnpm.log 2>&1) &
 spinner $! "Installing pnpm dependencies..."
 [[ -f /tmp/zbx_pnpm.log ]] && grep -i "error\|ERR" /tmp/zbx_pnpm.log | head -5 || true
 ok "pnpm dependencies installed"
 
 # Fix ownership after root install
 chown -R "$APP_USER":"$APP_USER" "$APP_DIR"
+
+# Now source .env for build env vars (DATABASE_URL, NODE_ENV, etc.)
+set -a; source "$ENV_FILE"; set +a
 
 # Build shared libs (tsc --build via local binary)
 (HOME=/root "$APP_DIR/node_modules/.bin/tsc" --build > /tmp/zbx_libs.log 2>&1) &
