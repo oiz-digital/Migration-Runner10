@@ -1,0 +1,200 @@
+ubuntu@ip-172-31-11-99:~/zebvix$ # Check .env vars
+sudo grep -E "CORS_ORIGINS|INTERNAL_SECRET|REDIS_URL" /opt/cryptox/.env
+
+# Agar missing hain toh add karo
+sudo tee -a /opt/cryptox/.env << 'EOF'
+CORS_ORIGINS=https://zebvix.com,https://www.zebvix.com
+REDIS_URL=redis://127.0.0.1:6379
+INTERNAL_SECRET=c11ad4f84db77b7bd7f4cc3b718f0cbb
+EOF
+
+# GitHub pull + rsync + build
+cd ~/zebvix && git pull origin main
+sudo rsync -a --exclude='.git' --exclude='node_modules' --exclude='*/node_modules' \
+  --exclude='.env' --exclude='artifacts/go-service/server' \
+  ~/zebvix/ /opt/cryptox/
+cd /opt/cryptox
+sudo HOME=/root NODE_ENV=development \
+  pnpm --filter @workspace/api-server run build > /tmp/zbx_api.log 2>&1 \
+  && echo "✔ Build OK" || { tail -20 /tmp/zbx_api.log; echo "✘ Build failed"; }
+
+# PM2 fully reload
+sudo PM2_HOME=/opt/cryptox/.pm2 pm2 delete all
+sudo PM2_HOME=/opt/cryptox/.pm2 pm2 start /opt/cryptox/deploy/pm2.config.cjs
+sleep 5
+sudo PM2_HOME=/opt/cryptox/.pm2 pm2 status
+sudo PM2_HOME=/opt/cryptox/.pm2 pm2 logs cryptox-api --lines 15 --nostream
+# REDIS_URL=redis://localhost:6379
+CORS_ORIGINS=https://zebvix.com,https://www.zebvix.com
+REDIS_URL=redis://127.0.0.1:6379
+INTERNAL_SECRET=c11ad4f84db77b7bd7f4cc3b718f0cbb
+CORS_ORIGINS=https://zebvix.com,https://www.zebvix.com
+REDIS_URL=redis://127.0.0.1:6379
+INTERNAL_SECRET=c11ad4f84db77b7bd7f4cc3b718f0cbb
+CORS_ORIGINS=https://zebvix.com,https://www.zebvix.com
+REDIS_URL=redis://127.0.0.1:6379
+INTERNAL_SECRET=c11ad4f84db77b7bd7f4cc3b718f0cbb
+CORS_ORIGINS=https://zebvix.com,https://www.zebvix.com
+REDIS_URL=redis://127.0.0.1:6379
+INTERNAL_SECRET=c11ad4f84db77b7bd7f4cc3b718f0cbb
+remote: Enumerating objects: 28, done.
+remote: Counting objects: 100% (28/28), done.
+remote: Compressing objects: 100% (7/7), done.
+remote: Total 17 (delta 12), reused 15 (delta 10), pack-reused 0 (from 0)
+Unpacking objects: 100% (17/17), 4.18 KiB | 1.39 MiB/s, done.
+From https://github.com/oiz-digital/Migration-Runner10
+ * branch            main       -> FETCH_HEAD
+   12c2c58..254e890  main       -> origin/main
+Updating 12c2c58..254e890
+Fast-forward
+ artifacts/api-server/src/routes/ai-chat.ts                                  |  4 +--
+ ...se-update-env-to-update-environment-variables-PM2-Appl_1781006531177.txt | 55 +++++++++++++++++++++++++++++++++++++
+ ...buntu-ip-172-31-11-99-zebvix-sudo-PM2-HOME-opt-cryptox_1781006223866.txt | 50 +++++++++++++++++++++++++++++++++
+ lib/integrations-anthropic-ai/src/client.ts                                 | 28 +++++++++----------
+ 4 files changed, 121 insertions(+), 16 deletions(-)
+ create mode 100644 attached_assets/Pasted-Use-update-env-to-update-environment-variables-PM2-Appl_1781006531177.txt
+ create mode 100644 attached_assets/Pasted-ubuntu-ip-172-31-11-99-zebvix-sudo-PM2-HOME-opt-cryptox_1781006223866.txt
+-bash: /tmp/zbx_api.log: Permission denied
+
+> @workspace/api-server@0.0.0 build /opt/cryptox/artifacts/api-server
+> node ./build.mjs
+
+
+  dist/index.mjs                       6.2mb ⚠️
+  dist/pino-worker.mjs               153.4kb
+  dist/pino-file.mjs                 142.0kb
+  dist/pino-pretty.mjs               114.6kb
+  dist/thread-stream-worker.mjs        7.3kb
+  dist/index.mjs.map                  11.5mb
+  dist/pino-worker.mjs.map           256.9kb
+  dist/pino-file.mjs.map             229.0kb
+  dist/pino-pretty.mjs.map           204.0kb
+  dist/thread-stream-worker.mjs.map   12.0kb
+
+⚡ Done in 1165ms
+✘ Build failed
+[PM2] Applying action deleteProcessId on app [all](ids: [ 0, 1 ])
+[PM2] [cryptox-api](0) ✓
+[PM2] [cryptox-go](1) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2][WARN] Applications cryptox-api, cryptox-go not running, starting...
+[PM2] App [cryptox-api] launched (1 instances)
+[PM2] App [cryptox-go] launched (1 instances)
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 0  │ cryptox-api        │ fork     │ 0    │ online    │ 0%       │ 25.9mb   │
+│ 1  │ cryptox-go         │ fork     │ 0    │ online    │ 0%       │ 6.7mb    │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 0  │ cryptox-api        │ fork     │ 1    │  │ 0%       │ 0b       │
+│ 1  │ cryptox-go         │ fork     │ 0    │ online    │ 0%       │ 6.7mb    │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[TAILING] Tailing last 15 lines for [cryptox-api] process (change the value with --lines option)
+/var/log/cryptox/api-error.log last 15 lines:
+0|cryptox- | 2026-06-09 11:56:22 +00:00:     at src/lib/price-service.ts (/opt/cryptox/artifacts/api-server/src/lib/price-service.ts:1:1)
+0|cryptox- | 2026-06-09 11:56:22 +00:00:     at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)
+0|cryptox- | 2026-06-09 11:56:22 +00:00:     at <anonymous> (/opt/cryptox/artifacts/api-server/src/index.ts:8:1)
+0|cryptox- | 2026-06-09 11:56:22 +00:00:     at ModuleJob.run (node:internal/modules/esm/module_job:439:25)
+0|cryptox- | 2026-06-09 11:56:22 +00:00:     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+0|cryptox- | 2026-06-09 11:56:22 +00:00:     at async node:internal/modules/esm/loader:633:26
+0|cryptox- | 2026-06-09 11:56:28 +00:00: Error: DATABASE_URL must be set. Did you forget to provision a database?
+0|cryptox- | 2026-06-09 11:56:28 +00:00:     at ../../lib/db/src/index.ts (/opt/cryptox/lib/db/src/index.ts:8:9)
+0|cryptox- | 2026-06-09 11:56:28 +00:00:     at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)
+0|cryptox- | 2026-06-09 11:56:28 +00:00:     at src/lib/price-service.ts (/opt/cryptox/artifacts/api-server/src/lib/price-service.ts:1:1)
+0|cryptox- | 2026-06-09 11:56:28 +00:00:     at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)
+0|cryptox- | 2026-06-09 11:56:28 +00:00:     at <anonymous> (/opt/cryptox/artifacts/api-server/src/index.ts:8:1)
+0|cryptox- | 2026-06-09 11:56:28 +00:00:     at ModuleJob.run (node:internal/modules/esm/module_job:439:25)
+0|cryptox- | 2026-06-09 11:56:28 +00:00:     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+0|cryptox- | 2026-06-09 11:56:28 +00:00:     at async node:internal/modules/esm/loader:633:26
+
+/var/log/cryptox/api-out.log last 15 lines:
+0|cryptox- | 1781006621786,"pid":35524,"hostname":"ip-172-31-11-99","channel":"prices.tick","msg":"[ws-fanout] subscribed for cross-instance price ticks"}
+0|cryptox- | 2026-06-09 12:03:42 +00:00: {"level":50,"time":1781006622006,"pid":35524,"hostname":"ip-172-31-11-99","err":"Error: AI_INTEGRATIONS_ANTHROPIC_BASE_URL must be set. Did you forget to provision the Anthropic AI integration?\n    at ../../lib/integrations-anthropic-ai/src/client.ts (/opt/cryptox/lib/integrations-anthropic-ai/src/client.ts:4:9)\n    at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)\n    at ../../lib/integrations-anthropic-ai/src/index.ts (/opt/cryptox/lib/integrations-anthropic-ai/src/index.ts:1:1)\n    at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)\n    at src/routes/ai-chat.ts (/opt/cryptox/artifacts/api-server/src/routes/ai-chat.ts:9:1)\n    at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)\n    at src/routes/index.ts (/opt/cryptox/artifacts/api-server/src/routes/index.ts:63:1)\n    at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)\n    at src/app.ts (/opt/cryptox/artifacts/api-server/src/app.ts:10:1)\n    at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)","msg":"fatal: bootstrap failed"}
+0|cryptox- | 2026-06-09 12:03:45 +00:00: {"level":30,"time":1781006625491,"pid":35547,"hostname":"ip-172-31-11-99","host":"127.0.0.1","port":6379,"msg":"Redis connected"}
+0|cryptox- | 2026-06-09 12:03:45 +00:00: {"level":30,"time":1781006625493,"pid":35547,"hostname":"ip-172-31-11-99","instanceId":"6f35690a-0623-4b0e-90b7-150cde27e0b8","isLeader":false,"heartbeatMs":5000,"msg":"[leader] election started"}
+0|cryptox- | 2026-06-09 12:03:45 +00:00: {"level":30,"time":1781006625494,"pid":35547,"hostname":"ip-172-31-11-99","channel":"prices.tick","msg":"[ws-fanout] subscribed for cross-instance price ticks"}
+0|cryptox- | 2026-06-09 12:03:45 +00:00: {"level":50,"time":1781006625755,"pid":35547,"hostname":"ip-172-31-11-99","err":"Error: AI_INTEGRATIONS_ANTHROPIC_BASE_URL must be set. Did you forget to provision the Anthropic AI integration?\n    at ../../lib/integrations-anthropic-ai/src/client.ts (/opt/cryptox/lib/integrations-anthropic-ai/src/client.ts:4:9)\n    at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)\n    at ../../lib/integrations-anthropic-ai/src/index.ts (/opt/cryptox/lib/integrations-anthropic-ai/src/index.ts:1:1)\n    at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)\n    at src/routes/ai-chat.ts (/opt/cryptox/artifacts/api-server/src/routes/ai-chat.ts:9:1)\n    at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)\n    at src/routes/index.ts (/opt/cryptox/artifacts/api-server/src/routes/index.ts:63:1)\n    at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)\n    at src/app.ts (/opt/cryptox/artifacts/api-server/src/app.ts:10:1)\n    at __init (file:///opt/cryptox/artifacts/api-server/dist/index.mjs:22:56)","msg":"fatal: bootstrap failed"}
+
+ubuntu@ip-172-31-11-99:/opt/cryptox$
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
