@@ -167,7 +167,7 @@ export default function Portfolio() {
   const pnlPositive = pnl >= 0;
 
   const fmtUsd = (n: number) =>
-    hidden ? "•••••" : "₹" + (Number(n) || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    hidden ? "•••••" : "$" + (Number(n) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fmtInr = (n: number) =>
     hidden ? "•••••" : "₹" + (Number(n) || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fmtCoin = (n: number, sym: string) =>
@@ -272,8 +272,8 @@ export default function Portfolio() {
         />
         <PremiumStatCard
           title="24h PnL"
-          value={hidden ? "•••••" : (pnlPositive ? "+" : "") + fmtUsd(pnl).replace("₹", "")}
-          prefix="₹"
+          value={hidden ? "•••••" : (pnlPositive ? "+" : "") + fmtUsd(pnl).replace("$", "")}
+          prefix="$"
           icon={pnlPositive ? TrendingUp : TrendingDown}
           loading={pnlQ.isLoading}
           hint={`${pnlPct.toFixed(2)}% change from yesterday`}

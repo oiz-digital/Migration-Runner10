@@ -108,8 +108,8 @@ function fmtNum(n: number, digits = 4): string {
   return n.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
 }
 function fmtUsd(n: number): string {
-  if (!isFinite(n) || n === 0) return "₹0.00";
-  return "₹" + n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (!isFinite(n) || n === 0) return "$0.00";
+  return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 function fmtInr(n: number): string {
   if (!isFinite(n) || n === 0) return "₹0.00";

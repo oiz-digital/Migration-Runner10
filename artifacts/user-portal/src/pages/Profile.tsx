@@ -44,9 +44,9 @@ const KYC_BENEFITS = [
 ];
 
 function fmtUsd(n: number) {
-  if (!Number.isFinite(n) || n === 0) return "₹0.00";
-  if (Math.abs(n) >= 1000) return `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
-  return `₹${n.toFixed(2)}`;
+  if (!Number.isFinite(n) || n === 0) return "$0.00";
+  if (Math.abs(n) >= 1000) return `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+  return `$${n.toFixed(2)}`;
 }
 
 export default function Profile() {
