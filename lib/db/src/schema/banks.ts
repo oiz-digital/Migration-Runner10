@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, boolean, index } from "drizzle-orm/pg-core";
 
 export const bankAccountsTable = pgTable("bank_accounts", {
   id: serial("id").primaryKey(),
@@ -17,6 +17,8 @@ export const bankAccountsTable = pgTable("bank_accounts", {
   nameMatchScore: integer("name_match_score"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
-});
+}, (t) => ({
+  byUser: index("bank_accounts_user_idx").on(t.userId),
+}));
 
 export type BankAccount = typeof bankAccountsTable.$inferSelect;

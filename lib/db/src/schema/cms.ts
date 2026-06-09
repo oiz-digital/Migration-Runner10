@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, boolean, index } from "drizzle-orm/pg-core";
 
 export const legalPagesTable = pgTable("legal_pages", {
   slug: text("slug").primaryKey(),
@@ -45,7 +45,10 @@ export const referralsTable = pgTable("referrals", {
   level: integer("level").notNull().default(1),
   sourceType: text("source_type").notNull().default("registration"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => ({
+  byReferrer: index("referrals_referrer_idx").on(t.referrerId),
+  byReferred: index("referrals_referred_idx").on(t.referredId),
+}));
 
 export type Referral = typeof referralsTable.$inferSelect;
 
@@ -57,7 +60,9 @@ export const chatThreadsTable = pgTable("chat_threads", {
   assigneeId: integer("assignee_id"),
   lastMessageAt: timestamp("last_message_at", { withTimezone: true }).notNull().defaultNow(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => ({
+  byUser: index("chat_threads_user_idx").on(t.userId),
+}));
 
 export type ChatThread = typeof chatThreadsTable.$inferSelect;
 
@@ -68,7 +73,9 @@ export const chatMessagesTable = pgTable("chat_messages", {
   senderRole: text("sender_role").notNull(),
   message: text("message").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => ({
+  byThread: index("chat_messages_thread_idx").on(t.threadId),
+}));
 
 export type ChatMessage = typeof chatMessagesTable.$inferSelect;
 

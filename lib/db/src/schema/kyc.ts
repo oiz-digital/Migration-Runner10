@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, boolean, index, uniqueIndex } from "drizzle-orm/pg-core";
 
 export const kycRecordsTable = pgTable("kyc_records", {
   id: serial("id").primaryKey(),
@@ -19,7 +19,10 @@ export const kycRecordsTable = pgTable("kyc_records", {
   reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
-});
+}, (t) => ({
+  uniqUserLevel: uniqueIndex("kyc_records_user_level_uniq").on(t.userId, t.level),
+  byUserStatus:  index("kyc_records_user_status_idx").on(t.userId, t.status),
+}));
 
 export type KycRecord = typeof kycRecordsTable.$inferSelect;
 

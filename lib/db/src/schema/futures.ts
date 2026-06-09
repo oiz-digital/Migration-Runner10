@@ -21,7 +21,10 @@ export const futuresPositionsTable = pgTable("futures_positions", {
   closedAt: timestamp("closed_at", { withTimezone: true }),
   closeReason: text("close_reason"),
   realizedPnl: numeric("realized_pnl", { precision: 28, scale: 8 }).notNull().default("0"),
-});
+}, (t) => ({
+  byUserStatus: index("futures_positions_user_status_idx").on(t.userId, t.status),
+  byPair:       index("futures_positions_pair_idx").on(t.pairId),
+}));
 
 export type FuturesPosition = typeof futuresPositionsTable.$inferSelect;
 
@@ -37,6 +40,8 @@ export const fundingPaymentsTable = pgTable("funding_payments", {
   paidAt: timestamp("paid_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => ({
   uniqRatePos: uniqueIndex("funding_payments_rate_pos_idx").on(t.fundingRateId, t.positionId),
+  byUser:      index("funding_payments_user_idx").on(t.userId),
+  byPair:      index("funding_payments_pair_idx").on(t.pairId),
 }));
 
 export type FundingPayment = typeof fundingPaymentsTable.$inferSelect;

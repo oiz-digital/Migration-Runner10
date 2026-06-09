@@ -19,7 +19,7 @@ const DEPARTMENTS = [
   { icon: Headphones, title: "Customer support", body: "Account access, deposits, withdrawals, KYC, trading questions.", email: "support@zebvix.com", action: { label: "Open a ticket", href: "/support" } },
   { icon: Briefcase, title: "Institutional & OTC desk", body: "Block trades, custody, white-glove onboarding from $1M+.",   email: "institutional@zebvix.com" },
   { icon: Building2, title: "Partnerships & listings",   body: "Token listing applications, ecosystem partnerships, integrations.", email: "listings@zebvix.com" },
-  { icon: Newspaper, title: "Press &amp; media",          body: "Interviews, statements, product briefings.",                email: "press@zebvix.com",  action: { label: "Press kit", href: "/press" } },
+  { icon: Newspaper, title: "Press & media",             body: "Interviews, statements, product briefings.",                email: "press@zebvix.com",  action: { label: "Press kit", href: "/press" } },
   { icon: ShieldAlert, title: "Security disclosures",    body: "Coordinated vulnerability disclosure. PGP available.",        email: "security@zebvix.com" },
   { icon: Briefcase, title: "Careers",                    body: "Hiring questions and general applications.",                  email: "careers@zebvix.com", action: { label: "Open roles", href: "/careers" } },
 ];
@@ -115,7 +115,7 @@ export default function Contact() {
                 <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-3">
                   <d.icon className="h-5 w-5" />
                 </div>
-                <div className="font-semibold mb-1" dangerouslySetInnerHTML={{ __html: d.title }} />
+                <div className="font-semibold mb-1">{d.title}</div>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-3 flex-1">{d.body}</p>
                 <a href={`mailto:${d.email}`} className="text-sm text-primary hover:underline inline-flex items-center gap-1.5 mb-2">
                   <Mail className="h-3.5 w-3.5" /> {d.email}

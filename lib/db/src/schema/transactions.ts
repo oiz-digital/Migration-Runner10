@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, numeric, uniqueIndex, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, numeric, uniqueIndex, index, varchar } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { ulid } from "ulid";
 
@@ -20,7 +20,10 @@ export const inrDepositsTable = pgTable("inr_deposits", {
   gatewayMethod: text("gateway_method"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   processedAt: timestamp("processed_at", { withTimezone: true }),
-});
+}, (t) => ({
+  byUser:   index("inr_deposits_user_idx").on(t.userId),
+  byStatus: index("inr_deposits_status_idx").on(t.status),
+}));
 
 export type InrDeposit = typeof inrDepositsTable.$inferSelect;
 
@@ -37,7 +40,10 @@ export const inrWithdrawalsTable = pgTable("inr_withdrawals", {
   reviewedBy: integer("reviewed_by"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   processedAt: timestamp("processed_at", { withTimezone: true }),
-});
+}, (t) => ({
+  byUser:   index("inr_withdrawals_user_idx").on(t.userId),
+  byStatus: index("inr_withdrawals_status_idx").on(t.status),
+}));
 
 export type InrWithdrawal = typeof inrWithdrawalsTable.$inferSelect;
 
@@ -86,7 +92,10 @@ export const cryptoWithdrawalsTable = pgTable("crypto_withdrawals", {
   broadcastedAt: timestamp("broadcasted_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   processedAt: timestamp("processed_at", { withTimezone: true }),
-});
+}, (t) => ({
+  byUser:   index("crypto_withdrawals_user_idx").on(t.userId),
+  byStatus: index("crypto_withdrawals_status_idx").on(t.status),
+}));
 
 export type CryptoWithdrawal = typeof cryptoWithdrawalsTable.$inferSelect;
 
@@ -99,6 +108,8 @@ export const transfersTable = pgTable("transfers", {
   amount: numeric("amount", { precision: 28, scale: 8 }).notNull(),
   status: text("status").notNull().default("completed"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => ({
+  byUser: index("transfers_user_idx").on(t.userId),
+}));
 
 export type Transfer = typeof transfersTable.$inferSelect;

@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, index } from "drizzle-orm/pg-core";
 
 export const otpCodesTable = pgTable("otp_codes", {
   id: serial("id").primaryKey(),
@@ -11,6 +11,8 @@ export const otpCodesTable = pgTable("otp_codes", {
   verifiedAt: timestamp("verified_at", { withTimezone: true }),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => ({
+  byRecipientPurpose: index("otp_codes_recipient_purpose_idx").on(t.recipient, t.purpose),
+}));
 
 export type OtpCode = typeof otpCodesTable.$inferSelect;

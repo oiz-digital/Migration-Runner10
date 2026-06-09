@@ -7,6 +7,7 @@ import { eq, and } from "drizzle-orm";
 import { db, ordersTable, usersTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/auth";
 import { getInrRate } from "../lib/price-service";
+import { COMPANY_NAME, COMPANY_SHORT, COMPANY_CIN, COMPANY_GST, COMPANY_ADDRESS } from "../lib/company";
 
 const router: IRouter = Router();
 
@@ -46,12 +47,12 @@ router.get("/orders/:id/invoice", requireAuth, async (req: any, res): Promise<vo
     invoiceNo: `INV-${String(order.id).padStart(8, "0")}`,
     issuedAt:  new Date().toISOString(),
     exchange: {
-      name:  "Zebvix Exchange",
-      short: "ZBX",
-      legal: "Zebvix Exchange — Spot Trading Tax Invoice",
-      cin:   "U74999KA2020PTC123456",
-      gst:   "29AAAAZ0000Z1Z1",
-      address: "Bangalore, India",
+      name:  COMPANY_NAME,
+      short: COMPANY_SHORT,
+      legal: `${COMPANY_NAME} — Spot Trading Tax Invoice`,
+      cin:   COMPANY_CIN,
+      gst:   COMPANY_GST,
+      address: COMPANY_ADDRESS,
     },
     user: {
       id:    user?.id,

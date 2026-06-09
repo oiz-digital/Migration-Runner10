@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, numeric, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, numeric, varchar, index } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { ulid } from "ulid";
 
@@ -30,6 +30,8 @@ export const convertQuotesTable = pgTable("convert_quotes", {
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   executedAt: timestamp("executed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => ({
+  byUserStatus: index("convert_quotes_user_status_idx").on(t.userId, t.status),
+}));
 
 export type ConvertQuote = typeof convertQuotesTable.$inferSelect;

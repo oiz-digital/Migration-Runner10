@@ -3,6 +3,7 @@ import { db, aiTradingPlansTable, aiTradingSubscriptionsTable, aiTradingEarnings
 import { eq, and, desc, count } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 import { getInrRate } from "../lib/price-service";
+import { COMPANY_NAME, COMPANY_SHORT, COMPANY_CIN, COMPANY_GST, COMPANY_ADDRESS } from "../lib/company";
 
 const AI_TDS_RATE = 0.01; // 1% India VDA TDS, applied to realized profit only
 
@@ -236,12 +237,12 @@ router.get("/ai-trading/subscriptions/:id/invoice", requireAuth, async (req, res
     issuedAt:  new Date().toISOString(),
     type:      "ai_trading",
     exchange: {
-      name:  "Zebvix Exchange",
-      short: "ZBX",
-      legal: "Zebvix Exchange — AI Trading Statement & Tax Invoice",
-      cin:   "U74999KA2020PTC123456",
-      gst:   "29AAAAZ0000Z1Z1",
-      address: "Bangalore, India",
+      name:  COMPANY_NAME,
+      short: COMPANY_SHORT,
+      legal: `${COMPANY_NAME} — AI Trading Statement & Tax Invoice`,
+      cin:   COMPANY_CIN,
+      gst:   COMPANY_GST,
+      address: COMPANY_ADDRESS,
     },
     user: {
       id:    user?.id,

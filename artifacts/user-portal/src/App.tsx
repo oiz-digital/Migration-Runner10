@@ -118,7 +118,7 @@ function App() {
                   {() => <RequireAuth><Settings /></RequireAuth>}
                 </Route>
                 <Route path="/earn">
-                  {() => <Earn />}
+                  {() => <RequireAuth><Earn /></RequireAuth>}
                 </Route>
                 <Route path="/invite">
                   {() => <RequireAuth><Invite /></RequireAuth>}
@@ -161,14 +161,18 @@ function App() {
                 <Route path="/bots">
                   {() => <RequireAuth><Bots /></RequireAuth>}
                 </Route>
-                <Route path="/ai-trading" component={AITrading} />
+                <Route path="/ai-trading">
+                  {() => <RequireAuth><AITrading /></RequireAuth>}
+                </Route>
                 <Route path="/ledger">
                   {() => <RequireAuth><Ledger /></RequireAuth>}
                 </Route>
                 <Route path="/referrals">
                   {() => <RequireAuth><Referrals /></RequireAuth>}
                 </Route>
-                <Route path="/copy-trading" component={CopyTrading} />
+                <Route path="/copy-trading">
+                  {() => <RequireAuth><CopyTrading /></RequireAuth>}
+                </Route>
                 <Route path="/price-alerts">
                   {() => <RequireAuth><PriceAlerts /></RequireAuth>}
                 </Route>

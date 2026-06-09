@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, numeric, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, numeric, boolean, index } from "drizzle-orm/pg-core";
 
 export const earnProductsTable = pgTable("earn_products", {
   id: serial("id").primaryKey(),
@@ -39,6 +39,9 @@ export const earnPositionsTable = pgTable("earn_positions", {
   startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
   maturedAt: timestamp("matured_at", { withTimezone: true }),
   closedAt: timestamp("closed_at", { withTimezone: true }),
-});
+}, (t) => ({
+  byUser:    index("earn_positions_user_idx").on(t.userId),
+  byProduct: index("earn_positions_product_idx").on(t.productId),
+}));
 
 export type EarnPosition = typeof earnPositionsTable.$inferSelect;
