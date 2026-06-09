@@ -40,7 +40,7 @@ spinner() {
   local i=0
   while kill -0 "$pid" 2>/dev/null; do
     printf "\r  ${C}%s${NC}  %s " "${frames[$((i % 10))]}" "$msg"
-    sleep 0.1; ((i++))
+    sleep 0.1; i=$((i + 1))
   done
   printf "\r%-60s\r" " "
 }
