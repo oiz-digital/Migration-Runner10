@@ -121,13 +121,16 @@ const LIMIT = 20;
 
 /* ── Summary cards ─────────────────────────────────────────────────────── */
 function SummaryCards({ data }: { data: SummaryResponse }) {
-  const netInr = data.totalCreditedInr - data.totalDebitedInr;
+  const netInr  = data.totalCreditedInr  - data.totalDebitedInr;
   const netUsdt = data.totalCreditedUsdt - data.totalDebitedUsdt;
 
-  const fmtInr = (v: number) =>
+  const fmtInr  = (v: number) =>
     `₹${Math.abs(v).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
   const fmtUsdt = (v: number) =>
     `${Math.abs(v).toLocaleString("en-US", { maximumFractionDigits: 4 })} USDT`;
+
+  const hasInr  = data.totalCreditedInr > 0 || data.totalDebitedInr > 0;
+  const hasUsdt = data.totalCreditedUsdt > 0 || data.totalDebitedUsdt > 0;
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
@@ -137,53 +140,81 @@ function SummaryCards({ data }: { data: SummaryResponse }) {
           <Bot className="h-4 w-4 text-violet-400" />
           <span className="text-xs text-muted-foreground">AI Earnings</span>
         </div>
-        <div className="text-xl font-bold tabular-nums">
+        <div className="text-xl font-bold tabular-nums text-violet-300">
           {fmtUsdt(data.totalAiEarningsUsdt)}
         </div>
         <div className="text-xs text-muted-foreground mt-0.5">{data.aiEarningsCount} credits</div>
       </div>
 
-      {/* INR Credited */}
+      {/* Total Credited — USDT primary, INR secondary */}
       <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/5 p-4">
         <div className="flex items-center gap-2 mb-1">
           <ArrowDownLeft className="h-4 w-4 text-emerald-400" />
-          <span className="text-xs text-muted-foreground">₹ Credited</span>
+          <span className="text-xs text-muted-foreground">Total Credited</span>
         </div>
-        <div className="text-xl font-bold tabular-nums text-emerald-400">
-          {fmtInr(data.totalCreditedInr)}
-        </div>
-        <div className="text-xs text-muted-foreground mt-0.5">INR inflows</div>
+        {hasUsdt && (
+          <div className="text-xl font-bold tabular-nums text-emerald-400">
+            +{fmtUsdt(data.totalCreditedUsdt)}
+          </div>
+        )}
+        {hasInr && (
+          <div className={`${hasUsdt ? "text-sm" : "text-xl"} font-bold tabular-nums text-emerald-400`}>
+            +{fmtInr(data.totalCreditedInr)}
+          </div>
+        )}
+        {!hasUsdt && !hasInr && (
+          <div className="text-xl font-bold tabular-nums text-muted-foreground">₹0</div>
+        )}
+        <div className="text-xs text-muted-foreground mt-0.5">All inflows</div>
       </div>
 
-      {/* INR Debited */}
+      {/* Total Debited — USDT primary, INR secondary */}
       <div className="rounded-xl border border-rose-400/20 bg-rose-500/5 p-4">
         <div className="flex items-center gap-2 mb-1">
           <ArrowUpRight className="h-4 w-4 text-rose-400" />
-          <span className="text-xs text-muted-foreground">₹ Debited</span>
+          <span className="text-xs text-muted-foreground">Total Debited</span>
         </div>
-        <div className="text-xl font-bold tabular-nums text-rose-400">
-          {fmtInr(data.totalDebitedInr)}
-        </div>
-        <div className="text-xs text-muted-foreground mt-0.5">INR outflows</div>
+        {hasUsdt && data.totalDebitedUsdt > 0 && (
+          <div className="text-xl font-bold tabular-nums text-rose-400">
+            −{fmtUsdt(data.totalDebitedUsdt)}
+          </div>
+        )}
+        {hasInr && data.totalDebitedInr > 0 && (
+          <div className={`${hasUsdt && data.totalDebitedUsdt > 0 ? "text-sm" : "text-xl"} font-bold tabular-nums text-rose-400`}>
+            −{fmtInr(data.totalDebitedInr)}
+          </div>
+        )}
+        {data.totalDebitedUsdt === 0 && data.totalDebitedInr === 0 && (
+          <div className="text-xl font-bold tabular-nums text-muted-foreground">₹0</div>
+        )}
+        <div className="text-xs text-muted-foreground mt-0.5">All outflows</div>
       </div>
 
-      {/* Net */}
-      <div className="rounded-xl border border-amber-400/20 bg-amber-500/5 p-4">
+      {/* Net Balance — show whichever currency is dominant */}
+      <div className={`rounded-xl border p-4 ${
+        (netUsdt >= 0 && netInr >= 0) ? "border-emerald-400/20 bg-emerald-500/5"
+        : "border-rose-400/20 bg-rose-500/5"
+      }`}>
         <div className="flex items-center gap-2 mb-1">
           <Coins className="h-4 w-4 text-amber-400" />
           <span className="text-xs text-muted-foreground">Net Balance</span>
         </div>
-        <div className={`text-xl font-bold tabular-nums ${netInr >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-          {netInr >= 0 ? "+" : "−"}{fmtInr(netInr)}
-        </div>
-        <div className="text-xs text-muted-foreground mt-0.5">
-          {netUsdt !== 0 && (
-            <span className={netUsdt >= 0 ? "text-emerald-400/70" : "text-rose-400/70"}>
-              {netUsdt >= 0 ? "+" : "−"}{fmtUsdt(netUsdt)}
-            </span>
-          )}
-          {netUsdt === 0 && "Credited − Debited"}
-        </div>
+        {/* USDT net — primary when non-zero */}
+        {netUsdt !== 0 && (
+          <div className={`text-xl font-bold tabular-nums ${netUsdt >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+            {netUsdt >= 0 ? "+" : "−"}{fmtUsdt(Math.abs(netUsdt))}
+          </div>
+        )}
+        {/* INR net */}
+        {netInr !== 0 && (
+          <div className={`${netUsdt !== 0 ? "text-sm" : "text-xl"} font-bold tabular-nums ${netInr >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+            {netInr >= 0 ? "+" : "−"}{fmtInr(Math.abs(netInr))}
+          </div>
+        )}
+        {netUsdt === 0 && netInr === 0 && (
+          <div className="text-xl font-bold tabular-nums text-muted-foreground">₹0</div>
+        )}
+        <div className="text-xs text-muted-foreground mt-0.5">Credited − Debited</div>
       </div>
     </div>
   );
