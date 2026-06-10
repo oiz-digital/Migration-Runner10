@@ -5,7 +5,7 @@ import { Router, type IRouter } from "express";
 import { eq, and, sql, desc } from "drizzle-orm";
 import { z } from "zod/v4";
 import {
-  db, walletsTable, coinsTable, usersTable, convertQuotesTable,
+  db, walletsTable, coinsTable, usersTable, convertQuotesTable, walletLedgerTable,
 } from "@workspace/db";
 import { requireAuth } from "../middlewares/auth";
 import { getConvertFeeRate } from "./fees";
@@ -210,6 +210,10 @@ router.post("/convert/execute", requireAuth, async (req, res): Promise<void> => 
         dstId = created.id;
       }
 
+      const srcBalBefore = String(src.balance);
+      const toAmt        = Number(q.toAmount);
+      const dstBalBefore = String(dstExisting?.balance ?? "0");
+
       await tx.update(walletsTable).set({
         balance: sql`${walletsTable.balance} - ${q.fromAmount}::numeric`,
         updatedAt: new Date(),
@@ -219,6 +223,22 @@ router.post("/convert/execute", requireAuth, async (req, res): Promise<void> => 
         balance: sql`${walletsTable.balance} + ${q.toAmount}::numeric`,
         updatedAt: new Date(),
       }).where(eq(walletsTable.id, dstId));
+
+      // Ledger: convert debit (from) + convert credit (to)
+      await tx.insert(walletLedgerTable).values([
+        {
+          userId, coinId: q.fromCoinId, walletType: "spot", type: "convert",
+          amount: String(-fromAmt),
+          balanceBefore: srcBalBefore, balanceAfter: String(Number(srcBalBefore) - fromAmt),
+          refType: "convert_quote", refId: String(q.id), note: "Convert: sent",
+        },
+        {
+          userId, coinId: q.toCoinId, walletType: "spot", type: "convert",
+          amount: String(toAmt),
+          balanceBefore: dstBalBefore, balanceAfter: String(Number(dstBalBefore) + toAmt),
+          refType: "convert_quote", refId: String(q.id), note: "Convert: received",
+        },
+      ]);
 
       const [updated] = await tx.update(convertQuotesTable).set({
         status: "executed",

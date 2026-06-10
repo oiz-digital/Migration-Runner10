@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, aiTradingPlansTable, aiTradingSubscriptionsTable, aiTradingEarningsTable, walletsTable, coinsTable, usersTable } from "@workspace/db";
+import { db, aiTradingPlansTable, aiTradingSubscriptionsTable, aiTradingEarningsTable, walletsTable, coinsTable, usersTable, walletLedgerTable } from "@workspace/db";
 import { eq, and, desc, count } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 import { getInrRate } from "../lib/price-service";
@@ -176,6 +176,15 @@ router.post("/ai-trading/subscribe", requireAuth, async (req, res): Promise<void
     userId, planId, investedAmount: String(amount),
     expiresAt, status: "active", totalEarned: "0",
   }).returning();
+
+  if (wallet?.coinId) {
+    await db.insert(walletLedgerTable).values({
+      userId, coinId: wallet.coinId, walletType: "spot", type: "ai_principal_lock",
+      amount: String(-amount), balanceBefore: wallet.balance, balanceAfter: String(avail - amount),
+      refType: "ai_subscription", refId: String(sub.id), note: `AI plan: ${plan.name}`,
+    });
+  }
+
   res.status(201).json(serializeSub(sub, plan));
 });
 
@@ -185,13 +194,23 @@ router.post("/ai-trading/subscriptions/:id/cancel", requireAuth, async (req, res
   const [sub] = await db.select().from(aiTradingSubscriptionsTable)
     .where(and(eq(aiTradingSubscriptionsTable.id, id), eq(aiTradingSubscriptionsTable.userId, userId)));
   if (!sub || sub.status !== "active") { res.status(404).json({ error: "Not found" }); return; }
-  const invested = parseFloat(sub.investedAmount);
-  const wallet   = await getSpotWallet(userId, "USDT");
+  const invested    = parseFloat(sub.investedAmount);
+  const wallet      = await getSpotWallet(userId, "USDT");
+  const balBefore   = wallet?.balance ?? "0";
   await upsertSpotWallet(userId, "USDT",
-    String(parseFloat(wallet?.balance ?? "0") + invested),
+    String(parseFloat(balBefore) + invested),
     String(Math.max(0, parseFloat(wallet?.locked ?? "0") - invested)));
   await db.update(aiTradingSubscriptionsTable).set({ status: "cancelled" })
     .where(eq(aiTradingSubscriptionsTable.id, id));
+
+  if (wallet?.coinId) {
+    await db.insert(walletLedgerTable).values({
+      userId, coinId: wallet.coinId, walletType: "spot", type: "ai_principal_return",
+      amount: String(invested), balanceBefore: balBefore, balanceAfter: String(parseFloat(balBefore) + invested),
+      refType: "ai_subscription", refId: String(id), note: "AI plan cancelled — principal returned",
+    });
+  }
+
   res.json({ success: true });
 });
 

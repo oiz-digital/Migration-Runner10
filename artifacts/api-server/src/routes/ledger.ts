@@ -22,7 +22,7 @@ router.get("/ledger", requireAuth, async (req, res): Promise<void> => {
   if (typeFilter)   conditions.push(eq(walletLedgerTable.type, typeFilter as any));
   if (walletFilter) conditions.push(eq(walletLedgerTable.walletType, walletFilter));
   if (fromDate)     conditions.push(gte(walletLedgerTable.createdAt, new Date(fromDate)));
-  if (toDate)       conditions.push(lte(walletLedgerTable.createdAt, new Date(toDate)));
+  if (toDate)       conditions.push(lte(walletLedgerTable.createdAt, new Date(toDate + "T23:59:59.999Z")));
 
   let coinIdFilter: number | null = null;
   if (coinFilter) {
@@ -31,6 +31,9 @@ router.get("/ledger", requireAuth, async (req, res): Promise<void> => {
     if (coin) {
       coinIdFilter = coin.id;
       conditions.push(eq(walletLedgerTable.coinId, coin.id));
+    } else {
+      res.json({ entries: [], total: 0, limit, offset, summary: [] });
+      return;
     }
   }
 

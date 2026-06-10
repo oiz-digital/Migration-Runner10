@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and, desc, sql } from "drizzle-orm";
-import { db, earnProductsTable, earnPositionsTable, walletsTable, coinsTable } from "@workspace/db";
+import { db, earnProductsTable, earnPositionsTable, walletsTable, coinsTable, walletLedgerTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/auth";
 import { getRawTick, getInrRate } from "../lib/price-service";
 
@@ -124,10 +124,19 @@ router.post("/earn/subscribe", requireAuth, async (req, res): Promise<void> => {
       }).where(eq(earnProductsTable.id, p.id));
 
       const maturedAt = p.durationDays > 0 ? new Date(Date.now() + p.durationDays * 86400_000) : null;
+      const spotBalBefore = String(src.balance);
+      const spotBalAfter  = String(Number(src.balance) - amt);
       const [pos] = await tx.insert(earnPositionsTable).values({
         userId, productId: p.id, amount: String(amt),
         autoMaturity: !!autoMaturity, status: "active", maturedAt,
       }).returning();
+
+      await tx.insert(walletLedgerTable).values({
+        userId, coinId: p.coinId, walletType: "spot", type: "earn_deposit",
+        amount: String(-amt), balanceBefore: spotBalBefore, balanceAfter: spotBalAfter,
+        refType: "earn_position", refId: String(pos.id), note: `Earn: ${p.name}`,
+      });
+
       return pos;
     });
     res.status(201).json(created);
@@ -175,6 +184,8 @@ router.post("/earn/positions/:id/redeem", requireAuth, async (req, res): Promise
       const [spotW] = await tx.select().from(walletsTable)
         .where(and(eq(walletsTable.userId, userId), eq(walletsTable.coinId, p.coinId), eq(walletsTable.walletType, "spot")))
         .for("update").limit(1);
+      const spotWBefore = String(spotW?.balance ?? "0");
+      const spotWAfter  = String(Number(spotWBefore) + payout);
       if (spotW) {
         await tx.update(walletsTable).set({
           balance: sql`${walletsTable.balance} + ${payout}`, updatedAt: new Date(),
@@ -191,6 +202,22 @@ router.post("/earn/positions/:id/redeem", requireAuth, async (req, res): Promise
         totalEarned: String(Math.max(0, earned - earlyPenalty)),
         closedAt: new Date(),
       }).where(eq(earnPositionsTable.id, id)).returning();
+
+      // Ledger: earn_withdrawal (principal) + earn_interest (net interest, if > 0)
+      const netInterest = Math.max(0, earned - earlyPenalty);
+      await tx.insert(walletLedgerTable).values({
+        userId, coinId: p.coinId, walletType: "spot", type: "earn_withdrawal",
+        amount: String(principal), balanceBefore: spotWBefore, balanceAfter: String(Number(spotWBefore) + principal),
+        refType: "earn_position", refId: String(id), note: `Earn redeem: ${p.name}`,
+      });
+      if (netInterest > 1e-10) {
+        await tx.insert(walletLedgerTable).values({
+          userId, coinId: p.coinId, walletType: "spot", type: "earn_interest",
+          amount: String(netInterest), balanceBefore: String(Number(spotWBefore) + principal), balanceAfter: spotWAfter,
+          refType: "earn_position", refId: String(id), note: `Earn interest: ${p.name}`,
+        });
+      }
+
       return { ...updated, payout, earned, earlyPenalty };
     });
     res.json(result);

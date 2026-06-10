@@ -89,8 +89,17 @@ const FILTER_TYPES = [
   { value: "trade_buy", label: "Trade Buy" },
   { value: "trade_sell", label: "Trade Sell" },
   { value: "trade_fee", label: "Trade Fee" },
+  { value: "earn_deposit", label: "Earn Deposit" },
+  { value: "earn_withdrawal", label: "Earn Withdrawal" },
   { value: "earn_interest", label: "Earn Interest" },
+  { value: "p2p_credit", label: "P2P Credit" },
+  { value: "p2p_debit", label: "P2P Debit" },
+  { value: "convert", label: "Convert" },
+  { value: "options_pnl", label: "Options P&L" },
+  { value: "futures_pnl", label: "Futures P&L" },
   { value: "referral_bonus", label: "Referral Bonus" },
+  { value: "admin_credit", label: "Admin Credit" },
+  { value: "admin_debit", label: "Admin Debit" },
 ];
 
 function fmt(n: number, coin: string) {
@@ -170,7 +179,7 @@ function SummaryCards({ data }: { data: SummaryResponse }) {
         <div className="text-xs text-muted-foreground mt-0.5">
           {netUsdt !== 0 && (
             <span className={netUsdt >= 0 ? "text-emerald-400/70" : "text-rose-400/70"}>
-              {netUsdt >= 0 ? "+" : "−"}{fmtUsdt(netUsdt)} USDT
+              {netUsdt >= 0 ? "+" : "−"}{fmtUsdt(netUsdt)}
             </span>
           )}
           {netUsdt === 0 && "Credited − Debited"}
