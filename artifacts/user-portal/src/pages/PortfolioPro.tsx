@@ -386,8 +386,8 @@ function TaxReportPanel() {
         <div className="mt-4 grid sm:grid-cols-4 gap-2 text-xs font-mono">
           <Stat label="Buys"     value={`${data.totals.buyCount} trades`}  sub={fmtInr(data.totals.totalBuyInr, 0)} />
           <Stat label="Sells"    value={`${data.totals.sellCount} trades`} sub={fmtInr(data.totals.totalSellInr, 0)} />
-          <Stat label="Fees"     value={fmtInr(data.totals.totalFeesInr)} sub={`$${data.totals.totalFeesUsd.toFixed(2)}`} />
-          <Stat label="Gross PnL" value={`${data.totals.grossPnl >= 0 ? "+" : ""}${fmtInr(data.totals.grossPnlInr, 0)}`} good={data.totals.grossPnl >= 0} sub={`$${data.totals.grossPnl.toFixed(2)}`} />
+          <Stat label="Fees"     value={fmtInr(data.totals.totalFeesInr)} sub={`${data.totals.totalFeesUsd.toFixed(2)} USDT`} />
+          <Stat label="Gross PnL" value={`${data.totals.grossPnl >= 0 ? "+" : ""}${fmtInr(data.totals.grossPnlInr, 0)}`} good={data.totals.grossPnl >= 0} sub={`${data.totals.grossPnl.toFixed(2)} USDT`} />
         </div>
 
         <p className="mt-4 text-[11px] text-muted-foreground italic">{data.note}</p>

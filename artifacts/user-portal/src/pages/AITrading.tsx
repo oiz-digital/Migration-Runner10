@@ -787,11 +787,11 @@ function AiInvoiceDialog({ subId, onClose }: { subId: number | null; onClose: ()
           <div class="muted">${esc(inv.bot.expiresAt ? "Ends " + new Date(inv.bot.expiresAt).toLocaleDateString("en-IN") : "No fixed expiry")}</div></div>
       </div>
       <table><thead><tr><th>Description</th><th class="right">USDT</th><th class="right">INR</th></tr></thead><tbody>
-        ${row("Principal invested (Buy)", "$" + inv.totals.principalUsdt.toFixed(4), fmtInr(inv.totals.principalInr))}
-        ${row(profitPositive ? "Gross profit" : "Gross loss", (profitPositive ? "+" : "") + "$" + inv.totals.grossProfitUsdt.toFixed(4), fmtInr(inv.totals.grossProfitInr))}
-        ${row(`TDS (${inv.charges.tdsRatePct}% on profit)`, "-$" + inv.totals.tdsUsdt.toFixed(4), "-" + fmtInr(inv.totals.tdsInr))}
-        ${row("Net profit / loss", (profitPositive ? "+" : "") + "$" + inv.totals.netProfitUsdt.toFixed(4), fmtInr(inv.totals.netProfitInr), true)}
-        ${row(inv.totals.principalReturned ? "Total payout (principal + net)" : "Net profit so far (principal still locked)", "$" + inv.totals.payoutUsdt.toFixed(4), fmtInr(inv.totals.payoutInr), true)}
+        ${row("Principal invested (Buy)", inv.totals.principalUsdt.toFixed(4) + " USDT", fmtInr(inv.totals.principalInr))}
+        ${row(profitPositive ? "Gross profit" : "Gross loss", (profitPositive ? "+" : "") + inv.totals.grossProfitUsdt.toFixed(4) + " USDT", fmtInr(inv.totals.grossProfitInr))}
+        ${row(`TDS (${inv.charges.tdsRatePct}% on profit)`, "-" + inv.totals.tdsUsdt.toFixed(4) + " USDT", "-" + fmtInr(inv.totals.tdsInr))}
+        ${row("Net profit / loss", (profitPositive ? "+" : "") + inv.totals.netProfitUsdt.toFixed(4) + " USDT", fmtInr(inv.totals.netProfitInr), true)}
+        ${row(inv.totals.principalReturned ? "Total payout (principal + net)" : "Net profit so far (principal still locked)", inv.totals.payoutUsdt.toFixed(4) + " USDT", fmtInr(inv.totals.payoutInr), true)}
       </tbody></table>
       <div class="legend">${esc(inv.legend)}<br/>ROI: ${esc(inv.totals.roiPct)}% · Payouts credited: ${esc(inv.bot.payouts)} · 1 USDT ≈ ₹${esc(inv.totals.inrRate.toFixed(2))}</div>
       <div class="legend">This is a system-generated statement for AI Trading activity and does not require a signature.</div>
@@ -984,11 +984,11 @@ function PlanCard({ plan, onSubscribe }: { plan: Plan; onSubscribe: () => void }
           />
           <div className="grid grid-cols-2 gap-2">
             <div className="text-center p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-              <div className="text-xs font-bold text-emerald-400">+${dailyProfit.toFixed(2)}</div>
+              <div className="text-xs font-bold text-emerald-400">+{dailyProfit.toFixed(2)} USDT</div>
               <div className="text-[10px] text-muted-foreground">Per day</div>
             </div>
             <div className="text-center p-2 rounded-lg" style={{ background: `${risk.color}10`, border: `1px solid ${risk.color}20` }}>
-              <div className="text-xs font-bold" style={{ color: risk.color }}>+${totalProfit.toFixed(2)}</div>
+              <div className="text-xs font-bold" style={{ color: risk.color }}>+{totalProfit.toFixed(2)} USDT</div>
               <div className="text-[10px] text-muted-foreground">Total profit</div>
             </div>
           </div>
@@ -1327,15 +1327,15 @@ function SubscribeDialog({ plan, open, onClose, onSuccess }: {
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="p-2 rounded-lg bg-background/60">
-                    <div className="text-sm font-bold text-emerald-400">+${dailyProfit.toFixed(2)}</div>
+                    <div className="text-sm font-bold text-emerald-400">+{dailyProfit.toFixed(2)} USDT</div>
                     <div className="text-[10px] text-muted-foreground">Per day</div>
                   </div>
                   <div className="p-2 rounded-lg bg-background/60">
-                    <div className="text-sm font-bold text-emerald-400">+${totalProfit.toFixed(2)}</div>
+                    <div className="text-sm font-bold text-emerald-400">+{totalProfit.toFixed(2)} USDT</div>
                     <div className="text-[10px] text-muted-foreground">Total profit</div>
                   </div>
                   <div className="p-2 rounded-lg bg-background/60">
-                    <div className="text-sm font-bold text-foreground">${totalReturn.toFixed(2)}</div>
+                    <div className="text-sm font-bold text-foreground">{totalReturn.toFixed(2)} USDT</div>
                     <div className="text-[10px] text-muted-foreground">Final value</div>
                   </div>
                 </div>
