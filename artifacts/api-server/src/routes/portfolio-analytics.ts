@@ -1,109 +1,141 @@
 /**
  * Portfolio Analytics — extended P&L / allocation / tax breakdown
  *
- *   GET /portfolio/analytics/summary        — equity, allocation, 24h pnl, ATH/ATL
+ *   GET /portfolio/analytics/summary        — equity, allocation, 24h pnl
  *   GET /portfolio/analytics/history?days=  — daily equity curve (synthetic fallback)
  *   GET /portfolio/analytics/tax-report     — Indian 1% TDS computation for filled trades
+ *
+ * Prices come from the price-service in-memory cache (getRawTick) — same authoritative
+ * price used by the matching engine and order book.  DB currentPrice is a fallback for
+ * coins not yet in cache (e.g., manual-only coins before first tick).
  */
 import { Router, type IRouter } from "express";
-import { db, walletsTable, coinsTable, ordersTable, tradesTable } from "@workspace/db";
-import { and, desc, eq, gte, sql } from "drizzle-orm";
+import { db, walletsTable, coinsTable, tradesTable } from "@workspace/db";
+import { and, desc, eq, gte } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
-import { getInrRate } from "../lib/price-service";
+import { getInrRate, getRawTick } from "../lib/price-service";
 
 const router: IRouter = Router();
 
+// ── helpers ──────────────────────────────────────────────────────────────────
+
+/** Live USDT price for a coin: cache first, DB fallback */
+function livePrice(symbol: string, dbPrice: string | null): number {
+  const tick = getRawTick(symbol);
+  if (tick && tick.usdt > 0) return tick.usdt;
+  return Number(dbPrice ?? 0);
+}
+
+/** Live 24h change % for a coin */
+function live24hChange(symbol: string, dbChange: string | null): number {
+  const tick = getRawTick(symbol);
+  if (tick) return tick.change24h;
+  return Number(dbChange ?? 0);
+}
+
+// ── summary ──────────────────────────────────────────────────────────────────
+
 router.get("/portfolio/analytics/summary", requireAuth, async (req, res): Promise<void> => {
-  const userId = req.user!.id;
+  const userId  = req.user!.id;
   const inrRate = getInrRate();
 
   const wallets = await db.select({
-    id: walletsTable.id,
-    walletType: walletsTable.walletType,
-    coinId: walletsTable.coinId,
-    balance: walletsTable.balance,
-    locked: walletsTable.locked,
-    coinSymbol: coinsTable.symbol,
-    coinName: coinsTable.name,
-    coinIcon: coinsTable.logoUrl,
-    coinPrice: coinsTable.currentPrice,
-    coinChange24h: coinsTable.change24h,
+    walletType:  walletsTable.walletType,
+    coinId:      walletsTable.coinId,
+    balance:     walletsTable.balance,
+    locked:      walletsTable.locked,
+    coinSymbol:  coinsTable.symbol,
+    coinName:    coinsTable.name,
+    coinIcon:    coinsTable.logoUrl,
+    dbPrice:     coinsTable.currentPrice,
+    dbChange24h: coinsTable.change24h,
   }).from(walletsTable)
     .leftJoin(coinsTable, eq(coinsTable.id, walletsTable.coinId))
     .where(eq(walletsTable.userId, userId));
 
-  let totalUsd = 0;
+  let totalUsd      = 0;
   let totalChangeUsd = 0;
   const allocation: Array<{
     symbol: string; name: string; icon: string | null;
-    valueUsd: number; valueInr: number; pct: number; change24hPct: number; balance: number;
+    valueUsd: number; valueInr: number;
+    pct: number; change24hPct: number; balance: number;
   }> = [];
 
   for (const w of wallets) {
     const total = Number(w.balance) + Number(w.locked);
     if (total <= 0) continue;
-    const price = Number(w.coinPrice ?? 0);
-    const valueUsd = total * price;
-    const ch24 = Number(w.coinChange24h ?? 0);
+
+    const sym    = w.coinSymbol ?? "?";
+    const price  = livePrice(sym, w.dbPrice);
+    const ch24   = live24hChange(sym, w.dbChange24h);
+
+    const valueUsd       = total * price;
     const valueYesterday = valueUsd / (1 + ch24 / 100);
     totalChangeUsd += valueUsd - valueYesterday;
-    totalUsd += valueUsd;
+    totalUsd       += valueUsd;
+
     allocation.push({
-      symbol: w.coinSymbol ?? "?",
-      name: w.coinName ?? "?",
-      icon: w.coinIcon ?? null,
+      symbol:      sym,
+      name:        w.coinName ?? "?",
+      icon:        w.coinIcon ?? null,
       valueUsd,
-      valueInr: valueUsd * inrRate,
-      pct: 0,
+      valueInr:    valueUsd * inrRate,
+      pct:         0,
       change24hPct: ch24,
-      balance: total,
+      balance:     total,
     });
   }
+
   for (const a of allocation) a.pct = totalUsd > 0 ? (a.valueUsd / totalUsd) * 100 : 0;
   allocation.sort((a, b) => b.valueUsd - a.valueUsd);
 
   res.json({
-    totalEquityUsd: totalUsd,
-    totalEquityInr: totalUsd * inrRate,
-    pnl24hUsd: totalChangeUsd,
-    pnl24hInr: totalChangeUsd * inrRate,
-    pnl24hPct: totalUsd > 0 ? (totalChangeUsd / totalUsd) * 100 : 0,
-    activeAssets: allocation.length,
+    totalEquityUsd:  totalUsd,
+    totalEquityInr:  totalUsd * inrRate,
+    pnl24hUsd:       totalChangeUsd,
+    pnl24hInr:       totalChangeUsd * inrRate,
+    pnl24hPct:       totalUsd > 0 ? (totalChangeUsd / totalUsd) * 100 : 0,
+    activeAssets:    allocation.length,
     inrRate,
     allocation,
   });
 });
 
+// ── history ───────────────────────────────────────────────────────────────────
+
 router.get("/portfolio/analytics/history", requireAuth, async (req, res): Promise<void> => {
-  const userId = req.user!.id;
-  const days = Math.min(365, Math.max(7, Number(req.query.days ?? 30)));
+  const userId  = req.user!.id;
+  const days    = Math.min(365, Math.max(7, Number(req.query.days ?? 30)));
   const inrRate = getInrRate();
 
   const wallets = await db.select({
-    balance: walletsTable.balance,
-    locked: walletsTable.locked,
-    coinPrice: coinsTable.currentPrice,
-    coinChange24h: coinsTable.change24h,
+    balance:     walletsTable.balance,
+    locked:      walletsTable.locked,
+    coinSymbol:  coinsTable.symbol,
+    dbPrice:     coinsTable.currentPrice,
+    dbChange24h: coinsTable.change24h,
   }).from(walletsTable)
     .leftJoin(coinsTable, eq(coinsTable.id, walletsTable.coinId))
     .where(eq(walletsTable.userId, userId));
 
-  let currentUsd = 0;
-  let weightedDailyChange = 0;
+  let currentUsd = 0, weightedDailyChange = 0;
   for (const w of wallets) {
     const total = Number(w.balance) + Number(w.locked);
-    const price = Number(w.coinPrice ?? 0);
-    const v = total * price;
+    const sym   = w.coinSymbol ?? "?";
+    const price = livePrice(sym, w.dbPrice);
+    const v     = total * price;
     if (v <= 0) continue;
-    currentUsd += v;
-    weightedDailyChange += v * (Number(w.coinChange24h ?? 0) / 100);
+    currentUsd           += v;
+    weightedDailyChange  += v * (live24hChange(sym, w.dbChange24h) / 100);
   }
   const avgDaily = currentUsd > 0 ? weightedDailyChange / currentUsd : 0;
 
   const points: Array<{ date: string; equityUsd: number; equityInr: number }> = [];
   let v = currentUsd;
   for (let i = 0; i < days; i++) {
-    const d = new Date(); d.setUTCDate(d.getUTCDate() - i); d.setUTCHours(0, 0, 0, 0);
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() - i);
+    d.setUTCHours(0, 0, 0, 0);
     points.unshift({ date: d.toISOString().slice(0, 10), equityUsd: v, equityInr: v * inrRate });
     const jitter = (Math.sin(i * 1.3) * 0.005) + (Math.cos(i * 0.7) * 0.003);
     v = v / (1 + (avgDaily * 0.5) + jitter);
@@ -112,12 +144,14 @@ router.get("/portfolio/analytics/history", requireAuth, async (req, res): Promis
   res.json({ days, inrRate, points });
 });
 
+// ── tax report ────────────────────────────────────────────────────────────────
+
 router.get("/portfolio/analytics/tax-report", requireAuth, async (req, res): Promise<void> => {
-  const userId = req.user!.id;
+  const userId  = req.user!.id;
   const inrRate = getInrRate();
   const fyStart = typeof req.query.from === "string"
     ? new Date(req.query.from)
-    : new Date(new Date().getFullYear(), 3, 1);
+    : new Date(new Date().getFullYear(), 3, 1);   // April 1 of current year
   if (isNaN(fyStart.getTime())) { res.status(400).json({ error: "bad from date" }); return; }
 
   const trades = await db.select().from(tradesTable)
@@ -129,33 +163,33 @@ router.get("/portfolio/analytics/tax-report", requireAuth, async (req, res): Pro
   let buyCount = 0, sellCount = 0;
   for (const t of trades) {
     const notional = Number(t.price) * Number(t.qty);
-    const fee = Number(t.fee ?? 0);
-    totalFeesUsd += fee;
-    if (t.side === "buy") { totalBuyUsd += notional; buyCount++; }
-    else { totalSellUsd += notional; sellCount++; tdsPaidUsd += notional * 0.01; }
+    const fee      = Number(t.fee ?? 0);
+    totalFeesUsd  += fee;
+    if (t.side === "buy") { totalBuyUsd  += notional; buyCount++; }
+    else                  { totalSellUsd += notional; sellCount++; tdsPaidUsd += notional * 0.01; }
   }
-  const grossPnl = totalSellUsd - totalBuyUsd;
+  const grossPnl      = totalSellUsd - totalBuyUsd;
   const taxableProfit = Math.max(0, grossPnl);
-  const incomeTax = taxableProfit * 0.30;
+  const incomeTax     = taxableProfit * 0.30;
 
   res.json({
     fyStart: fyStart.toISOString(),
     inrRate,
     totals: {
-      totalBuyUsd,  totalBuyInr:  totalBuyUsd  * inrRate,
-      totalSellUsd, totalSellInr: totalSellUsd * inrRate,
-      totalFeesUsd, totalFeesInr: totalFeesUsd * inrRate,
-      grossPnl,     grossPnlInr:  grossPnl     * inrRate,
+      totalBuyUsd,   totalBuyInr:   totalBuyUsd   * inrRate,
+      totalSellUsd,  totalSellInr:  totalSellUsd  * inrRate,
+      totalFeesUsd,  totalFeesInr:  totalFeesUsd  * inrRate,
+      grossPnl,      grossPnlInr:   grossPnl      * inrRate,
       buyCount, sellCount, tradeCount: trades.length,
     },
     tax: {
-      tdsPaidUsd,        tdsPaidInr:        tdsPaidUsd        * inrRate,
-      taxableProfit,     taxableProfitInr:  taxableProfit     * inrRate,
-      incomeTaxUsd:      incomeTax,         incomeTaxInr:     incomeTax * inrRate,
-      totalTaxLiabilityUsd: incomeTax,      totalTaxLiabilityInr: incomeTax * inrRate,
+      tdsPaidUsd,          tdsPaidInr:           tdsPaidUsd    * inrRate,
+      taxableProfit,       taxableProfitInr:     taxableProfit * inrRate,
+      incomeTaxUsd:        incomeTax,            incomeTaxInr: incomeTax * inrRate,
+      totalTaxLiabilityUsd: incomeTax,           totalTaxLiabilityInr: incomeTax * inrRate,
       effectiveRatePct: totalSellUsd > 0 ? (incomeTax / totalSellUsd) * 100 : 0,
     },
-    note: "Indian crypto tax: 1% TDS on every sell (Sec 194S) + 30% flat tax on net profits (Sec 115BBH). Losses cannot be offset against other income. INR values computed at current USDT/INR rate.",
+    note: "Indian crypto tax: 1% TDS on every sell (Sec 194S) + 30% flat tax on net profits (Sec 115BBH). Losses cannot be offset against other income. INR values at current USDT/INR rate.",
   });
 });
 
