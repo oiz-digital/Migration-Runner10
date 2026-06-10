@@ -1277,7 +1277,7 @@ export default function Forex() {
           </div>
           <div className="space-y-3">
             <p className="text-xs font-bold uppercase tracking-widest text-amber-400">Coming Soon</p>
-            <h1 className="text-4xl font-bold tracking-tight">Forex Trading</h1>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">Forex Trading</h1>
             <p className="text-muted-foreground leading-relaxed max-w-sm">Trade currency pairs with up to 50× leverage — EURINR, USDINR, GBPINR and major G10 pairs via MT5.</p>
           </div>
           <div className="flex flex-wrap justify-center gap-2">

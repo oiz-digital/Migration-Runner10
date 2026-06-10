@@ -854,7 +854,7 @@ export default function SmartAPI() {
         </div>
         <div className="max-w-sm space-y-2">
           <p className="text-xs font-bold uppercase tracking-widest text-violet-400">Coming Soon</p>
-          <h1 className="text-3xl font-bold tracking-tight">Smart API</h1>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Smart API</h1>
           <p className="text-muted-foreground text-sm leading-relaxed">
             Connect your Angel One broker account for automated trading, live holdings, and real-time P&amp;L — coming soon to Zebvix.
           </p>

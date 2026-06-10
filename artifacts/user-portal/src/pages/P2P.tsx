@@ -143,7 +143,7 @@ export default function P2P() {
         </div>
         <div className="max-w-sm space-y-2">
           <p className="text-xs font-bold uppercase tracking-widest text-amber-400">Coming Soon</p>
-          <h1 className="text-3xl font-bold tracking-tight">P2P Marketplace</h1>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">P2P Marketplace</h1>
           <p className="text-muted-foreground text-sm leading-relaxed">
             Direct peer-to-peer crypto trading with INR/UPI escrow — launching soon on Zebvix.
           </p>

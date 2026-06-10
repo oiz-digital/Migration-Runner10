@@ -129,8 +129,31 @@
 
 @layer base {
   * { @apply border-border; }
+
+  /* ── Fluid base font-size ──────────────────────────────────────
+     At 320 px → 15 px  |  At 768 px → 15.5 px  |  At 1280 px → 16 px
+     All rem-based Tailwind classes scale proportionally,
+     making small text more readable on narrow screens without
+     changing layouts on desktop.
+  ──────────────────────────────────────────────────────────────── */
+  html {
+    font-size: clamp(15px, 0.9375rem + 0.15vw, 16px);
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
   body { 
     @apply font-sans antialiased bg-background text-foreground;
+  }
+
+  /* ── Minimum touch targets for interactive elements ─────────── */
+  button, [role="button"], a, select, input[type="checkbox"], input[type="radio"] {
+    touch-action: manipulation;
+  }
+
+  /* ── Prevent horizontal overflow on very small screens ──────── */
+  img, video, canvas, audio, iframe, embed, object {
+    max-width: 100%;
   }
 }
 

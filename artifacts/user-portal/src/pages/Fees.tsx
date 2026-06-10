@@ -84,12 +84,14 @@ export default function Fees() {
       </section>
 
       <Tabs defaultValue="spot" className="w-full">
-        <TabsList className="grid grid-cols-4 w-full max-w-2xl mb-8">
-          <TabsTrigger value="spot" data-testid="tab-fees-spot"><TrendingUp className="h-4 w-4 mr-1.5" />Spot</TabsTrigger>
-          <TabsTrigger value="futures" data-testid="tab-fees-futures"><TrendingUp className="h-4 w-4 mr-1.5" />Futures</TabsTrigger>
-          <TabsTrigger value="funding" data-testid="tab-fees-funding"><ArrowDownToLine className="h-4 w-4 mr-1.5" />Funding</TabsTrigger>
-          <TabsTrigger value="discounts" data-testid="tab-fees-discounts"><Star className="h-4 w-4 mr-1.5" />Discounts</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-1 px-1 mb-8">
+          <TabsList className="grid grid-cols-4 w-full max-w-2xl min-w-[22rem]">
+            <TabsTrigger value="spot" data-testid="tab-fees-spot"><TrendingUp className="h-4 w-4 mr-1.5" />Spot</TabsTrigger>
+            <TabsTrigger value="futures" data-testid="tab-fees-futures"><TrendingUp className="h-4 w-4 mr-1.5" />Futures</TabsTrigger>
+            <TabsTrigger value="funding" data-testid="tab-fees-funding"><ArrowDownToLine className="h-4 w-4 mr-1.5" />Funding</TabsTrigger>
+            <TabsTrigger value="discounts" data-testid="tab-fees-discounts"><Star className="h-4 w-4 mr-1.5" />Discounts</TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* ── Spot ─────────────────────────── */}
         <TabsContent value="spot" className="space-y-6">

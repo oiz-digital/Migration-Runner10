@@ -321,7 +321,7 @@ export default function AITrading() {
         </div>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground tracking-tight mb-1">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground tracking-tight mb-1">
               AI Trading Bots
               <span className="ml-3 inline-flex items-center gap-1 text-sm font-normal text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-full px-3 py-0.5">
                 <Sparkles className="w-3.5 h-3.5" /> Powered by Zebvix AI Engine

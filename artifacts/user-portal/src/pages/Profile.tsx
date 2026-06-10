@@ -440,7 +440,7 @@ function VipTierCard({
             <span className="text-xs font-semibold uppercase tracking-wider text-amber-400">VIP Status</span>
           </div>
           <div>
-            <div className="text-3xl font-extrabold tracking-tight" data-testid="vip-tier-name">{t.name}</div>
+            <div className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight" data-testid="vip-tier-name">{t.name}</div>
             <div className="text-xs text-muted-foreground mt-0.5">Level {t.level} · ₹{(vol * inrRate).toLocaleString("en-IN", { maximumFractionDigits: 0 })} traded last 30d</div>
           </div>
           {next ? (

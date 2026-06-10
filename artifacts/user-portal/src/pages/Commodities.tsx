@@ -69,7 +69,7 @@ function CommoditiesComingSoon() {
         </div>
         <div className="space-y-3">
           <p className="text-xs font-bold uppercase tracking-widest text-amber-400">Coming Soon</p>
-          <h1 className="text-4xl font-bold tracking-tight">Commodities</h1>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">Commodities</h1>
           <p className="text-muted-foreground leading-relaxed max-w-sm">Trade Gold, Silver, Crude Oil, Natural Gas and more — real-time commodity markets with MCX integration.</p>
         </div>
         <div className="flex flex-wrap justify-center gap-2">

@@ -505,7 +505,7 @@ function ProductCard({ product: p, canEarn, onSubscribe }: {
       {/* APY */}
       <div className="my-3">
         <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Estimated APY</div>
-        <div className="text-3xl font-extrabold tabular-nums bg-gradient-to-r from-amber-400 to-emerald-400 bg-clip-text text-transparent">
+        <div className="text-xl sm:text-2xl lg:text-3xl font-extrabold tabular-nums bg-gradient-to-r from-amber-400 to-emerald-400 bg-clip-text text-transparent">
           {fmtPct(apy)}
         </div>
         <div className="text-[10px] text-muted-foreground mt-0.5">

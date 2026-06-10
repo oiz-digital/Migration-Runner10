@@ -154,7 +154,7 @@ function StocksComingSoon() {
         </div>
         <div className="space-y-3">
           <p className="text-xs font-bold uppercase tracking-widest text-amber-400">Coming Soon</p>
-          <h1 className="text-4xl font-bold tracking-tight">Stocks Trading</h1>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">Stocks Trading</h1>
           <p className="text-muted-foreground leading-relaxed max-w-sm">NSE India & US NASDAQ/NYSE stocks — Reliance, TCS, AAPL, NVDA and more with real-time market depth.</p>
         </div>
         <div className="flex flex-wrap justify-center gap-2">

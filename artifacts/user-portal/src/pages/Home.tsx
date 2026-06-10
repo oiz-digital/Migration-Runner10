@@ -864,7 +864,7 @@ export default function Home() {
               <div className="flex items-center gap-2 text-xs text-muted-foreground uppercase tracking-wider">
                 <Activity className="h-3.5 w-3.5 text-primary" /> 24h volume
               </div>
-              <div className="text-3xl font-bold mt-2">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold mt-2">
                 <AnimatedNumber value={stats.totalVolumeInr} prefix="₹" compact />
               </div>
               <div className="text-xs text-success mt-1">
@@ -878,7 +878,7 @@ export default function Home() {
               <div className="flex items-center gap-2 text-xs text-muted-foreground uppercase tracking-wider">
                 <Globe2 className="h-3.5 w-3.5 text-violet-400" /> Markets
               </div>
-              <div className="text-3xl font-bold mt-2">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold mt-2">
                 <AnimatedNumber value={stats.markets} />
               </div>
               <div className="text-xs text-muted-foreground mt-1">Spot &amp; perpetuals</div>
@@ -888,7 +888,7 @@ export default function Home() {
               <div className="flex items-center gap-2 text-xs text-muted-foreground uppercase tracking-wider">
                 <CircleDollarSign className="h-3.5 w-3.5 text-fuchsia-400" /> Native token
               </div>
-              <div className="text-3xl font-bold mt-2 text-primary">{ZBX_CHAIN.symbol}</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold mt-2 text-primary">{ZBX_CHAIN.symbol}</div>
               <div className="text-xs text-muted-foreground mt-1">Gas &amp; staking on L1</div>
             </Card>
             <Card className="scale-in delay-450 relative p-5 bg-card/60 backdrop-blur border-border/60 hover:border-primary/40 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 group overflow-hidden">
@@ -896,7 +896,7 @@ export default function Home() {
               <div className="flex items-center gap-2 text-xs text-muted-foreground uppercase tracking-wider">
                 <Zap className="h-3.5 w-3.5 text-sky-400" /> Latency
               </div>
-              <div className="text-3xl font-bold mt-2">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold mt-2">
                 {"<"}5<span className="text-base font-medium text-muted-foreground ml-1">ms</span>
               </div>
               <div className="text-xs text-muted-foreground mt-1">Match engine p99</div>
@@ -911,7 +911,7 @@ export default function Home() {
           <Reveal className="flex items-end justify-between flex-wrap gap-4 mb-6">
             <div>
               <div className="flex items-center gap-2.5">
-                <h2 className="text-3xl font-bold tracking-tight">Live markets</h2>
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Live markets</h2>
                 <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-success/30 bg-success/10 text-success text-[11px] font-medium">
                   <span className="relative flex h-1.5 w-1.5">
                     <span className="absolute inline-flex h-full w-full rounded-full bg-success ring-pulse" />
@@ -1172,7 +1172,7 @@ export default function Home() {
             <Badge variant="outline" className="border-primary/40 text-primary mb-3">
               Ecosystem
             </Badge>
-            <h2 className="text-3xl font-bold tracking-tight">One brand. Six powerful products.</h2>
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">One brand. Six powerful products.</h2>
             <p className="text-muted-foreground text-sm mt-2">
               From CEX-grade trading to native blockchain smart contracts — Zebvix gives you the full stack.
             </p>
@@ -1205,7 +1205,7 @@ export default function Home() {
               <Shield className="h-3 w-3 mr-1.5" />
               Why Zebvix
             </Badge>
-            <h2 className="text-3xl font-bold tracking-tight">Why traders choose Zebvix</h2>
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Why traders choose Zebvix</h2>
             <p className="text-muted-foreground text-sm mt-2">A serious exchange, on a serious chain — built for the Indian market.</p>
           </Reveal>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1248,7 +1248,7 @@ export default function Home() {
       <section className="w-full py-16 bg-background">
         <div className="container mx-auto px-4 max-w-3xl">
           <Reveal className="text-center mb-8">
-            <h2 className="text-3xl font-bold tracking-tight">Frequently asked</h2>
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Frequently asked</h2>
             <p className="text-muted-foreground text-sm mt-2">Everything you wanted to know about Zebvix Exchange &amp; the Zebvix Blockchain.</p>
           </Reveal>
           <Accordion type="single" collapsible className="w-full">
@@ -1321,7 +1321,7 @@ export default function Home() {
             </span>
             Blockchain Under Development · Coming Soon
           </div>
-          <h2 className="text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.1]">
+          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.1]">
             Ready to trade on a{" "}
             <span className="shimmer-text">real Blockchain?</span>
           </h2>
@@ -1386,7 +1386,7 @@ function ZebvixChainSection() {
             <Layers className="h-3 w-3 mr-1.5" />
             Powered by Zebvix Blockchain
           </Badge>
-          <h2 className="text-3xl lg:text-4xl font-bold tracking-tight leading-tight">
+          <h2 className="text-xl sm:text-3xl lg:text-4xl font-bold tracking-tight leading-tight">
             Not just an exchange.{" "}
             <span className="bg-gradient-to-r from-violet-300 to-fuchsia-400 bg-clip-text text-transparent">
               An entire blockchain.
@@ -1543,7 +1543,7 @@ function MobileCalloutSection() {
             <Smartphone className="h-3 w-3 mr-1.5" />
             Mobile wallet
           </Badge>
-          <h2 className="text-3xl font-bold tracking-tight leading-tight">
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight leading-tight">
             Your blockchain, in your pocket.
           </h2>
           <p className="text-muted-foreground leading-relaxed max-w-lg">
@@ -2064,7 +2064,7 @@ function EarnSection() {
             <Sparkles className="h-3 w-3 mr-1.5" />
             Earn
           </Badge>
-          <h2 className="text-3xl font-bold tracking-tight">Put your assets to work</h2>
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Put your assets to work</h2>
           <p className="text-muted-foreground text-sm mt-2">
             6 curated products for USDT, ETH &amp; BTC — flexible or locked, interest accrues every block.
           </p>
@@ -2082,7 +2082,7 @@ function EarnSection() {
                     </div>
                     {/* APY highlight */}
                     <div className="mt-4 flex items-baseline gap-1.5">
-                      <span className={`text-3xl font-extrabold tabular-nums ${p.accent}`}>{p.apy}%</span>
+                      <span className={`text-xl sm:text-2xl lg:text-3xl font-extrabold tabular-nums ${p.accent}`}>{p.apy}%</span>
                       <span className="text-xs text-muted-foreground font-medium">APY</span>
                       <span className="ml-auto text-xs font-semibold text-foreground/70 bg-muted/40 px-2 py-0.5 rounded-full">{p.coin}</span>
                     </div>
@@ -2151,7 +2151,7 @@ const { result } = await res.json();
             <Terminal className="h-3 w-3 mr-1.5" />
             For developers
           </Badge>
-          <h2 className="text-3xl lg:text-4xl font-bold tracking-tight leading-tight">
+          <h2 className="text-xl sm:text-3xl lg:text-4xl font-bold tracking-tight leading-tight">
             Build on the{" "}
             <span className="bg-gradient-to-r from-sky-300 to-cyan-400 bg-clip-text text-transparent">Zebvix Blockchain</span>
           </h2>
@@ -2309,7 +2309,7 @@ function ChainComingSoonSection() {
             </span>
             Multi-Chain Expansion
           </div>
-          <h2 className="text-3xl lg:text-4xl font-extrabold tracking-tight leading-tight">
+          <h2 className="text-xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight leading-tight">
             More chains,{" "}
             <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-amber-400 bg-clip-text text-transparent">
               coming soon
@@ -2427,7 +2427,7 @@ function AiTradingBanner() {
             AI-Powered Trading
             <Sparkles className="h-3 w-3" />
           </div>
-          <h2 className="text-3xl lg:text-4xl font-extrabold tracking-tight leading-tight">
+          <h2 className="text-xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight leading-tight">
             Let AI analyse the market<br />
             <span className="bg-gradient-to-r from-violet-400 to-amber-400 bg-clip-text text-transparent">so you never miss a move</span>
           </h2>
@@ -2533,7 +2533,7 @@ function PremiumFeaturesSection() {
             <Gem className="h-3 w-3 mr-1.5" />
             All Features
           </Badge>
-          <h2 className="text-3xl font-extrabold tracking-tight">Everything a pro trader needs</h2>
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight">Everything a pro trader needs</h2>
           <p className="text-muted-foreground text-sm mt-2 max-w-xl mx-auto">
             12 powerful features — all under one login. Spot, futures, AI, bots, earn, Web3, P2P and more.
           </p>
@@ -2579,7 +2579,7 @@ function ReferralBanner({ user }: { user: any }) {
               <Gem className="h-3 w-3 mr-1.5" />
               Invite &amp; Earn
             </Badge>
-            <h2 className="text-3xl font-extrabold tracking-tight leading-tight">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight leading-tight">
               Earn{" "}
               <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">20% commission</span>{" "}
               on every trade your friends make
@@ -2603,7 +2603,7 @@ function ReferralBanner({ user }: { user: any }) {
               { label: "Avg. monthly earn", value: "₹8K+", desc: "per active referral", color: "text-violet-400" },
             ].map((s) => (
               <div key={s.label} className="rounded-2xl border border-border/60 bg-card/60 p-5 text-center min-w-[8rem]">
-                <div className={`text-3xl font-extrabold tabular-nums ${s.color}`}>{s.value}</div>
+                <div className={`text-xl sm:text-2xl lg:text-3xl font-extrabold tabular-nums ${s.color}`}>{s.value}</div>
                 <div className="text-[11px] font-semibold text-foreground mt-1">{s.label}</div>
                 <div className="text-[10px] text-muted-foreground mt-0.5">{s.desc}</div>
               </div>
@@ -2684,7 +2684,7 @@ function RoadmapSection() {
             <CalendarDays className="h-3 w-3 mr-1.5" />
             Roadmap
           </Badge>
-          <h2 className="text-3xl font-bold tracking-tight">Where we&apos;re headed</h2>
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Where we&apos;re headed</h2>
           <p className="text-muted-foreground text-sm mt-2">
             A focused, public roadmap for Zebvix Exchange and the Zebvix Blockchain.
           </p>

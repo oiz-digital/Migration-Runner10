@@ -239,13 +239,13 @@ export default function Orders() {
             <table className="w-full text-sm">
               <thead className="bg-muted/30 border-b border-border/60">
                 <tr className="text-xs uppercase tracking-wide text-muted-foreground text-left">
-                  <th className="px-4 py-3 font-medium">Date</th>
-                  <th className="px-4 py-3 font-medium">Pair</th>
-                  <th className="px-4 py-3 font-medium text-right">From</th>
-                  <th className="px-4 py-3 font-medium text-right">To</th>
-                  <th className="px-4 py-3 font-medium text-right">Rate</th>
-                  <th className="px-4 py-3 font-medium text-right">Fee</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-3 sm:px-4 py-3 font-medium hidden sm:table-cell">Date</th>
+                  <th className="px-3 sm:px-4 py-3 font-medium">Pair</th>
+                  <th className="px-3 sm:px-4 py-3 font-medium text-right">From</th>
+                  <th className="px-3 sm:px-4 py-3 font-medium text-right">To</th>
+                  <th className="px-3 sm:px-4 py-3 font-medium text-right hidden md:table-cell">Rate</th>
+                  <th className="px-3 sm:px-4 py-3 font-medium text-right hidden md:table-cell">Fee</th>
+                  <th className="px-3 sm:px-4 py-3 font-medium">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -263,19 +263,19 @@ export default function Orders() {
                 ) : (
                   convertQ.data!.map((r) => (
                     <tr key={`cvt-${r.id}`} className="border-b border-border/40 hover:bg-muted/10 transition-colors">
-                      <td className="px-4 py-3 text-muted-foreground tabular-nums text-xs">{fmtDate(r.createdAt)}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 sm:px-4 py-3 text-muted-foreground tabular-nums text-xs hidden sm:table-cell">{fmtDate(r.createdAt)}</td>
+                      <td className="px-3 sm:px-4 py-3">
                         <div className="flex items-center gap-1.5">
                           <span className="font-semibold">{r.fromCoin}</span>
                           <ArrowLeftRight className="h-3 w-3 text-muted-foreground" />
                           <span className="font-semibold">{r.toCoin}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 font-mono tabular-nums text-right">{fmtNum(r.fromAmount)} {r.fromCoin}</td>
-                      <td className="px-4 py-3 font-mono tabular-nums text-right text-emerald-400">{fmtNum(r.toAmount)} {r.toCoin}</td>
-                      <td className="px-4 py-3 font-mono tabular-nums text-right text-xs text-muted-foreground">{fmtNum(r.rate, 6)}</td>
-                      <td className="px-4 py-3 font-mono tabular-nums text-right text-xs text-muted-foreground">{fmtNum(r.feeAmount, 6)}</td>
-                      <td className="px-4 py-3"><StatusPill status={r.status} /></td>
+                      <td className="px-3 sm:px-4 py-3 font-mono tabular-nums text-right text-sm">{fmtNum(r.fromAmount)} {r.fromCoin}</td>
+                      <td className="px-3 sm:px-4 py-3 font-mono tabular-nums text-right text-sm text-emerald-400">{fmtNum(r.toAmount)} {r.toCoin}</td>
+                      <td className="px-3 sm:px-4 py-3 font-mono tabular-nums text-right text-xs text-muted-foreground hidden md:table-cell">{fmtNum(r.rate, 6)}</td>
+                      <td className="px-3 sm:px-4 py-3 font-mono tabular-nums text-right text-xs text-muted-foreground hidden md:table-cell">{fmtNum(r.feeAmount, 6)}</td>
+                      <td className="px-3 sm:px-4 py-3"><StatusPill status={r.status} /></td>
                     </tr>
                   ))
                 )}
@@ -302,15 +302,15 @@ export default function Orders() {
             <table className="w-full text-left text-sm">
               <thead className="bg-muted/30 border-b border-border/60">
                 <tr className="text-xs uppercase tracking-wide text-muted-foreground">
-                  <th className="px-4 py-3 font-medium">Date</th>
-                  <th className="px-4 py-3 font-medium">Pair</th>
-                  <th className="px-4 py-3 font-medium">Type</th>
-                  <th className="px-4 py-3 font-medium">Side</th>
-                  <th className="px-4 py-3 font-medium text-right">Price</th>
-                  <th className="px-4 py-3 font-medium text-right">Amount</th>
-                  <th className="px-4 py-3 font-medium text-right">Filled</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium text-right">Action</th>
+                  <th className="px-3 sm:px-4 py-3 font-medium hidden sm:table-cell">Date</th>
+                  <th className="px-3 sm:px-4 py-3 font-medium">Pair</th>
+                  <th className="px-3 sm:px-4 py-3 font-medium hidden md:table-cell">Type</th>
+                  <th className="px-3 sm:px-4 py-3 font-medium">Side</th>
+                  <th className="px-3 sm:px-4 py-3 font-medium text-right">Price</th>
+                  <th className="px-3 sm:px-4 py-3 font-medium text-right hidden sm:table-cell">Amount</th>
+                  <th className="px-3 sm:px-4 py-3 font-medium text-right hidden md:table-cell">Filled</th>
+                  <th className="px-3 sm:px-4 py-3 font-medium">Status</th>
+                  <th className="px-3 sm:px-4 py-3 font-medium text-right">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -356,10 +356,10 @@ export default function Orders() {
                         tabIndex={0}
                         aria-label={`View fills for order ${o.id}`}
                       >
-                        <td className="px-4 py-3 text-muted-foreground tabular-nums text-xs whitespace-nowrap">
+                        <td className="px-3 sm:px-4 py-3 text-muted-foreground tabular-nums text-xs whitespace-nowrap hidden sm:table-cell">
                           {fmtDate(o.createdAt)}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 sm:px-4 py-3">
                           <div className="flex items-center gap-1.5">
                             <span className="font-semibold text-foreground text-sm">{o.symbol}</span>
                             {isFutures(o) && (
@@ -367,10 +367,10 @@ export default function Orders() {
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-3 uppercase text-xs text-muted-foreground tracking-wide">
+                        <td className="px-3 sm:px-4 py-3 uppercase text-xs text-muted-foreground tracking-wide hidden md:table-cell">
                           {o.type}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 sm:px-4 py-3">
                           <span className={cn(
                             "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold uppercase",
                             o.side === "buy"
@@ -381,7 +381,7 @@ export default function Orders() {
                             {o.side}
                           </span>
                         </td>
-                        <td className="px-4 py-3 font-mono tabular-nums text-right text-sm">
+                        <td className="px-3 sm:px-4 py-3 font-mono tabular-nums text-right text-sm">
                           {(() => {
                             const isMarket = String(o.type).toLowerCase() === "market";
                             const avg = Number(o.avgPrice ?? 0);
@@ -396,10 +396,10 @@ export default function Orders() {
                             return lim > 0 ? fmtNum(lim) : "—";
                           })()}
                         </td>
-                        <td className="px-4 py-3 font-mono tabular-nums text-right">
+                        <td className="px-3 sm:px-4 py-3 font-mono tabular-nums text-right hidden sm:table-cell">
                           {fmtNum(o.amount, 8)}
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-3 sm:px-4 py-3 text-right hidden md:table-cell">
                           {total > 0 ? (
                             <div className="flex flex-col items-end gap-1">
                               <span className="font-mono tabular-nums text-xs text-muted-foreground">
@@ -414,13 +414,13 @@ export default function Orders() {
                             </div>
                           ) : <span className="text-muted-foreground text-xs">—</span>}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 sm:px-4 py-3">
                           <div className="flex items-center gap-1.5">
                             {statusIcon(o.status)}
                             <StatusPill status={o.status} />
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-3 sm:px-4 py-3 text-right">
                           {isOpen ? (
                             <Button
                               size="sm"
