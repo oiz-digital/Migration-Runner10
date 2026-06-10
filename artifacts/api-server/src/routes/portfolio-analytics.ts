@@ -72,28 +72,49 @@ router.get("/portfolio/analytics/summary", requireAuth, async (req, res): Promis
     pct: number; change24hPct: number; balance: number;
   }> = [];
 
+  // Merge all wallet types (spot + futures + earn + inr) by coin symbol
+  const bySymbol = new Map<string, {
+    symbol: string; name: string; icon: string | null;
+    balance: number; dbPrice: string | null; dbChange24h: string | null;
+  }>();
+
   for (const w of wallets) {
     const total = Number(w.balance) + Number(w.locked);
     if (total <= 0) continue;
+    const sym = w.coinSymbol ?? "?";
+    if (bySymbol.has(sym)) {
+      bySymbol.get(sym)!.balance += total;
+    } else {
+      bySymbol.set(sym, {
+        symbol: sym,
+        name: w.coinName ?? "?",
+        icon: w.coinIcon ?? null,
+        balance: total,
+        dbPrice: w.dbPrice ?? null,
+        dbChange24h: w.dbChange24h ?? null,
+      });
+    }
+  }
 
-    const sym    = w.coinSymbol ?? "?";
-    const price  = livePrice(sym, w.dbPrice);
-    const ch24   = live24hChange(sym, w.dbChange24h);
+  for (const entry of bySymbol.values()) {
+    const sym    = entry.symbol;
+    const price  = livePrice(sym, entry.dbPrice);
+    const ch24   = live24hChange(sym, entry.dbChange24h);
 
-    const valueUsd       = total * price;
+    const valueUsd       = entry.balance * price;
     const valueYesterday = valueUsd / (1 + ch24 / 100);
     totalChangeUsd += valueUsd - valueYesterday;
     totalUsd       += valueUsd;
 
     allocation.push({
-      symbol:      sym,
-      name:        w.coinName ?? "?",
-      icon:        w.coinIcon ?? null,
+      symbol:       sym,
+      name:         entry.name,
+      icon:         entry.icon,
       valueUsd,
-      valueInr:    valueUsd * inrRate,
-      pct:         0,
+      valueInr:     valueUsd * inrRate,
+      pct:          0,
       change24hPct: ch24,
-      balance:     total,
+      balance:      entry.balance,
     });
   }
 
