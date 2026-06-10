@@ -364,7 +364,6 @@ function TaxReportPanel() {
             <div className="font-mono font-bold text-lg text-amber-400 mt-1">
               {fmtInr(data.tax.tdsPaidInr)}
             </div>
-            <div className="font-mono text-[10px] text-muted-foreground">≈ ${data.tax.tdsPaidUsd.toFixed(2)} USDT</div>
             <div className="text-[10px] text-muted-foreground mt-1">1% of every sell — Sec 194S</div>
           </div>
           <div className="rounded-lg border border-border bg-muted/20 p-3">
@@ -372,16 +371,14 @@ function TaxReportPanel() {
             <div className={`font-mono font-bold text-lg ${data.tax.taxableProfit > 0 ? "text-emerald-400" : "text-muted-foreground"} mt-1`}>
               {fmtInr(data.tax.taxableProfitInr)}
             </div>
-            <div className="font-mono text-[10px] text-muted-foreground">≈ ${data.tax.taxableProfit.toFixed(2)} USDT</div>
-            <div className="text-[10px] text-muted-foreground mt-1">Losses cannot be offset</div>
+            <div className="text-[10px] text-muted-foreground mt-1">Losses cannot be offset — Sec 115BBH</div>
           </div>
           <div className="rounded-lg border border-rose-500/20 bg-rose-500/5 p-3">
             <div className="text-[10px] uppercase tracking-wider text-rose-400">Total Tax Liability</div>
             <div className="font-mono font-bold text-lg text-rose-400 mt-1">
               {fmtInr(data.tax.totalTaxLiabilityInr)}
             </div>
-            <div className="font-mono text-[10px] text-muted-foreground">≈ ${data.tax.totalTaxLiabilityUsd.toFixed(2)} USDT</div>
-            <div className="text-[10px] text-muted-foreground mt-1">30% flat on taxable profit</div>
+            <div className="text-[10px] text-muted-foreground mt-1">30% flat on profits — Sec 115BBH</div>
           </div>
         </div>
 
