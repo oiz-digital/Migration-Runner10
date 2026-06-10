@@ -97,7 +97,7 @@ export default function PortfolioPro() {
           title="Total equity"
           value={summary ? fmtInrShort(summary.totalEquityInr) : "—"}
           icon={Wallet}
-          hint={summary ? `≈ $${summary.totalEquityUsd.toLocaleString("en-US", { maximumFractionDigits: 0 })} USDT` : undefined}
+          hint={summary ? `≈ ${summary.totalEquityUsd.toLocaleString("en-US", { maximumFractionDigits: 0 })} USDT` : undefined}
           accent
         />
         <PremiumStatCard

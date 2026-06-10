@@ -1282,7 +1282,7 @@ function SubscribeDialog({ plan, open, onClose, onSuccess }: {
             />
             {numAmt > 0 && !isValid && (
               <p className="text-xs text-rose-400 mt-1.5">
-                {numAmt < minAmt ? `Minimum: ${currency === "USDT" ? "$" : "₹"}${minAmt.toLocaleString()}` : `Maximum: ${currency === "USDT" ? "$" : "₹"}${maxAmt.toLocaleString()}`}
+                {numAmt < minAmt ? `Minimum: ${currency === "USDT" ? "" : "₹"}${minAmt.toLocaleString()}${currency === "USDT" ? " USDT" : ""}` : `Maximum: ${currency === "USDT" ? "" : "₹"}${maxAmt.toLocaleString()}${currency === "USDT" ? " USDT" : ""}`}
               </p>
             )}
           </div>

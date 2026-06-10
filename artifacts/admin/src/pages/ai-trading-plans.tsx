@@ -879,7 +879,7 @@ export default function AITradingPlansPage() {
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                     <XAxis dataKey="date" tick={{ fill: "#64748b", fontSize: 10 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: "#64748b", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => "$" + fmtNum(v)} />
+                    <YAxis tick={{ fill: "#64748b", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => fmtNum(v) + " USDT"} />
                     <Tooltip content={<ChartTooltip />} />
                     <Area type="monotone" dataKey="earned" name="Earnings" stroke="#f59e0b" strokeWidth={2} fill="url(#earnGrad)" dot={false} />
                   </AreaChart>
@@ -935,7 +935,7 @@ export default function AITradingPlansPage() {
                 <BarChart data={planEarningsData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                   <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: "#64748b", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => "$" + fmtNum(v)} />
+                  <YAxis tick={{ fill: "#64748b", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => fmtNum(v) + " USDT"} />
                   <Tooltip content={<ChartTooltip />} />
                   <Legend
                     wrapperStyle={{ fontSize: 11, color: "#64748b" }}

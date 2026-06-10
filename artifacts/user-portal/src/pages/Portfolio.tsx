@@ -84,7 +84,7 @@ const InrTooltip = ({ active, payload, label, inrRate }: any) => {
         <span className="text-foreground font-mono font-semibold">
           ₹{(val * (inrRate ?? 100)).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
         </span>
-        <span className="text-muted-foreground">(${val.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</span>
+        <span className="text-muted-foreground">({val.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDT)</span>
       </div>
     </div>
   );
@@ -98,7 +98,7 @@ const PieInrTooltip = ({ active, payload, inrRate }: any) => {
     <div className="bg-card border border-border rounded-lg px-3 py-2 shadow-xl text-xs">
       <div className="font-bold text-foreground">{d.name}</div>
       <div className="text-foreground font-mono">₹{(usd * (inrRate ?? 100)).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
-      <div className="text-muted-foreground">${usd.toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
+      <div className="text-muted-foreground">{usd.toLocaleString("en-US", { minimumFractionDigits: 2 })} USDT</div>
       <div className="text-amber-400 font-semibold">{(d.payload.pct ?? 0).toFixed(1)}%</div>
     </div>
   );
@@ -202,7 +202,7 @@ export default function Portfolio() {
 
   const hide = (s: string) => hidden ? "•••••" : s;
   const fmtInr = (n: number) => hide("₹" + (Number(n) || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-  const fmtUsd = (n: number) => hide("$" + (Number(n) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+  const fmtUsd = (n: number) => hide((Number(n) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " USDT");
   const fmtCoin = (n: number, sym: string) => hide((Number(n) || 0).toLocaleString("en-US", { maximumFractionDigits: 6 }) + " " + sym);
 
   const refresh = () => { walletQ.refetch(); pnlQ.refetch(); };
@@ -286,7 +286,7 @@ export default function Portfolio() {
           prefix="₹"
           icon={Wallet}
           loading={walletQ.isLoading}
-          hint={hidden ? "Hidden" : `≈ ${fmtUsd(totalUsd)} USD`}
+          hint={hidden ? "Hidden" : `≈ ${fmtUsd(totalUsd)}`}
         />
         <PremiumStatCard
           title="24h P&L (INR)"

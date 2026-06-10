@@ -22,7 +22,7 @@ function fmt(n: number, dp = 2) {
 function currencySymbol(pair: string): string {
   const quote = pair.split("/")[1] || "";
   if (quote === "INR") return "₹";
-  if (quote === "USDT" || quote === "USDC" || quote === "USD") return "$";
+  if (quote === "USDT" || quote === "USDC" || quote === "USD") return "";
   if (quote === "BTC") return "₿";
   if (quote === "ETH") return "Ξ";
   return quote ? `${quote} ` : "₹";

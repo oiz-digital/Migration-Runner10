@@ -63,9 +63,9 @@ function durationDays(s?: string | null, e?: string | null): string {
 
 function fmtVolume(v: string): string {
   const n = parseFloat(v);
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
-  if (n >= 1_000)     return `$${(n / 1_000).toFixed(1)}K`;
-  return `$${n.toFixed(2)}`;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M USDT`;
+  if (n >= 1_000)     return `${(n / 1_000).toFixed(1)}K USDT`;
+  return `${n.toFixed(2)} USDT`;
 }
 
 export default function LeaguesPage() {

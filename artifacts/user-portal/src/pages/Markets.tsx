@@ -69,15 +69,15 @@ function quoteAsset(sym: string) {
 }
 function currencyPrefix(sym: string): string {
   if (isInr(sym)) return "₹";
-  const q = sym.split("/")[1] ?? sym;
-  if (q === "USDT" || q === "USDC" || q === "USD" || q === "BUSD") return "$";
   return "";
 }
 function fmtPrice(n: number, sym: string): string {
   if (!isFinite(n) || n === 0) return "—";
   const inr = isInr(sym);
   const digits = inr ? 2 : n < 1 ? 6 : n < 100 ? 4 : 2;
-  return currencyPrefix(sym) + n.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  const q = sym.split("/")[1] ?? "";
+  const suffix = !inr && q ? ` ${q}` : "";
+  return currencyPrefix(sym) + n.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits }) + suffix;
 }
 function fmtCompact(n: number, prefix = "") {
   if (!isFinite(n) || n === 0) return prefix + "0";
@@ -765,7 +765,7 @@ export default function Markets() {
                         {fmtPrice(t.low, t.symbol)}
                       </td>
                       <td className="px-2 py-3 text-right font-mono tabular-nums text-xs">
-                        {fmtCompact(t.quoteVolume || 0, isInr(t.symbol) ? "₹" : "$")}
+                        {isInr(t.symbol) ? fmtCompact(t.quoteVolume || 0, "₹") : fmtCompact(t.quoteVolume || 0) + " " + quoteAsset(t.symbol)}
                       </td>
                       <td className="px-2 py-3 hidden xl:table-cell">
                         <div className="flex justify-center">
@@ -844,7 +844,7 @@ export default function Markets() {
                         {isNew && <Badge className="h-3.5 px-1 text-[8px] bg-emerald-500/15 text-emerald-400 border-emerald-500/30">NEW</Badge>}
                       </div>
                       <div className="text-[10px] text-muted-foreground">
-                        Vol {fmtCompact(t.quoteVolume || 0, isInr(t.symbol) ? "₹" : "$")}
+                        Vol {isInr(t.symbol) ? fmtCompact(t.quoteVolume || 0, "₹") : fmtCompact(t.quoteVolume || 0) + " " + quoteAsset(t.symbol)}
                       </div>
                     </div>
                     <MiniSpark symbol={t.symbol} pct={t.priceChangePercent} w={48} h={20} />

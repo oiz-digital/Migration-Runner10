@@ -54,8 +54,8 @@ function fmtPrice(n: number, quote: string): string {
   if (!isFinite(n) || n === 0) return "—";
   const inr = quote === "INR";
   const digits = inr ? 2 : n < 1 ? 6 : n < 100 ? 4 : 2;
-  const prefix = inr ? "₹" : (quote === "USDT" || quote === "USDC" || quote === "USD") ? "$" : "";
-  const suffix = (!inr && quote !== "USDT" && quote !== "USDC" && quote !== "USD" && quote) ? ` ${quote}` : "";
+  const prefix = inr ? "₹" : "";
+  const suffix = !inr && quote ? ` ${quote}` : "";
   return prefix + n.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits }) + suffix;
 }
 function fmtCompact(n: number, prefix = "") {
@@ -624,7 +624,7 @@ export default function Futures() {
           <HeaderStat label="24h High">{fmtPrice(high, quote)}</HeaderStat>
           <HeaderStat label="24h Low">{fmtPrice(low, quote)}</HeaderStat>
           <HeaderStat label={`24h Vol (${base})`}>{fmtCompact(vol)}</HeaderStat>
-          <HeaderStat label={`24h Vol (${quote})`}>{fmtCompact(quoteVol, quote === "INR" ? "₹" : "$")}</HeaderStat>
+          <HeaderStat label={`24h Vol (${quote})`}>{fmtCompact(quoteVol, quote === "INR" ? "₹" : "")}{quote !== "INR" && quote ? ` ${quote}` : ""}</HeaderStat>
 
           {!isSimple && (
             <HeaderStat label="Funding · Next">

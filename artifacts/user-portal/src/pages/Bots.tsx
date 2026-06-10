@@ -79,18 +79,18 @@ export default function Bots() {
         <PremiumStatCard title="Active bots" value={String(runningCount)} icon={BotIcon} accent />
         <PremiumStatCard
           title="Total invested"
-          value={`₹${totalInvested.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`}
+          value={totalInvested.toLocaleString("en-US", { maximumFractionDigits: 2 }) + " USDT"}
           icon={DollarSign}
         />
         <PremiumStatCard
           title="Realized PnL"
-          value={`${totalRealized >= 0 ? "+" : ""}₹${totalRealized.toFixed(2)}`}
+          value={`${totalRealized >= 0 ? "+" : ""}${totalRealized.toFixed(2)} USDT`}
           icon={TrendingUp}
           accent={totalRealized > 0}
         />
         <PremiumStatCard
           title="Unrealized PnL"
-          value={`${totalUnrealized >= 0 ? "+" : ""}₹${totalUnrealized.toFixed(2)}`}
+          value={`${totalUnrealized >= 0 ? "+" : ""}${totalUnrealized.toFixed(2)} USDT`}
           icon={Activity}
           accent={totalUnrealized > 0}
         />
@@ -181,13 +181,13 @@ function BotCard({ bot, onSelect }: { bot: Bot; onSelect: () => void }) {
             <div>
               <div className="text-muted-foreground">Realized</div>
               <div className={`font-mono font-bold ${realized >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                {realized >= 0 ? "+" : ""}${realized.toFixed(2)}
+                {realized >= 0 ? "+" : ""}{realized.toFixed(2)} USDT
               </div>
             </div>
             <div>
               <div className="text-muted-foreground">Unrealized</div>
               <div className={`font-mono font-bold ${unrealized >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                {unrealized >= 0 ? "+" : ""}${unrealized.toFixed(2)}
+                {unrealized >= 0 ? "+" : ""}{unrealized.toFixed(2)} USDT
               </div>
             </div>
             <div>

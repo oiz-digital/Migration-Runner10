@@ -155,7 +155,7 @@ function TraderCard({ trader, rank }: { trader: Trader; rank: number }) {
           <div className="grid grid-cols-4 gap-2 mt-3 text-[11px]">
             <Metric label="30d PnL" value={`${pnl30 >= 0 ? "+" : ""}${pnl30.toFixed(2)}%`} good={pnl30 >= 0} />
             <Metric label="Win rate" value={`${win.toFixed(0)}%`} />
-            <Metric label="AUM" value={`₹${aum >= 1000 ? (aum / 1000).toFixed(1) + "k" : aum.toFixed(0)}`} />
+            <Metric label="AUM" value={`${aum >= 1000 ? (aum / 1000).toFixed(1) + "k" : aum.toFixed(0)} USDT`} />
             <Metric label="Followers" value={String(trader.followersCount)} />
           </div>
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50 text-[11px]">
@@ -267,8 +267,8 @@ function Following() {
     <>
       <div className="grid grid-cols-3 gap-3">
         <PremiumStatCard title="Active follows" value={String(active.length)} icon={Users} accent />
-        <PremiumStatCard title="Total allocated" value={`₹${totalAlloc.toLocaleString("en-IN")}`} icon={DollarSign} />
-        <PremiumStatCard title="Copy PnL" value={`${totalPnl >= 0 ? "+" : ""}₹${totalPnl.toFixed(2)}`} icon={TrendingUp} accent={totalPnl > 0} />
+        <PremiumStatCard title="Total allocated" value={`${totalAlloc.toLocaleString("en-US", { maximumFractionDigits: 2 })} USDT`} icon={DollarSign} />
+        <PremiumStatCard title="Copy PnL" value={`${totalPnl >= 0 ? "+" : ""}${totalPnl.toFixed(2)} USDT`} icon={TrendingUp} accent={totalPnl > 0} />
       </div>
 
       {items.length === 0 ? (

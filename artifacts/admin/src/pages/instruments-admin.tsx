@@ -207,7 +207,7 @@ export default function InstrumentsAdminPage() {
                             </td>
                             <td className="py-3 px-4 text-xs text-muted-foreground">{inst.exchange}</td>
                             <td className="py-3 px-4 text-right tabular-nums text-sm font-medium">
-                              {inst.quoteCurrency === "INR" ? "₹" : "$"}{Number(inst.currentPrice).toLocaleString("en-IN", { maximumFractionDigits: inst.pricePrecision })}
+                              {inst.quoteCurrency === "INR" ? "₹" : ""}{Number(inst.currentPrice).toLocaleString("en-IN", { maximumFractionDigits: inst.pricePrecision })}{inst.quoteCurrency !== "INR" ? ` ${inst.quoteCurrency}` : ""}
                             </td>
                             <td className={cn("py-3 px-4 text-right tabular-nums text-xs font-medium", isUp ? "text-emerald-400" : "text-red-400")}>
                               {isUp ? "+" : ""}{chg.toFixed(2)}%

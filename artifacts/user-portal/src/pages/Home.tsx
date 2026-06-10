@@ -94,8 +94,6 @@ function isInr(sym: string) {
 }
 function currencyPrefix(sym: string): string {
   if (isInr(sym)) return "₹";
-  const q = sym.split("/")[1] ?? sym;
-  if (q === "USDT" || q === "USDC" || q === "USD" || q === "BUSD") return "$";
   return "";
 }
 function fmtPrice(n: number, sym: string): string {
@@ -468,7 +466,7 @@ function MarketRow({
 
       {/* 24h volume (sm+) */}
       <div className="hidden sm:block sm:col-span-2 lg:col-span-1 text-right font-mono tabular-nums text-xs text-muted-foreground">
-        {fmtCompact(t.quoteVolume, isInr(t.symbol) ? "₹" : "$")}
+        {fmtCompact(t.quoteVolume, isInr(t.symbol) ? "₹" : "")}
       </div>
 
       {/* Sparkline */}
@@ -552,7 +550,7 @@ function MarketCard({
         </div>
         <div className="flex items-end justify-between">
           <div className="text-[10px] text-muted-foreground">
-            Vol {fmtCompact(t.quoteVolume, isInr(t.symbol) ? "₹" : "$")}
+            Vol {fmtCompact(t.quoteVolume, isInr(t.symbol) ? "₹" : "")}
           </div>
           <Sparkline symbol={t.symbol} positive={positive} />
         </div>
@@ -752,7 +750,7 @@ export default function Home() {
           {[
             { label: "Registered users", value: 210000, suffix: "+", prefix: "", compact: true },
             { label: "24h trades executed", value: stats.totalTrades24h || 18400, suffix: "", prefix: "", compact: true },
-            { label: "Total volume", value: stats.totalVolumeUsd || 61176470, suffix: "", prefix: "₹", compact: true },
+            { label: "Total volume", value: stats.totalVolumeInr || 6117647000, suffix: "", prefix: "₹", compact: true },
             { label: "Active markets", value: stats.markets || 249, suffix: "", prefix: "", compact: false },
           ].map((s) => (
             <div key={s.label} className="flex items-baseline gap-2">
@@ -867,7 +865,7 @@ export default function Home() {
                 <Activity className="h-3.5 w-3.5 text-primary" /> 24h volume
               </div>
               <div className="text-3xl font-bold mt-2">
-                <AnimatedNumber value={stats.totalVolumeUsd} prefix="₹" compact />
+                <AnimatedNumber value={stats.totalVolumeInr} prefix="₹" compact />
               </div>
               <div className="text-xs text-success mt-1">
                 {stats.totalTrades24h > 0
@@ -1555,9 +1553,9 @@ function MobileCalloutSection() {
           </p>
           <div className="flex flex-wrap gap-3 pt-2">
             <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90" asChild>
-              <a href="/wallet/" target="_blank" rel="noreferrer noopener">
-                Open mobile wallet (web build) <ArrowRight className="ml-2 h-4 w-4" />
-              </a>
+              <Link href="/wallet">
+                Open wallet <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
               <Link href="/profile">Connect via QR</Link>
@@ -2448,7 +2446,7 @@ function AiTradingBanner() {
           </div>
           <div className="flex flex-wrap gap-3 pt-2">
             <Button size="lg" className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white shadow-lg shadow-violet-900/30" asChild>
-              <Link href="/trade/BTCINR">Try AI Trade on BTC <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              <Link href="/trade/BTC_INR">Try AI Trade on BTC <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
             <Button size="lg" variant="outline" className="border-violet-500/30 text-violet-300 hover:bg-violet-500/10" asChild>
               <Link href="/ai-trading">AI Auto-Trading Plans</Link>
