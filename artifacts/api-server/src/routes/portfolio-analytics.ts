@@ -10,10 +10,21 @@
  * coins not yet in cache (e.g., manual-only coins before first tick).
  */
 import { Router, type IRouter } from "express";
-import { db, walletsTable, coinsTable, tradesTable } from "@workspace/db";
+import { db, walletsTable, coinsTable, tradesTable, settingsTable } from "@workspace/db";
 import { and, desc, eq, gte } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 import { getInrRate, getRawTick } from "../lib/price-service";
+
+/** Always-fresh INR rate: price-service cache first, DB direct fallback */
+async function fetchInrRate(): Promise<number> {
+  const cached = getInrRate();
+  if (cached > 1) return cached;
+  try {
+    const [row] = await db.select().from(settingsTable).where(eq(settingsTable.key, "inr_usdt_rate")).limit(1);
+    if (row) { const n = Number(row.value); if (Number.isFinite(n) && n > 1) return n; }
+  } catch {}
+  return cached;
+}
 
 const router: IRouter = Router();
 
@@ -37,7 +48,7 @@ function live24hChange(symbol: string, dbChange: string | null): number {
 
 router.get("/portfolio/analytics/summary", requireAuth, async (req, res): Promise<void> => {
   const userId  = req.user!.id;
-  const inrRate = getInrRate();
+  const inrRate = await fetchInrRate();
 
   const wallets = await db.select({
     walletType:  walletsTable.walletType,
@@ -106,7 +117,7 @@ router.get("/portfolio/analytics/summary", requireAuth, async (req, res): Promis
 router.get("/portfolio/analytics/history", requireAuth, async (req, res): Promise<void> => {
   const userId  = req.user!.id;
   const days    = Math.min(365, Math.max(7, Number(req.query.days ?? 30)));
-  const inrRate = getInrRate();
+  const inrRate = await fetchInrRate();
 
   const wallets = await db.select({
     balance:     walletsTable.balance,
@@ -148,7 +159,7 @@ router.get("/portfolio/analytics/history", requireAuth, async (req, res): Promis
 
 router.get("/portfolio/analytics/tax-report", requireAuth, async (req, res): Promise<void> => {
   const userId  = req.user!.id;
-  const inrRate = getInrRate();
+  const inrRate = await fetchInrRate();
   const fyStart = typeof req.query.from === "string"
     ? new Date(req.query.from)
     : new Date(new Date().getFullYear(), 3, 1);   // April 1 of current year

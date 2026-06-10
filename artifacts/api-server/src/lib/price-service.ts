@@ -203,6 +203,9 @@ async function safeTick() {
 export function startPriceService(intervalMs = 1000) {
   if (started) return;
   started = true;
+  // Load INR rate from DB immediately — don't wait for the first tick so
+  // portfolio analytics requests that arrive before tick-1 get the correct rate.
+  void loadInrRate();
   void safeTick();
   setInterval(() => { void safeTick(); }, intervalMs);
   logger.info({ intervalMs }, "price service started (leader-gated)");
