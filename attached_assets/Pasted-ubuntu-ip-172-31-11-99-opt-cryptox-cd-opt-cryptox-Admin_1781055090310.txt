@@ -1,0 +1,65 @@
+ubuntu@ip-172-31-11-99:/opt/cryptox$ cd /opt/cryptox
+
+# Admin build
+PORT=3001 BASE_PATH=/admin/ pnpm --filter @workspace/admin run build
+
+# User portal build
+PORT=3002 BASE_PATH=/user/ pnpm --filter @workspace/user-portal run build
+
+# Restart
+sudo PM2_HOME=/opt/cryptox/.pm2 pm2 restart all
+
+> @workspace/admin@0.0.0 build /opt/cryptox/artifacts/admin
+> vite build --config vite.config.ts
+
+vite v7.3.3 building client environment for production...
+src/components/ui/tooltip.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+src/components/ui/avatar.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+src/components/ui/dropdown-menu.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+src/components/ui/command.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+src/components/ui/label.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+src/components/ui/select.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+src/components/ui/sheet.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+src/components/ui/progress.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+✓ 2537 modules transformed.
+dist/public/index.html                           1.30 kB │ gzip:   0.68 kB
+dist/public/assets/zebvix-mark-CLM6YkG7.png  1,010.25 kB
+dist/public/assets/index-ChfnHuMY.css          184.47 kB │ gzip:  26.66 kB
+dist/public/assets/index-DU3-lhTU.js         1,830.26 kB │ gzip: 464.70 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 8.05s
+
+> @workspace/user-portal@0.0.0 build /opt/cryptox/artifacts/user-portal
+> vite build --config vite.config.ts
+
+vite v7.3.3 building client environment for production...
+src/components/ui/tooltip.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+src/components/ui/dropdown-menu.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+src/components/ui/label.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+src/components/ui/select.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+src/components/ui/sheet.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+✓ 2579 modules transformed.
+dist/public/index.html                     1.61 kB │ gzip:   0.78 kB
+dist/public/assets/index-C-3mk6k5.css    332.54 kB │ gzip:  41.19 kB
+dist/public/assets/index-YrajTXuW.js   2,319.21 kB │ gzip: 623.52 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 8.31s
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [all](ids: [ 0, 1 ])
+[PM2] [cryptox-api](0) ✓
+[PM2] [cryptox-go](1) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 0  │ cryptox-api        │ fork     │ 31   │ online    │ 0%       │ 0b       │
+│ 1  │ cryptox-go         │ fork     │ 4    │ online    │ 0%       │ 0b       │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+ubuntu@ip-172-31-11-99:/opt/cryptox$
