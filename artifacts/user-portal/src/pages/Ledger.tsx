@@ -47,7 +47,7 @@ type SummaryResponse = {
   totalDebitedUsdt: number;
 };
 
-type WalletTab = "all" | "spot" | "futures" | "fiat";
+type WalletTab = "all" | "spot" | "futures" | "inr";
 type Period    = "1d"  | "7d"  | "1m"  | "all";
 
 /* ── Constants ─────────────────────────────────────────────────────────────── */
@@ -57,7 +57,7 @@ const WALLET_TABS: { value: WalletTab; label: string; icon: React.ReactNode; des
   { value: "all",     label: "All",     icon: <Globe     className="h-3.5 w-3.5" />, desc: "All wallets"          },
   { value: "spot",    label: "Spot",    icon: <Wallet    className="h-3.5 w-3.5" />, desc: "Spot trading wallet"  },
   { value: "futures", label: "Futures", icon: <BarChart3 className="h-3.5 w-3.5" />, desc: "Futures wallet"       },
-  { value: "fiat",    label: "Fiat ₹",  icon: <Landmark  className="h-3.5 w-3.5" />, desc: "INR fiat wallet"      },
+  { value: "inr",     label: "Fiat ₹",  icon: <Landmark  className="h-3.5 w-3.5" />, desc: "INR fiat wallet"      },
 ];
 
 const PERIOD_OPTIONS: { value: Period; label: string; shortLabel: string }[] = [
