@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { get } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -6,15 +6,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowDownLeft, ArrowUpRight, Bot, ArrowLeftRight, Coins, TrendingUp,
   TrendingDown, Zap, Gift, ShieldCheck, RefreshCw, ChevronLeft, ChevronRight,
-  BookOpen, Info, X,
+  BookOpen, Info, X, Download, Loader2, Wallet, BarChart3, Landmark, Globe,
 } from "lucide-react";
 import { Link } from "wouter";
+import { cn } from "@/lib/utils";
 
-/* ── Types ─────────────────────────────────────────────────────────────── */
+/* ── Types ─────────────────────────────────────────────────────────────────── */
 type LedgerEntry = {
   id: number;
   type: string;
@@ -29,14 +30,12 @@ type LedgerEntry = {
   createdAt: string;
 };
 
-type LedgerSummaryItem = { type: string; totalAmount: number; txCount: number };
-
 type LedgerResponse = {
   entries: LedgerEntry[];
   total: number;
   limit: number;
   offset: number;
-  summary: LedgerSummaryItem[];
+  summary: { type: string; totalAmount: number; txCount: number }[];
 };
 
 type SummaryResponse = {
@@ -48,64 +47,98 @@ type SummaryResponse = {
   totalDebitedUsdt: number;
 };
 
-/* ── Helpers ───────────────────────────────────────────────────────────── */
-const TYPE_META: Record<string, { label: string; icon: React.ReactNode; tone: string }> = {
-  deposit_inr:           { label: "INR Deposit",        icon: <ArrowDownLeft className="h-3.5 w-3.5" />,  tone: "text-emerald-400" },
-  deposit_crypto:        { label: "Crypto Deposit",     icon: <ArrowDownLeft className="h-3.5 w-3.5" />,  tone: "text-emerald-400" },
-  withdrawal_inr:        { label: "INR Withdrawal",     icon: <ArrowUpRight   className="h-3.5 w-3.5" />,  tone: "text-rose-400"    },
-  withdrawal_crypto:     { label: "Crypto Withdrawal",  icon: <ArrowUpRight   className="h-3.5 w-3.5" />,  tone: "text-rose-400"    },
-  ai_earning:            { label: "AI Trade Earning",   icon: <Bot            className="h-3.5 w-3.5" />,  tone: "text-violet-400"  },
-  ai_principal_lock:     { label: "AI Plan Invested",   icon: <Bot            className="h-3.5 w-3.5" />,  tone: "text-amber-400"   },
-  ai_principal_return:   { label: "AI Plan Returned",   icon: <Bot            className="h-3.5 w-3.5" />,  tone: "text-emerald-400" },
-  transfer_in:           { label: "Transfer In",        icon: <ArrowLeftRight className="h-3.5 w-3.5" />,  tone: "text-emerald-400" },
-  transfer_out:          { label: "Transfer Out",       icon: <ArrowLeftRight className="h-3.5 w-3.5" />,  tone: "text-rose-400"    },
-  trade_fee:             { label: "Trade Fee",          icon: <Coins          className="h-3.5 w-3.5" />,  tone: "text-rose-400"    },
-  trade_buy:             { label: "Trade Buy",          icon: <TrendingUp     className="h-3.5 w-3.5" />,  tone: "text-emerald-400" },
-  trade_sell:            { label: "Trade Sell",         icon: <TrendingDown   className="h-3.5 w-3.5" />,  tone: "text-rose-400"    },
-  earn_deposit:          { label: "Earn Deposit",       icon: <Coins          className="h-3.5 w-3.5" />,  tone: "text-amber-400"   },
-  earn_withdrawal:       { label: "Earn Withdrawal",    icon: <Coins          className="h-3.5 w-3.5" />,  tone: "text-emerald-400" },
-  earn_interest:         { label: "Earn Interest",      icon: <Zap            className="h-3.5 w-3.5" />,  tone: "text-emerald-400" },
-  p2p_credit:            { label: "P2P Credit",         icon: <ArrowDownLeft  className="h-3.5 w-3.5" />,  tone: "text-emerald-400" },
-  p2p_debit:             { label: "P2P Debit",          icon: <ArrowUpRight   className="h-3.5 w-3.5" />,  tone: "text-rose-400"    },
-  referral_bonus:        { label: "Referral Bonus",     icon: <Gift           className="h-3.5 w-3.5" />,  tone: "text-amber-400"   },
-  admin_credit:          { label: "Admin Credit",       icon: <ShieldCheck    className="h-3.5 w-3.5" />,  tone: "text-emerald-400" },
-  admin_debit:           { label: "Admin Debit",        icon: <ShieldCheck    className="h-3.5 w-3.5" />,  tone: "text-rose-400"    },
-  convert:               { label: "Convert",            icon: <RefreshCw      className="h-3.5 w-3.5" />,  tone: "text-sky-400"     },
-  options_pnl:           { label: "Options P&L",        icon: <TrendingUp     className="h-3.5 w-3.5" />,  tone: "text-violet-400"  },
-  futures_pnl:           { label: "Futures P&L",        icon: <TrendingUp     className="h-3.5 w-3.5" />,  tone: "text-violet-400"  },
+type WalletTab = "all" | "spot" | "futures" | "fiat";
+type Period    = "1d"  | "7d"  | "1m"  | "all";
+
+/* ── Constants ─────────────────────────────────────────────────────────────── */
+const LIMIT = 25;
+
+const WALLET_TABS: { value: WalletTab; label: string; icon: React.ReactNode; desc: string }[] = [
+  { value: "all",     label: "All",     icon: <Globe     className="h-3.5 w-3.5" />, desc: "All wallets"          },
+  { value: "spot",    label: "Spot",    icon: <Wallet    className="h-3.5 w-3.5" />, desc: "Spot trading wallet"  },
+  { value: "futures", label: "Futures", icon: <BarChart3 className="h-3.5 w-3.5" />, desc: "Futures wallet"       },
+  { value: "fiat",    label: "Fiat ₹",  icon: <Landmark  className="h-3.5 w-3.5" />, desc: "INR fiat wallet"      },
+];
+
+const PERIOD_OPTIONS: { value: Period; label: string; shortLabel: string }[] = [
+  { value: "1d",  label: "Today",   shortLabel: "1D"  },
+  { value: "7d",  label: "7 Days",  shortLabel: "7D"  },
+  { value: "1m",  label: "1 Month", shortLabel: "1M"  },
+  { value: "all", label: "All",     shortLabel: "All" },
+];
+
+const TYPE_META: Record<string, { label: string; icon: React.ReactNode; tone: string; credit: boolean | null }> = {
+  deposit_inr:         { label: "INR Deposit",       icon: <ArrowDownLeft  className="h-3.5 w-3.5" />, tone: "text-emerald-400", credit: true  },
+  deposit_crypto:      { label: "Crypto Deposit",    icon: <ArrowDownLeft  className="h-3.5 w-3.5" />, tone: "text-emerald-400", credit: true  },
+  withdrawal_inr:      { label: "INR Withdrawal",    icon: <ArrowUpRight   className="h-3.5 w-3.5" />, tone: "text-rose-400",    credit: false },
+  withdrawal_crypto:   { label: "Crypto Withdrawal", icon: <ArrowUpRight   className="h-3.5 w-3.5" />, tone: "text-rose-400",    credit: false },
+  ai_earning:          { label: "AI Earning",        icon: <Bot            className="h-3.5 w-3.5" />, tone: "text-violet-400",  credit: true  },
+  ai_principal_lock:   { label: "AI Invested",       icon: <Bot            className="h-3.5 w-3.5" />, tone: "text-amber-400",   credit: false },
+  ai_principal_return: { label: "AI Returned",       icon: <Bot            className="h-3.5 w-3.5" />, tone: "text-emerald-400", credit: true  },
+  transfer_in:         { label: "Transfer In",       icon: <ArrowLeftRight className="h-3.5 w-3.5" />, tone: "text-emerald-400", credit: true  },
+  transfer_out:        { label: "Transfer Out",      icon: <ArrowLeftRight className="h-3.5 w-3.5" />, tone: "text-rose-400",    credit: false },
+  trade_fee:           { label: "Trade Fee",         icon: <Coins          className="h-3.5 w-3.5" />, tone: "text-rose-400",    credit: false },
+  trade_buy:           { label: "Trade Buy",         icon: <TrendingUp     className="h-3.5 w-3.5" />, tone: "text-emerald-400", credit: true  },
+  trade_sell:          { label: "Trade Sell",        icon: <TrendingDown   className="h-3.5 w-3.5" />, tone: "text-rose-400",    credit: false },
+  earn_deposit:        { label: "Earn Deposit",      icon: <Coins          className="h-3.5 w-3.5" />, tone: "text-amber-400",   credit: false },
+  earn_withdrawal:     { label: "Earn Withdrawal",   icon: <Coins          className="h-3.5 w-3.5" />, tone: "text-emerald-400", credit: true  },
+  earn_interest:       { label: "Earn Interest",     icon: <Zap            className="h-3.5 w-3.5" />, tone: "text-emerald-400", credit: true  },
+  p2p_credit:          { label: "P2P Credit",        icon: <ArrowDownLeft  className="h-3.5 w-3.5" />, tone: "text-emerald-400", credit: true  },
+  p2p_debit:           { label: "P2P Debit",         icon: <ArrowUpRight   className="h-3.5 w-3.5" />, tone: "text-rose-400",    credit: false },
+  referral_bonus:      { label: "Referral Bonus",    icon: <Gift           className="h-3.5 w-3.5" />, tone: "text-amber-400",   credit: true  },
+  admin_credit:        { label: "Admin Credit",      icon: <ShieldCheck    className="h-3.5 w-3.5" />, tone: "text-emerald-400", credit: true  },
+  admin_debit:         { label: "Admin Debit",       icon: <ShieldCheck    className="h-3.5 w-3.5" />, tone: "text-rose-400",    credit: false },
+  convert:             { label: "Convert",           icon: <RefreshCw      className="h-3.5 w-3.5" />, tone: "text-sky-400",     credit: null  },
+  options_pnl:         { label: "Options P&L",       icon: <TrendingUp     className="h-3.5 w-3.5" />, tone: "text-violet-400",  credit: null  },
+  futures_pnl:         { label: "Futures P&L",       icon: <TrendingUp     className="h-3.5 w-3.5" />, tone: "text-violet-400",  credit: null  },
 };
 
 const FILTER_TYPES = [
-  { value: "all", label: "All types" },
-  { value: "ai_earning", label: "AI Trade Earnings" },
-  { value: "deposit_inr", label: "INR Deposits" },
-  { value: "deposit_crypto", label: "Crypto Deposits" },
-  { value: "withdrawal_inr", label: "INR Withdrawals" },
-  { value: "withdrawal_crypto", label: "Crypto Withdrawals" },
-  { value: "ai_principal_lock", label: "AI Plan Invested" },
-  { value: "ai_principal_return", label: "AI Plan Returned" },
-  { value: "transfer_in", label: "Transfer In" },
-  { value: "transfer_out", label: "Transfer Out" },
-  { value: "trade_buy", label: "Trade Buy" },
-  { value: "trade_sell", label: "Trade Sell" },
-  { value: "trade_fee", label: "Trade Fee" },
-  { value: "earn_deposit", label: "Earn Deposit" },
-  { value: "earn_withdrawal", label: "Earn Withdrawal" },
-  { value: "earn_interest", label: "Earn Interest" },
-  { value: "p2p_credit", label: "P2P Credit" },
-  { value: "p2p_debit", label: "P2P Debit" },
-  { value: "convert", label: "Convert" },
-  { value: "options_pnl", label: "Options P&L" },
-  { value: "futures_pnl", label: "Futures P&L" },
-  { value: "referral_bonus", label: "Referral Bonus" },
-  { value: "admin_credit", label: "Admin Credit" },
-  { value: "admin_debit", label: "Admin Debit" },
+  { value: "all",                label: "All types"          },
+  { value: "deposit_inr",        label: "INR Deposit"        },
+  { value: "deposit_crypto",     label: "Crypto Deposit"     },
+  { value: "withdrawal_inr",     label: "INR Withdrawal"     },
+  { value: "withdrawal_crypto",  label: "Crypto Withdrawal"  },
+  { value: "ai_earning",         label: "AI Earning"         },
+  { value: "ai_principal_lock",  label: "AI Invested"        },
+  { value: "ai_principal_return",label: "AI Returned"        },
+  { value: "trade_buy",          label: "Trade Buy"          },
+  { value: "trade_sell",         label: "Trade Sell"         },
+  { value: "trade_fee",          label: "Trade Fee"          },
+  { value: "transfer_in",        label: "Transfer In"        },
+  { value: "transfer_out",       label: "Transfer Out"       },
+  { value: "earn_deposit",       label: "Earn Deposit"       },
+  { value: "earn_withdrawal",    label: "Earn Withdrawal"    },
+  { value: "earn_interest",      label: "Earn Interest"      },
+  { value: "p2p_credit",         label: "P2P Credit"         },
+  { value: "p2p_debit",          label: "P2P Debit"          },
+  { value: "convert",            label: "Convert"            },
+  { value: "futures_pnl",        label: "Futures P&L"        },
+  { value: "options_pnl",        label: "Options P&L"        },
+  { value: "referral_bonus",     label: "Referral Bonus"     },
+  { value: "admin_credit",       label: "Admin Credit"       },
+  { value: "admin_debit",        label: "Admin Debit"        },
 ];
 
+/* ── Helpers ─────────────────────────────────────────────────────────────── */
+function getPeriodDates(period: Period): { from: string; to: string } {
+  if (period === "all") return { from: "", to: "" };
+  const now  = new Date();
+  const from = new Date();
+  if (period === "1d") from.setDate(now.getDate() - 1);
+  if (period === "7d") from.setDate(now.getDate() - 7);
+  if (period === "1m") from.setMonth(now.getMonth() - 1);
+  return {
+    from: from.toISOString().slice(0, 10),
+    to:   now.toISOString().slice(0, 10),
+  };
+}
+
 function fmt(n: number, coin: string) {
-  if (coin === "INR") return `₹${Math.abs(n).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
-  if (["USDT", "USDC"].includes(coin)) return `${Math.abs(n).toLocaleString("en-US", { maximumFractionDigits: 4 })} ${coin}`;
-  return `${Math.abs(n).toLocaleString("en-US", { maximumFractionDigits: 6 })} ${coin}`;
+  const abs = Math.abs(n);
+  if (coin === "INR")                       return `₹${abs.toLocaleString("en-IN",  { maximumFractionDigits: 2 })}`;
+  if (["USDT", "USDC", "BUSD"].includes(coin)) return `${abs.toLocaleString("en-US",  { maximumFractionDigits: 4 })} ${coin}`;
+  return `${abs.toLocaleString("en-US", { maximumFractionDigits: 6 })} ${coin}`;
 }
 
 function fmtBal(n: number, coin: string) {
@@ -114,253 +147,407 @@ function fmtBal(n: number, coin: string) {
 }
 
 function fmtDate(d: string) {
-  return new Date(d).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  return new Date(d).toLocaleString("en-IN", {
+    day: "2-digit", month: "short", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  });
 }
 
-const LIMIT = 20;
+function fmtDateShort(d: string) {
+  return new Date(d).toLocaleString("en-IN", {
+    day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+  });
+}
 
-/* ── Summary cards ─────────────────────────────────────────────────────── */
+/* ── Summary Cards ─────────────────────────────────────────────────────────── */
 function SummaryCards({ data }: { data: SummaryResponse }) {
   const netInr  = data.totalCreditedInr  - data.totalDebitedInr;
   const netUsdt = data.totalCreditedUsdt - data.totalDebitedUsdt;
 
-  const fmtInr  = (v: number) =>
-    `₹${Math.abs(v).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
-  const fmtUsdt = (v: number) =>
-    `${Math.abs(v).toLocaleString("en-US", { maximumFractionDigits: 4 })} USDT`;
+  const fmtInr  = (v: number) => `₹${Math.abs(v).toLocaleString("en-IN",  { maximumFractionDigits: 2 })}`;
+  const fmtUsdt = (v: number) => `${Math.abs(v).toLocaleString("en-US", { maximumFractionDigits: 4 })} USDT`;
 
-  const hasInr  = data.totalCreditedInr > 0 || data.totalDebitedInr > 0;
+  const hasInr  = data.totalCreditedInr  > 0 || data.totalDebitedInr  > 0;
   const hasUsdt = data.totalCreditedUsdt > 0 || data.totalDebitedUsdt > 0;
 
+  const cards = [
+    {
+      icon: <Bot className="h-4 w-4 text-violet-400" />,
+      label: "AI Earnings",
+      border: "border-violet-400/20",
+      bg:     "bg-violet-500/5",
+      value:  <span className="text-violet-300">{fmtUsdt(data.totalAiEarningsUsdt)}</span>,
+      sub:    `${data.aiEarningsCount} credits`,
+    },
+    {
+      icon: <ArrowDownLeft className="h-4 w-4 text-emerald-400" />,
+      label: "Total Credited",
+      border: "border-emerald-400/20",
+      bg:     "bg-emerald-500/5",
+      value: (
+        <div className="flex flex-col">
+          {hasUsdt && <span className="text-emerald-400">+{fmtUsdt(data.totalCreditedUsdt)}</span>}
+          {hasInr  && <span className={cn("text-emerald-400", hasUsdt ? "text-xs" : "")}>+{fmtInr(data.totalCreditedInr)}</span>}
+          {!hasUsdt && !hasInr && <span className="text-muted-foreground">₹0</span>}
+        </div>
+      ),
+      sub: "All inflows",
+    },
+    {
+      icon: <ArrowUpRight className="h-4 w-4 text-rose-400" />,
+      label: "Total Debited",
+      border: "border-rose-400/20",
+      bg:     "bg-rose-500/5",
+      value: (
+        <div className="flex flex-col">
+          {hasUsdt && data.totalDebitedUsdt > 0 && <span className="text-rose-400">−{fmtUsdt(data.totalDebitedUsdt)}</span>}
+          {hasInr  && data.totalDebitedInr  > 0 && <span className={cn("text-rose-400", hasUsdt && data.totalDebitedUsdt > 0 ? "text-xs" : "")}>−{fmtInr(data.totalDebitedInr)}</span>}
+          {data.totalDebitedUsdt === 0 && data.totalDebitedInr === 0 && <span className="text-muted-foreground">₹0</span>}
+        </div>
+      ),
+      sub: "All outflows",
+    },
+    {
+      icon: <Coins className="h-4 w-4 text-amber-400" />,
+      label: "Net Flow",
+      border: netUsdt >= 0 && netInr >= 0 ? "border-emerald-400/20" : "border-rose-400/20",
+      bg:     netUsdt >= 0 && netInr >= 0 ? "bg-emerald-500/5"      : "bg-rose-500/5",
+      value: (
+        <div className="flex flex-col">
+          {netUsdt !== 0 && <span className={netUsdt >= 0 ? "text-emerald-400" : "text-rose-400"}>{netUsdt >= 0 ? "+" : "−"}{fmtUsdt(Math.abs(netUsdt))}</span>}
+          {netInr  !== 0 && <span className={cn(netInr  >= 0 ? "text-emerald-400" : "text-rose-400", netUsdt !== 0 ? "text-xs" : "")}>{netInr >= 0 ? "+" : "−"}{fmtInr(Math.abs(netInr))}</span>}
+          {netUsdt === 0 && netInr === 0 && <span className="text-muted-foreground">₹0</span>}
+        </div>
+      ),
+      sub: "Credited − Debited",
+    },
+  ];
+
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-      {/* AI Trade Earnings */}
-      <div className="rounded-xl border border-violet-400/20 bg-violet-500/5 p-4">
-        <div className="flex items-center gap-2 mb-1">
-          <Bot className="h-4 w-4 text-violet-400" />
-          <span className="text-xs text-muted-foreground">AI Earnings</span>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mb-5">
+      {cards.map(c => (
+        <div key={c.label} className={cn("rounded-xl border p-3 sm:p-4", c.border, c.bg)}>
+          <div className="flex items-center gap-1.5 mb-2">
+            {c.icon}
+            <span className="text-[11px] sm:text-xs text-muted-foreground">{c.label}</span>
+          </div>
+          <div className="text-sm sm:text-base font-bold tabular-nums leading-tight">{c.value}</div>
+          <div className="text-[10px] sm:text-xs text-muted-foreground mt-1">{c.sub}</div>
         </div>
-        <div className="text-xl font-bold tabular-nums text-violet-300">
-          {fmtUsdt(data.totalAiEarningsUsdt)}
-        </div>
-        <div className="text-xs text-muted-foreground mt-0.5">{data.aiEarningsCount} credits</div>
-      </div>
-
-      {/* Total Credited — USDT primary, INR secondary */}
-      <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/5 p-4">
-        <div className="flex items-center gap-2 mb-1">
-          <ArrowDownLeft className="h-4 w-4 text-emerald-400" />
-          <span className="text-xs text-muted-foreground">Total Credited</span>
-        </div>
-        {hasUsdt && (
-          <div className="text-xl font-bold tabular-nums text-emerald-400">
-            +{fmtUsdt(data.totalCreditedUsdt)}
-          </div>
-        )}
-        {hasInr && (
-          <div className={`${hasUsdt ? "text-sm" : "text-xl"} font-bold tabular-nums text-emerald-400`}>
-            +{fmtInr(data.totalCreditedInr)}
-          </div>
-        )}
-        {!hasUsdt && !hasInr && (
-          <div className="text-xl font-bold tabular-nums text-muted-foreground">₹0</div>
-        )}
-        <div className="text-xs text-muted-foreground mt-0.5">All inflows</div>
-      </div>
-
-      {/* Total Debited — USDT primary, INR secondary */}
-      <div className="rounded-xl border border-rose-400/20 bg-rose-500/5 p-4">
-        <div className="flex items-center gap-2 mb-1">
-          <ArrowUpRight className="h-4 w-4 text-rose-400" />
-          <span className="text-xs text-muted-foreground">Total Debited</span>
-        </div>
-        {hasUsdt && data.totalDebitedUsdt > 0 && (
-          <div className="text-xl font-bold tabular-nums text-rose-400">
-            −{fmtUsdt(data.totalDebitedUsdt)}
-          </div>
-        )}
-        {hasInr && data.totalDebitedInr > 0 && (
-          <div className={`${hasUsdt && data.totalDebitedUsdt > 0 ? "text-sm" : "text-xl"} font-bold tabular-nums text-rose-400`}>
-            −{fmtInr(data.totalDebitedInr)}
-          </div>
-        )}
-        {data.totalDebitedUsdt === 0 && data.totalDebitedInr === 0 && (
-          <div className="text-xl font-bold tabular-nums text-muted-foreground">₹0</div>
-        )}
-        <div className="text-xs text-muted-foreground mt-0.5">All outflows</div>
-      </div>
-
-      {/* Net Balance — show whichever currency is dominant */}
-      <div className={`rounded-xl border p-4 ${
-        (netUsdt >= 0 && netInr >= 0) ? "border-emerald-400/20 bg-emerald-500/5"
-        : "border-rose-400/20 bg-rose-500/5"
-      }`}>
-        <div className="flex items-center gap-2 mb-1">
-          <Coins className="h-4 w-4 text-amber-400" />
-          <span className="text-xs text-muted-foreground">Net Balance</span>
-        </div>
-        {/* USDT net — primary when non-zero */}
-        {netUsdt !== 0 && (
-          <div className={`text-xl font-bold tabular-nums ${netUsdt >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-            {netUsdt >= 0 ? "+" : "−"}{fmtUsdt(Math.abs(netUsdt))}
-          </div>
-        )}
-        {/* INR net */}
-        {netInr !== 0 && (
-          <div className={`${netUsdt !== 0 ? "text-sm" : "text-xl"} font-bold tabular-nums ${netInr >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-            {netInr >= 0 ? "+" : "−"}{fmtInr(Math.abs(netInr))}
-          </div>
-        )}
-        {netUsdt === 0 && netInr === 0 && (
-          <div className="text-xl font-bold tabular-nums text-muted-foreground">₹0</div>
-        )}
-        <div className="text-xs text-muted-foreground mt-0.5">Credited − Debited</div>
-      </div>
+      ))}
     </div>
   );
 }
 
-/* ── Main page ─────────────────────────────────────────────────────────── */
+/* ── Main Page ─────────────────────────────────────────────────────────────── */
 export default function LedgerPage() {
   const { user } = useAuth();
-  const [page, setPage] = useState(0);
+
+  const [walletTab, setWalletTab]   = useState<WalletTab>("all");
+  const [period,    setPeriod]      = useState<Period>("all");
   const [typeFilter, setTypeFilter] = useState("");
   const [coinFilter, setCoinFilter] = useState("");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  const [page,       setPage]       = useState(0);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
-  const hasFilters = !!(typeFilter || coinFilter || fromDate || toDate);
+  /* period → dates */
+  const periodDates = getPeriodDates(period);
 
   const params = new URLSearchParams({
-    limit: String(LIMIT),
+    limit:  String(LIMIT),
     offset: String(page * LIMIT),
-    ...(typeFilter && { type: typeFilter }),
-    ...(coinFilter && { coin: coinFilter.toUpperCase() }),
-    ...(fromDate && { from: fromDate }),
-    ...(toDate && { to: toDate }),
+    ...(walletTab !== "all" && { wallet: walletTab }),
+    ...(typeFilter           && { type:   typeFilter }),
+    ...(coinFilter           && { coin:   coinFilter.toUpperCase() }),
+    ...(periodDates.from     && { from:   periodDates.from }),
+    ...(periodDates.to       && { to:     periodDates.to   }),
   });
 
   const ledgerQ = useQuery<LedgerResponse>({
-    queryKey: ["ledger", page, typeFilter, coinFilter, fromDate, toDate],
-    queryFn: () => get(`/ledger?${params}`),
-    enabled: !!user,
+    queryKey: ["ledger", walletTab, period, typeFilter, coinFilter, page],
+    queryFn:  () => get(`/ledger?${params}`),
+    enabled:  !!user,
   });
 
   const summaryQ = useQuery<SummaryResponse>({
     queryKey: ["ledger-summary"],
-    queryFn: () => get("/ledger/summary"),
-    enabled: !!user,
+    queryFn:  () => get("/ledger/summary"),
+    enabled:  !!user,
   });
 
-  const entries = ledgerQ.data?.entries ?? [];
-  const total   = ledgerQ.data?.total ?? 0;
-  const pages   = Math.ceil(total / LIMIT);
+  const entries  = ledgerQ.data?.entries ?? [];
+  const total    = ledgerQ.data?.total   ?? 0;
+  const pages    = Math.ceil(total / LIMIT);
+  const hasFilters = !!(typeFilter || coinFilter || walletTab !== "all" || period !== "all");
 
+  function resetFilters() {
+    setTypeFilter(""); setCoinFilter(""); setWalletTab("all"); setPeriod("all"); setPage(0);
+  }
+
+  /* ── PDF Download ────────────────────────────────────────────────────────── */
+  const downloadPdf = useCallback(async () => {
+    if (pdfLoading) return;
+    setPdfLoading(true);
+    try {
+      const exportParams = new URLSearchParams({
+        ...(walletTab !== "all" && { wallet: walletTab }),
+        ...(typeFilter           && { type:   typeFilter }),
+        ...(coinFilter           && { coin:   coinFilter.toUpperCase() }),
+        ...(periodDates.from     && { from:   periodDates.from }),
+        ...(periodDates.to       && { to:     periodDates.to   }),
+      });
+
+      const data: { entries: LedgerEntry[] } = await get(`/ledger/export?${exportParams}`);
+      const rows = data.entries;
+
+      const { default: jsPDF }   = await import("jspdf");
+      const { default: autoTable } = await import("jspdf-autotable");
+
+      const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+
+      /* Header */
+      doc.setFontSize(18);
+      doc.setTextColor(40, 40, 40);
+      doc.text("Zebvix — Wallet Ledger", 14, 16);
+
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      const walletLabel = walletTab === "all" ? "All Wallets" : walletTab.charAt(0).toUpperCase() + walletTab.slice(1);
+      const periodLabel = PERIOD_OPTIONS.find(p => p.value === period)?.label ?? "All";
+      doc.text(`Wallet: ${walletLabel}  |  Period: ${periodLabel}  |  Generated: ${new Date().toLocaleString("en-IN")}`, 14, 23);
+      if (user?.name) doc.text(`Account: ${user.name}`, 14, 28);
+
+      doc.setDrawColor(200, 200, 200);
+      doc.line(14, 32, 283, 32);
+
+      /* Table */
+      autoTable(doc, {
+        startY: 35,
+        head: [["#", "Date & Time", "Type", "Wallet", "Coin", "Amount", "Balance Before", "Balance After", "Note"]],
+        body: rows.map((e, i) => {
+          const meta = TYPE_META[e.type];
+          const sign = e.amount >= 0 ? "+" : "−";
+          return [
+            String(i + 1),
+            fmtDate(e.createdAt),
+            meta?.label ?? e.type,
+            e.walletType.charAt(0).toUpperCase() + e.walletType.slice(1),
+            e.coin,
+            `${sign}${fmt(e.amount, e.coin)}`,
+            fmtBal(e.balanceBefore, e.coin),
+            fmtBal(e.balanceAfter,  e.coin),
+            e.note ?? (e.refId ? `Ref: ${e.refId}` : "—"),
+          ];
+        }),
+        styles:          { fontSize: 7.5, cellPadding: 2.5 },
+        headStyles:      { fillColor: [30, 30, 30], textColor: 255, fontStyle: "bold" },
+        alternateRowStyles: { fillColor: [248, 248, 248] },
+        columnStyles: {
+          0: { cellWidth: 8  },
+          1: { cellWidth: 36 },
+          2: { cellWidth: 32 },
+          3: { cellWidth: 18 },
+          4: { cellWidth: 14 },
+          5: { cellWidth: 30, halign: "right" },
+          6: { cellWidth: 32, halign: "right" },
+          7: { cellWidth: 32, halign: "right" },
+          8: { cellWidth: "auto" as any },
+        },
+        didDrawCell: (hookData: any) => {
+          if (hookData.section === "body" && hookData.column.index === 5) {
+            const text = hookData.cell.text?.[0] ?? "";
+            if (text.startsWith("+")) doc.setTextColor(22, 163, 74);
+            else if (text.startsWith("−")) doc.setTextColor(220, 38, 38);
+            else doc.setTextColor(40, 40, 40);
+          }
+        },
+      });
+
+      /* Footer */
+      const pageCount = (doc as any).internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`Page ${i} of ${pageCount}  |  Total ${rows.length} transactions  |  Zebvix Exchange`, 14, doc.internal.pageSize.getHeight() - 6);
+      }
+
+      const fileName = [
+        "zebvix-ledger",
+        walletTab !== "all" ? walletTab : "",
+        period !== "all" ? period : "",
+        new Date().toISOString().slice(0, 10),
+      ].filter(Boolean).join("-") + ".pdf";
+
+      doc.save(fileName);
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+    } finally {
+      setPdfLoading(false);
+    }
+  }, [walletTab, period, typeFilter, coinFilter, periodDates, user, pdfLoading]);
+
+  /* ── Auth guard ──────────────────────────────────────────────────────────── */
   if (!user) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-        <h2 className="text-2xl font-bold mb-2">Login Required</h2>
-        <p className="text-muted-foreground mb-6">Please log in to view your fund ledger</p>
-        <Button asChild><Link href="/login">Login</Link></Button>
+        <h2 className="text-xl sm:text-2xl font-bold mb-2">Login Required</h2>
+        <p className="text-muted-foreground text-sm mb-6">Please log in to view your wallet ledger</p>
+        <Button asChild><Link href="/login">Log In</Link></Button>
       </div>
     );
   }
 
+  /* ── Render ──────────────────────────────────────────────────────────────── */
   return (
-    <div className="container mx-auto px-3 md:px-6 py-5 max-w-6xl">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-5">
+    <div className="container mx-auto px-3 md:px-6 py-4 max-w-7xl">
+
+      {/* ── Page header ─────────────────────────────────────────────── */}
+      <div className="flex items-start justify-between gap-3 mb-5">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <BookOpen className="h-6 w-6 text-primary" />
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold flex items-center gap-2">
+            <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-primary shrink-0" />
             Wallet Ledger
           </h1>
-          <p className="text-muted-foreground text-sm mt-0.5">Complete history of every fund movement</p>
+          <p className="text-muted-foreground text-xs sm:text-sm mt-0.5">
+            Complete history of every fund movement — Spot, Futures &amp; Fiat
+          </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => { ledgerQ.refetch(); summaryQ.refetch(); }}>
-          <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Refresh
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs gap-1.5"
+            onClick={() => { ledgerQ.refetch(); summaryQ.refetch(); }}
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Refresh</span>
+          </Button>
+          <Button
+            size="sm"
+            className="h-8 text-xs gap-1.5 bg-primary/90 hover:bg-primary"
+            onClick={downloadPdf}
+            disabled={pdfLoading}
+          >
+            {pdfLoading
+              ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              : <Download className="h-3.5 w-3.5" />
+            }
+            <span className="hidden sm:inline">{pdfLoading ? "Generating…" : "PDF"}</span>
+          </Button>
+        </div>
       </div>
 
-      {/* Summary cards */}
+      {/* ── Summary cards ───────────────────────────────────────────── */}
       {summaryQ.data && <SummaryCards data={summaryQ.data} />}
 
-      {/* Filters */}
-      <div className="rounded-xl border border-border bg-card p-3 mb-4">
-        <div className="flex flex-wrap gap-3 items-end">
-          {/* Type filter */}
-          <div className="flex flex-col gap-1">
-            <Label className="text-[11px] text-muted-foreground uppercase tracking-wide">Transaction type</Label>
+      {/* ── Wallet type tabs ─────────────────────────────────────────── */}
+      <Tabs value={walletTab} onValueChange={(v) => { setWalletTab(v as WalletTab); setPage(0); }} className="mb-4">
+        <div className="overflow-x-auto -mx-1 px-1">
+          <TabsList className="inline-flex h-10 min-w-full sm:min-w-0 gap-0.5 bg-muted/40 border border-border p-1 rounded-xl">
+            {WALLET_TABS.map(t => (
+              <TabsTrigger
+                key={t.value}
+                value={t.value}
+                className={cn(
+                  "flex-1 sm:flex-none inline-flex items-center gap-1.5 text-xs sm:text-sm px-3 sm:px-5 rounded-lg transition-all",
+                  "data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground",
+                )}
+              >
+                {t.icon}
+                {t.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
+      </Tabs>
+
+      {/* ── Period + filters row ──────────────────────────────────────── */}
+      <div className="rounded-xl border border-border bg-card/60 p-3 mb-4 space-y-3">
+
+        {/* Period quick buttons */}
+        <div className="flex items-center gap-1.5">
+          <span className="text-[11px] text-muted-foreground uppercase tracking-wide mr-1 hidden sm:inline">Period:</span>
+          {PERIOD_OPTIONS.map(p => (
+            <button
+              key={p.value}
+              onClick={() => { setPeriod(p.value); setPage(0); }}
+              className={cn(
+                "px-3 py-1 rounded-lg text-xs font-medium transition-all border",
+                period === p.value
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                  : "bg-muted/40 text-muted-foreground border-transparent hover:bg-muted hover:text-foreground",
+              )}
+            >
+              <span className="sm:hidden">{p.shortLabel}</span>
+              <span className="hidden sm:inline">{p.label}</span>
+            </button>
+          ))}
+          {period !== "all" && periodDates.from && (
+            <span className="text-[10px] text-muted-foreground ml-1">
+              {periodDates.from} → {periodDates.to}
+            </span>
+          )}
+        </div>
+
+        {/* Type + Coin filters */}
+        <div className="flex flex-wrap gap-2 items-end">
+          <div className="flex flex-col gap-1 min-w-[160px]">
+            <span className="text-[11px] text-muted-foreground uppercase tracking-wide">Transaction type</span>
             <Select value={typeFilter || "all"} onValueChange={(v) => { setTypeFilter(v === "all" ? "" : v); setPage(0); }}>
-              <SelectTrigger className="w-44 h-8 text-xs">
+              <SelectTrigger className="h-8 text-xs">
                 <SelectValue placeholder="All types" />
               </SelectTrigger>
-              <SelectContent>
-                {FILTER_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+              <SelectContent className="max-h-64">
+                {FILTER_TYPES.map(t => (
+                  <SelectItem key={t.value} value={t.value} className="text-xs">{t.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Coin filter */}
           <div className="flex flex-col gap-1">
-            <Label className="text-[11px] text-muted-foreground uppercase tracking-wide">Coin</Label>
+            <span className="text-[11px] text-muted-foreground uppercase tracking-wide">Coin / Asset</span>
             <Input
-              placeholder="e.g. USDT, INR, BTC"
+              placeholder="BTC, USDT, INR…"
               value={coinFilter}
               onChange={(e) => { setCoinFilter(e.target.value); setPage(0); }}
-              className="w-36 h-8 text-xs"
+              className="h-8 text-xs w-32"
             />
           </div>
 
-          {/* Date range */}
-          <div className="flex flex-col gap-1">
-            <Label className="text-[11px] text-muted-foreground uppercase tracking-wide">From date</Label>
-            <Input
-              type="date"
-              value={fromDate}
-              onChange={(e) => { setFromDate(e.target.value); setPage(0); }}
-              className="w-36 h-8 text-xs"
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <Label className="text-[11px] text-muted-foreground uppercase tracking-wide">To date</Label>
-            <Input
-              type="date"
-              value={toDate}
-              onChange={(e) => { setToDate(e.target.value); setPage(0); }}
-              className="w-36 h-8 text-xs"
-            />
-          </div>
-
-          {/* Clear */}
           {hasFilters && (
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 text-xs gap-1.5 self-end"
-              onClick={() => { setTypeFilter(""); setCoinFilter(""); setFromDate(""); setToDate(""); setPage(0); }}
+              className="h-8 text-xs gap-1.5 self-end text-muted-foreground hover:text-foreground"
+              onClick={resetFilters}
             >
-              <X className="h-3 w-3" /> Clear filters
+              <X className="h-3 w-3" /> Clear all
             </Button>
           )}
+
+          <div className="ml-auto text-[11px] text-muted-foreground self-end pb-1.5">
+            {total > 0 && `${total.toLocaleString()} entries`}
+          </div>
         </div>
       </div>
 
-      {/* Table */}
+      {/* ── Ledger table ─────────────────────────────────────────────── */}
       <div className="rounded-xl border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-muted/30 text-muted-foreground text-xs uppercase tracking-wide border-b border-border">
-                <th className="px-4 py-3 text-left">Type</th>
-                <th className="px-4 py-3 text-left">Coin</th>
-                <th className="px-4 py-3 text-left">Wallet</th>
-                <th className="px-4 py-3 text-right">Amount</th>
-                <th className="px-4 py-3 text-right">Before</th>
-                <th className="px-4 py-3 text-right">After</th>
-                <th className="px-4 py-3 text-left">Note</th>
-                <th className="px-4 py-3 text-right">Time</th>
+                <th className="px-3 sm:px-4 py-3 text-left">Type</th>
+                <th className="px-3 sm:px-4 py-3 text-left hidden sm:table-cell">Wallet</th>
+                <th className="px-3 sm:px-4 py-3 text-left">Coin</th>
+                <th className="px-3 sm:px-4 py-3 text-right">Amount</th>
+                <th className="px-3 sm:px-4 py-3 text-right hidden md:table-cell">Balance Before</th>
+                <th className="px-3 sm:px-4 py-3 text-right hidden md:table-cell">Balance After</th>
+                <th className="px-3 sm:px-4 py-3 text-left hidden lg:table-cell">Note</th>
+                <th className="px-3 sm:px-4 py-3 text-right">Time</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/40">
@@ -368,7 +555,9 @@ export default function LedgerPage() {
                 Array.from({ length: 8 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
                     {Array.from({ length: 8 }).map((_, j) => (
-                      <td key={j} className="px-4 py-3"><div className="h-4 bg-muted/40 rounded w-20" /></td>
+                      <td key={j} className="px-4 py-3">
+                        <div className="h-3.5 bg-muted/40 rounded w-16" />
+                      </td>
                     ))}
                   </tr>
                 ))
@@ -377,15 +566,12 @@ export default function LedgerPage() {
                   <td colSpan={8} className="py-16 text-center">
                     <Info className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
                     <div className="text-muted-foreground text-sm">
-                      {hasFilters ? "No matching entries found" : "No ledger entries yet — fund movements will appear here"}
+                      {hasFilters
+                        ? "No entries match your filters"
+                        : "No ledger entries yet — fund movements will appear here"}
                     </div>
                     {hasFilters && (
-                      <Button
-                        variant="link"
-                        size="sm"
-                        className="mt-2 text-xs"
-                        onClick={() => { setTypeFilter(""); setCoinFilter(""); setFromDate(""); setToDate(""); setPage(0); }}
-                      >
+                      <Button variant="link" size="sm" className="mt-2 text-xs" onClick={resetFilters}>
                         Clear filters
                       </Button>
                     )}
@@ -393,34 +579,71 @@ export default function LedgerPage() {
                 </tr>
               ) : (
                 entries.map((e) => {
-                  const meta = TYPE_META[e.type] ?? { label: e.type, icon: <Coins className="h-3.5 w-3.5" />, tone: "text-muted-foreground" };
+                  const meta     = TYPE_META[e.type] ?? { label: e.type, icon: <Coins className="h-3.5 w-3.5" />, tone: "text-muted-foreground", credit: null };
                   const isCredit = e.amount >= 0;
+                  const amtColor = meta.credit === null
+                    ? (isCredit ? "text-emerald-400" : "text-rose-400")
+                    : (meta.credit ? "text-emerald-400" : "text-rose-400");
+
                   return (
-                    <tr key={e.id} className="hover:bg-muted/10 transition-colors">
-                      <td className="px-4 py-3">
+                    <tr key={e.id} className="hover:bg-muted/10 transition-colors group">
+                      {/* Type */}
+                      <td className="px-3 sm:px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <span className={meta.tone}>{meta.icon}</span>
-                          <span className="font-medium text-xs">{meta.label}</span>
+                          <span className={cn("shrink-0", meta.tone)}>{meta.icon}</span>
+                          <span className="font-medium text-[11px] sm:text-xs leading-tight">{meta.label}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3">
-                        <Badge variant="outline" className="text-[10px] py-0 px-1.5">{e.coin}</Badge>
+
+                      {/* Wallet */}
+                      <td className="px-3 sm:px-4 py-3 hidden sm:table-cell">
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[9px] px-1.5 py-0 capitalize",
+                            e.walletType === "futures" && "border-violet-400/40 text-violet-300",
+                            e.walletType === "fiat"    && "border-amber-400/40 text-amber-300",
+                            e.walletType === "spot"    && "border-sky-400/40 text-sky-300",
+                          )}
+                        >
+                          {e.walletType}
+                        </Badge>
                       </td>
-                      <td className="px-4 py-3 capitalize text-muted-foreground text-xs">{e.walletType}</td>
-                      <td className={`px-4 py-3 text-right font-mono font-semibold tabular-nums text-sm ${isCredit ? "text-emerald-400" : "text-rose-400"}`}>
+
+                      {/* Coin */}
+                      <td className="px-3 sm:px-4 py-3">
+                        <Badge variant="secondary" className="text-[10px] py-0 px-1.5 font-mono">
+                          {e.coin}
+                        </Badge>
+                      </td>
+
+                      {/* Amount */}
+                      <td className={cn("px-3 sm:px-4 py-3 text-right font-mono font-semibold tabular-nums text-xs sm:text-sm", amtColor)}>
                         {isCredit ? "+" : "−"}{fmt(e.amount, e.coin)}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums text-xs text-muted-foreground">
+
+                      {/* Balance Before */}
+                      <td className="px-3 sm:px-4 py-3 text-right tabular-nums text-xs text-muted-foreground hidden md:table-cell">
                         {fmtBal(e.balanceBefore, e.coin)}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums text-xs">
+
+                      {/* Balance After */}
+                      <td className={cn(
+                        "px-3 sm:px-4 py-3 text-right tabular-nums text-xs hidden md:table-cell",
+                        isCredit ? "text-emerald-400/80" : "text-rose-400/80",
+                      )}>
                         {fmtBal(e.balanceAfter, e.coin)}
                       </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground max-w-[140px] truncate">
+
+                      {/* Note */}
+                      <td className="px-3 sm:px-4 py-3 text-xs text-muted-foreground max-w-[160px] truncate hidden lg:table-cell">
                         {e.note ?? (e.refId ? `Ref: ${e.refId}` : "—")}
                       </td>
-                      <td className="px-4 py-3 text-right text-xs text-muted-foreground whitespace-nowrap">
-                        {fmtDate(e.createdAt)}
+
+                      {/* Time */}
+                      <td className="px-3 sm:px-4 py-3 text-right text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap">
+                        <span className="sm:hidden">{fmtDateShort(e.createdAt)}</span>
+                        <span className="hidden sm:inline">{fmtDate(e.createdAt)}</span>
                       </td>
                     </tr>
                   );
@@ -430,21 +653,44 @@ export default function LedgerPage() {
           </table>
         </div>
 
-        {/* Pagination */}
-        {total > LIMIT && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/10 text-xs text-muted-foreground">
-            <span>{total} total entries · Page {page + 1} of {pages}</span>
+        {/* ── Pagination ─────────────────────────────────────────────── */}
+        {(total > 0 || page > 0) && (
+          <div className="flex items-center justify-between px-3 sm:px-4 py-3 border-t border-border bg-muted/10 text-xs text-muted-foreground">
+            <span>
+              {total > 0 ? (
+                <>
+                  Showing {page * LIMIT + 1}–{Math.min((page + 1) * LIMIT, total)} of {total.toLocaleString()}
+                </>
+              ) : ""}
+            </span>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className="h-7 w-7" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
+              <Button
+                variant="ghost" size="icon" className="h-7 w-7"
+                disabled={page === 0}
+                onClick={() => setPage(p => p - 1)}
+              >
                 <ChevronLeft className="h-3.5 w-3.5" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7" disabled={page >= pages - 1} onClick={() => setPage(p => p + 1)}>
+              <span className="px-2">
+                {page + 1} / {pages || 1}
+              </span>
+              <Button
+                variant="ghost" size="icon" className="h-7 w-7"
+                disabled={page >= pages - 1}
+                onClick={() => setPage(p => p + 1)}
+              >
                 <ChevronRight className="h-3.5 w-3.5" />
               </Button>
             </div>
           </div>
         )}
       </div>
+
+      {/* ── PDF tip ──────────────────────────────────────────────────── */}
+      <p className="text-center text-[11px] text-muted-foreground mt-4">
+        <Download className="h-3 w-3 inline mr-1" />
+        Click <strong>PDF</strong> to download a statement for the selected wallet &amp; period (up to 1,000 transactions).
+      </p>
     </div>
   );
 }
