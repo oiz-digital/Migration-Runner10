@@ -1,0 +1,62 @@
+buntu@ip-172-31-11-99:/opt/cryptox$ cd /opt/cryptox
+git pull origin main
+pnpm install --frozen-lockfile
+pnpm run build
+sudo PM2_HOME=/opt/cryptox/.pm2 pm2 restart all
+From https://github.com/oiz-digital/Migration-Runner10
+ * branch            main       -> FETCH_HEAD
+Already up to date.
+Scope: all 13 workspace projects
+? The modules directories will be removed and reinstalled from scratch. Proceed? (Y/n) ‣ true
+   ╭──────────────────────────────────────────────────────────────────╮
+   │                                                                  │
+   │                Update available! 9.15.9 → 11.5.2.                │
+   │   Changelog: https://github.com/pnpm/pnpm/releases/tag/v11.5.2   │
+   │                Run "pnpm add -g pnpm" to update.                 │
+   │                                                                  │
+   ╰──────────────────────────────────────────────────────────────────╯
+
+✔ The modules directories will be removed and reinstalled from scratch. Proceed? (Y/n) · true
+Recreating /opt/cryptox/node_modules
+ EACCES  EACCES: permission denied, rmdir '/opt/cryptox/node_modules/.bin'
+
+
+
+> workspace@0.0.0 build /opt/cryptox
+> pnpm run typecheck && pnpm -r --if-present run build
+
+
+> workspace@0.0.0 typecheck /opt/cryptox
+> pnpm run typecheck:libs && pnpm -r --filter "./artifacts/**" --filter "./scripts" --if-present run typecheck
+
+
+> workspace@0.0.0 typecheck:libs /opt/cryptox
+> tsc --build
+
+error TS5033: Could not write file '/opt/cryptox/lib/integrations-anthropic-ai/dist/client.d.ts': EACCES: permission denied, open '/opt/cryptox/lib/integrations-anthropic-ai/dist/client.d.ts'.
+
+error TS5033: Could not write file '/opt/cryptox/lib/integrations-anthropic-ai/dist/client.d.ts.map': EACCES: permission denied, open '/opt/cryptox/lib/integrations-anthropic-ai/dist/client.d.ts.map'.
+
+error TS5033: Could not write file '/opt/cryptox/lib/integrations-anthropic-ai/dist/index.d.ts': EACCES: permission denied, open '/opt/cryptox/lib/integrations-anthropic-ai/dist/index.d.ts'.
+
+error TS5033: Could not write file '/opt/cryptox/lib/integrations-anthropic-ai/dist/index.d.ts.map': EACCES: permission denied, open '/opt/cryptox/lib/integrations-anthropic-ai/dist/index.d.ts.map'.
+
+error TS5033: Could not write file '/opt/cryptox/lib/integrations-anthropic-ai/tsconfig.tsbuildinfo': EACCES: permission denied, open '/opt/cryptox/lib/integrations-anthropic-ai/tsconfig.tsbuildinfo'.
+
+
+Found 5 errors.
+
+ ELIFECYCLE  Command failed with exit code 2.
+ ELIFECYCLE  Command failed with exit code 2.
+ ELIFECYCLE  Command failed with exit code 2.
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [all](ids: [ 0, 1 ])
+[PM2] [cryptox-api](0) ✓
+[PM2] [cryptox-go](1) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 0  │ cryptox-api        │ fork     │ 28   │ online    │ 0%       │ 0b       │
+│ 1  │ cryptox-go         │ fork     │ 1    │ online    │ 0%       │ 0b       │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+ubuntu@ip-172-31-11-99:/opt/cryptox$
