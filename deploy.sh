@@ -10,6 +10,9 @@ echo "==> Pulling latest from GitHub..."
 cd "$PROJECT"
 git pull origin main
 
+echo "==> Fixing permissions..."
+sudo chown -R ubuntu:ubuntu /opt/cryptox/artifacts /opt/cryptox/lib /opt/cryptox/node_modules 2>/dev/null || true
+
 echo "==> Installing dependencies..."
 pnpm install --frozen-lockfile --prefer-offline || pnpm install
 
