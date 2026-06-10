@@ -10,7 +10,7 @@
  * coins not yet in cache (e.g., manual-only coins before first tick).
  */
 import { Router, type IRouter } from "express";
-import { db, walletsTable, coinsTable, tradesTable, settingsTable } from "@workspace/db";
+import { db, walletsTable, coinsTable, tradesTable, pairsTable, settingsTable } from "@workspace/db";
 import { and, desc, eq, gte } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 import { getInrRate, getRawTick } from "../lib/price-service";
@@ -183,23 +183,55 @@ router.get("/portfolio/analytics/tax-report", requireAuth, async (req, res): Pro
   const inrRate = await fetchInrRate();
   const fyStart = typeof req.query.from === "string"
     ? new Date(req.query.from)
-    : new Date(new Date().getFullYear(), 3, 1);   // April 1 of current year
+    : new Date(new Date().getFullYear() - (new Date().getMonth() < 3 ? 1 : 0), 3, 1); // April 1 of current FY
   if (isNaN(fyStart.getTime())) { res.status(400).json({ error: "bad from date" }); return; }
 
-  const trades = await db.select().from(tradesTable)
+  // JOIN with pairs to get quote currency — needed to correctly convert notional to USDT
+  const rows = await db
+    .select({
+      side:      tradesTable.side,
+      price:     tradesTable.price,
+      qty:       tradesTable.qty,
+      fee:       tradesTable.fee,
+      tds:       tradesTable.tds,
+      pairSymbol: pairsTable.symbol,   // e.g. "BTC/INR" or "BTC/USDT"
+    })
+    .from(tradesTable)
+    .leftJoin(pairsTable, eq(tradesTable.pairId, pairsTable.id))
     .where(and(eq(tradesTable.userId, userId), gte(tradesTable.createdAt, fyStart)))
     .orderBy(desc(tradesTable.createdAt))
     .limit(5000);
 
   let totalBuyUsd = 0, totalSellUsd = 0, tdsPaidUsd = 0, totalFeesUsd = 0;
   let buyCount = 0, sellCount = 0;
-  for (const t of trades) {
-    const notional = Number(t.price) * Number(t.qty);
-    const fee      = Number(t.fee ?? 0);
-    totalFeesUsd  += fee;
-    if (t.side === "buy") { totalBuyUsd  += notional; buyCount++; }
-    else                  { totalSellUsd += notional; sellCount++; tdsPaidUsd += notional * 0.01; }
+
+  for (const t of rows) {
+    const rawNotional = Number(t.price) * Number(t.qty);
+    const rawFee      = Number(t.fee ?? 0);
+    const rawTds      = Number(t.tds ?? 0);
+
+    // Determine quote currency: INR pairs store price in INR, all others treated as USDT
+    const quoteSymbol = t.pairSymbol?.split("/")[1]?.toUpperCase() ?? "USDT";
+    const isInrQuote  = quoteSymbol === "INR";
+
+    // Normalise everything to USDT
+    const notionalUsd = isInrQuote ? rawNotional / inrRate : rawNotional;
+    const feeUsd      = isInrQuote ? rawFee      / inrRate : rawFee;
+    // Use stored TDS value if available; otherwise compute 1% on sell side
+    const tdsUsd      = isInrQuote ? rawTds / inrRate : rawTds;
+
+    totalFeesUsd += feeUsd;
+    if (t.side === "buy") {
+      totalBuyUsd += notionalUsd;
+      buyCount++;
+    } else {
+      totalSellUsd += notionalUsd;
+      sellCount++;
+      // Use stored TDS if non-zero, else compute 1%
+      tdsPaidUsd += tdsUsd > 0 ? tdsUsd : notionalUsd * 0.01;
+    }
   }
+
   const grossPnl      = totalSellUsd - totalBuyUsd;
   const taxableProfit = Math.max(0, grossPnl);
   const incomeTax     = taxableProfit * 0.30;
@@ -212,13 +244,13 @@ router.get("/portfolio/analytics/tax-report", requireAuth, async (req, res): Pro
       totalSellUsd,  totalSellInr:  totalSellUsd  * inrRate,
       totalFeesUsd,  totalFeesInr:  totalFeesUsd  * inrRate,
       grossPnl,      grossPnlInr:   grossPnl      * inrRate,
-      buyCount, sellCount, tradeCount: trades.length,
+      buyCount, sellCount, tradeCount: rows.length,
     },
     tax: {
-      tdsPaidUsd,          tdsPaidInr:           tdsPaidUsd    * inrRate,
-      taxableProfit,       taxableProfitInr:     taxableProfit * inrRate,
-      incomeTaxUsd:        incomeTax,            incomeTaxInr: incomeTax * inrRate,
-      totalTaxLiabilityUsd: incomeTax,           totalTaxLiabilityInr: incomeTax * inrRate,
+      tdsPaidUsd,           tdsPaidInr:           tdsPaidUsd    * inrRate,
+      taxableProfit,        taxableProfitInr:     taxableProfit * inrRate,
+      incomeTaxUsd:         incomeTax,            incomeTaxInr: incomeTax * inrRate,
+      totalTaxLiabilityUsd: incomeTax,            totalTaxLiabilityInr: incomeTax * inrRate,
       effectiveRatePct: totalSellUsd > 0 ? (incomeTax / totalSellUsd) * 100 : 0,
     },
     note: "Indian crypto tax: 1% TDS on every sell (Sec 194S) + 30% flat tax on net profits (Sec 115BBH). Losses cannot be offset against other income. INR values at current USDT/INR rate.",
