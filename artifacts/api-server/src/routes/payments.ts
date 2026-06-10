@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, gatewaysTable, inrDepositsTable, walletsTable, coinsTable } from "@workspace/db";
+import { db, gatewaysTable, inrDepositsTable, walletsTable, coinsTable, walletLedgerTable } from "@workspace/db";
 import { eq, and, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 import { logger } from "../lib/logger";
@@ -108,10 +108,18 @@ export async function creditDepositOnce(depositId: number, paymentId: string, me
     )).for("update").limit(1);
     if (!w) throw new Error("INR wallet not found");
     const credit = Number(d.amount) - Number(d.fee || 0);
+    const pmtBalBefore = w.balance;
     await tx.update(walletsTable).set({
       balance: sql`${walletsTable.balance} + ${credit}`,
       updatedAt: new Date(),
     }).where(eq(walletsTable.id, w.id));
+    await tx.insert(walletLedgerTable).values({
+      userId: d.userId, coinId: inrCoin.id, walletType: "inr", type: "deposit_inr",
+      amount: credit.toFixed(8),
+      balanceBefore: pmtBalBefore,
+      balanceAfter: (Number(pmtBalBefore) + credit).toFixed(8),
+      refType: "inr_deposit", refId: String(depositId), note: "INR deposit via payment gateway",
+    });
     await tx.update(inrDepositsTable).set({
       status: "completed",
       gatewayPaymentId: paymentId,

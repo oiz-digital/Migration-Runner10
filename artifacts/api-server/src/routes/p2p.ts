@@ -11,6 +11,7 @@ import {
   walletsTable,
   coinsTable,
   usersTable,
+  walletLedgerTable,
 } from "@workspace/db";
 import { requireAuth, requireRole } from "../middlewares/auth";
 import { lockEscrow, releaseEscrow, refundEscrow, quantizeQty } from "../lib/p2p-escrow";
@@ -475,6 +476,12 @@ router.post("/p2p/orders", requireAuth, async (req, res): Promise<void> => {
         status: "pending",
         expiresAt,
       }).returning();
+      await tx.insert(walletLedgerTable).values({
+        userId: sellerId, coinId: offer.coinId, walletType: "spot", type: "p2p_debit",
+        amount: (-Number(qtyStr)).toFixed(8),
+        balanceBefore: "0", balanceAfter: "0",
+        refType: "p2p_order", refId: String(order.id), note: "P2P escrow lock",
+      });
 
       // Seed a system message so the chat shows the deal opening as
       // its first event (great for audit + onboarding context).
@@ -624,6 +631,20 @@ async function releaseOrder(orderId: number, actorId: number, actorRole: string)
 
     // Move crypto via shared helper: seller.locked → buyer.balance.
     await releaseEscrow(tx, o.sellerId, o.buyerId, o.coinId, o.qty);
+    await tx.insert(walletLedgerTable).values([
+      {
+        userId: o.sellerId, coinId: o.coinId, walletType: "spot", type: "p2p_debit",
+        amount: (-Number(o.qty)).toFixed(8),
+        balanceBefore: "0", balanceAfter: "0",
+        refType: "p2p_order", refId: String(orderId), note: "P2P escrow released to buyer (seller)",
+      },
+      {
+        userId: o.buyerId, coinId: o.coinId, walletType: "spot", type: "p2p_credit",
+        amount: Number(o.qty).toFixed(8),
+        balanceBefore: "0", balanceAfter: "0",
+        refType: "p2p_order", refId: String(orderId), note: "P2P crypto received (buyer)",
+      },
+    ]);
 
     const [updated] = await tx.update(p2pOrdersTable).set({
       status: "released",
@@ -680,6 +701,12 @@ async function cancelOrder(orderId: number, actorId: number, actorRole: string) 
     // Refund seller's escrow via shared helper.
     const qtyStr = quantizeQty(o.qty);
     await refundEscrow(tx, o.sellerId, o.coinId, qtyStr);
+    await tx.insert(walletLedgerTable).values({
+      userId: o.sellerId, coinId: o.coinId, walletType: "spot", type: "p2p_credit",
+      amount: Number(qtyStr).toFixed(8),
+      balanceBefore: "0", balanceAfter: "0",
+      refType: "p2p_order", refId: String(o.id), note: "P2P escrow refunded (order cancelled)",
+    });
 
     // Restore offer's available liquidity.
     await tx.update(p2pOffersTable).set({

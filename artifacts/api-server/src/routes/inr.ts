@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, inrTransactionsTable, walletsTable, coinsTable, kycRecordsTable, settingsTable } from "@workspace/db";
+import { db, inrTransactionsTable, walletsTable, coinsTable, kycRecordsTable, settingsTable, walletLedgerTable } from "@workspace/db";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 import { getInrRate } from "../lib/price-service";
@@ -128,13 +128,22 @@ router.post("/payments/inr/withdraw", requireAuth, async (req: any, res): Promis
         updatedAt: new Date(),
       }).where(eq(walletsTable.id, inrData.wallet.id));
     }
-    await tx.insert(inrTransactionsTable).values({
+    const [inrTx] = await tx.insert(inrTransactionsTable).values({
       userId, type: "withdrawal",
       amountInr: String(amountInr), usdAmount,
       method, bankName: bankName ?? null, accountNumber: accountNumber ?? null,
       ifscCode: ifscCode ?? null, accountHolder: accountHolder ?? null,
       upiId: upiId ?? null, status: "pending",
-    });
+    }).returning();
+    if (inrData?.wallet && inrData.coinId) {
+      await tx.insert(walletLedgerTable).values({
+        userId, coinId: inrData.coinId, walletType: "inr", type: "withdrawal_inr",
+        amount: (-amountInr).toFixed(8),
+        balanceBefore: Number(inrData.wallet.balance).toFixed(8),
+        balanceAfter: (Number(inrData.wallet.balance) - amountInr).toFixed(8),
+        refType: "inr_withdrawal", refId: String(inrTx.id), note: "INR withdrawal initiated",
+      });
+    }
   });
 
   res.status(201).json({ success: true, amountInr, method, status: "pending" });

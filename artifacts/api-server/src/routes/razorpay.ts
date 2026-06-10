@@ -6,7 +6,7 @@
  */
 import { Router, type IRouter, type Request, type Response } from "express";
 import crypto from "crypto";
-import { db, inrTransactionsTable, walletsTable, coinsTable, exchangeSettingsTable } from "@workspace/db";
+import { db, inrTransactionsTable, walletsTable, coinsTable, exchangeSettingsTable, walletLedgerTable } from "@workspace/db";
 import { eq, and, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 import { getInrRate } from "../lib/price-service";
@@ -30,12 +30,20 @@ async function creditInrWallet(userId: number, amountInr: number) {
   if (!coin) return;
   const [w] = await db.select().from(walletsTable)
     .where(and(eq(walletsTable.userId, userId), eq(walletsTable.coinId, coin.id), eq(walletsTable.walletType, "inr"))).limit(1);
+  const balBefore = w?.balance ?? "0";
   if (w) {
     await db.update(walletsTable).set({ balance: sql`${walletsTable.balance} + ${amountInr}`, updatedAt: new Date() })
       .where(eq(walletsTable.id, w.id));
   } else {
     await db.insert(walletsTable).values({ userId, coinId: coin.id, walletType: "inr", balance: String(amountInr), locked: "0" });
   }
+  await db.insert(walletLedgerTable).values({
+    userId, coinId: coin.id, walletType: "inr", type: "deposit_inr",
+    amount: amountInr.toFixed(8),
+    balanceBefore: balBefore,
+    balanceAfter: (Number(balBefore) + amountInr).toFixed(8),
+    refType: "razorpay", note: "INR deposit via Razorpay",
+  });
 }
 
 /* POST /api/payments/razorpay/create-order */

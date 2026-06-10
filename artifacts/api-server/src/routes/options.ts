@@ -15,7 +15,7 @@
  */
 import { Router, type IRouter } from "express";
 import { and, eq, gt, desc, sql, inArray } from "drizzle-orm";
-import { db, optionContractsTable, optionOrdersTable, optionPositionsTable, coinsTable, walletsTable } from "@workspace/db";
+import { db, optionContractsTable, optionOrdersTable, optionPositionsTable, coinsTable, walletsTable, walletLedgerTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/auth";
 import { priceOption, bpsToDec, yearsTo } from "../lib/options-pricing";
 
@@ -180,6 +180,15 @@ router.post("/options/orders", requireAuth, async (req, res): Promise<void> => {
         userId, contractId: cId, side, qty: String(q), premium: String(premium),
         markPriceAtFill: String(greeks.mark), fee: String(fee), status: "FILLED",
       }).returning();
+      const optNetCash = cashDelta - marginToLock;
+      await tx.insert(walletLedgerTable).values({
+        userId, coinId: quoteCoin.id, walletType: "spot", type: "options_pnl",
+        amount: optNetCash.toFixed(8),
+        balanceBefore: w.balance,
+        balanceAfter: (Number(w.balance) + optNetCash).toFixed(8),
+        refType: "option_order", refId: String(order.id),
+        note: `Options ${side} fill — premium=${premium.toFixed(8)}, fee=${fee.toFixed(8)}`,
+      });
 
       // Upsert position (one open row per (user, contract, side))
       const [existing] = await tx.select().from(optionPositionsTable).where(
@@ -307,6 +316,14 @@ router.post("/options/positions/:id/close", requireAuth, async (req, res): Promi
         locked:  sql`${walletsTable.locked}  - ${margin}`,
         updatedAt: new Date(),
       }).where(eq(walletsTable.id, w.id));
+      await tx.insert(walletLedgerTable).values({
+        userId, coinId: quoteCoin.id, walletType: "spot", type: "options_pnl",
+        amount: (margin + pnl).toFixed(8),
+        balanceBefore: w.balance,
+        balanceAfter: (Number(w.balance) + margin + pnl).toFixed(8),
+        refType: "option_position", refId: String(p.id),
+        note: `Options close — margin=${margin.toFixed(8)}, pnl=${pnl.toFixed(8)}`,
+      });
 
       await tx.update(optionPositionsTable).set({
         status: "closed",

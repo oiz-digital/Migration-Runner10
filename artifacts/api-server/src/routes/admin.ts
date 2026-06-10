@@ -33,6 +33,7 @@ import {
   sessionsTable,
   emailConfigsTable,
   customApisTable,
+  walletLedgerTable,
 } from "@workspace/db";
 import { auditLogsTable } from "@workspace/db";
 import { requireRole } from "../middlewares/auth";
@@ -1525,6 +1526,13 @@ router.patch("/admin/inr-deposits/:id", adminOnly, async (req, res): Promise<voi
           balance: sql`${walletsTable.balance} + ${credit}`,
           updatedAt: new Date(),
         }).where(eq(walletsTable.id, w.id));
+        await tx.insert(walletLedgerTable).values({
+          userId: current.userId, coinId: inrCoin.id, walletType: "inr", type: "deposit_inr",
+          amount: credit.toFixed(8),
+          balanceBefore: w.balance,
+          balanceAfter: (Number(w.balance) + credit).toFixed(8),
+          refType: "inr_deposit", refId: String(current.id), note: "INR deposit approved",
+        });
       }
       const [d] = await tx.update(inrDepositsTable).set({
         status, notes: notes ?? null, reviewedBy: req.user!.id, processedAt: new Date(),
@@ -1587,6 +1595,13 @@ router.patch("/admin/inr-withdrawals/:id", adminOnly, async (req, res): Promise<
           updatedAt: new Date(),
         }).where(and(eq(walletsTable.id, w.id), sql`${walletsTable.locked} >= ${amt}`)).returning();
         if (upd.length === 0) { const e: any = new Error("Locked balance mismatch — refusing to refund"); e.code = 409; throw e; }
+        await tx.insert(walletLedgerTable).values({
+          userId: current.userId, coinId: inrCoin!.id, walletType: "inr", type: "admin_credit",
+          amount: amt.toFixed(8),
+          balanceBefore: w.balance,
+          balanceAfter: (Number(w.balance) + amt).toFixed(8),
+          refType: "inr_withdrawal", refId: String(id), note: "INR withdrawal rejected — refunded",
+        });
       }
       const [updatedRow] = await tx.update(inrWithdrawalsTable).set({
         status, rejectReason: rejectReason ?? null, reviewedBy: req.user!.id, processedAt: new Date(),
@@ -1822,12 +1837,23 @@ router.patch("/admin/crypto-deposits/:id", adminOnly, async (req, res): Promise<
       // Credit on completion — atomic upsert keyed on the (userId, walletType, coinId) unique index
       if (status === "completed") {
         const amt = Number(current.amount);
+        const [existingWallet] = await tx.select({ balance: walletsTable.balance }).from(walletsTable)
+          .where(and(eq(walletsTable.userId, current.userId), eq(walletsTable.coinId, current.coinId), eq(walletsTable.walletType, "spot")))
+          .limit(1);
+        const cryptoBalBefore = existingWallet?.balance ?? "0";
         await tx.insert(walletsTable).values({
           userId: current.userId, coinId: current.coinId, walletType: "spot",
           balance: String(amt), locked: "0",
         }).onConflictDoUpdate({
           target: [walletsTable.userId, walletsTable.walletType, walletsTable.coinId],
           set: { balance: sql`${walletsTable.balance} + ${amt}`, updatedAt: new Date() },
+        });
+        await tx.insert(walletLedgerTable).values({
+          userId: current.userId, coinId: current.coinId, walletType: "spot", type: "deposit_crypto",
+          amount: amt.toFixed(8),
+          balanceBefore: cryptoBalBefore,
+          balanceAfter: (Number(cryptoBalBefore) + amt).toFixed(8),
+          refType: "crypto_deposit", refId: String(current.id), note: "Crypto deposit approved",
         });
       }
       const [d] = await tx.update(cryptoDepositsTable).set({
@@ -1864,6 +1890,11 @@ router.post("/admin/users/:id/fund", adminOnly, async (req, res): Promise<void> 
         const [c] = await tx.select().from(coinsTable).where(eq(coinsTable.id, coinId)).limit(1);
         if (!c) { const e: any = new Error("Coin not found"); e.code = 400; throw e; }
       }
+      // Snapshot balance before the upsert for ledger tracking
+      const [preFundW] = await tx.select({ balance: walletsTable.balance }).from(walletsTable)
+        .where(and(eq(walletsTable.userId, userId), eq(walletsTable.coinId, coinId), eq(walletsTable.walletType, walletType)))
+        .limit(1);
+      const fundBalBefore = preFundW?.balance ?? "0";
       // Atomic upsert — creates wallet if missing, else credits balance
       await tx.insert(walletsTable).values({
         userId, coinId, walletType,
@@ -1880,6 +1911,13 @@ router.post("/admin/users/:id/fund", adminOnly, async (req, res): Promise<void> 
         userId, fromWallet: "admin_fund", toWallet: walletType, coinId,
         amount: String(amt), status: "completed",
       }).returning();
+      await tx.insert(walletLedgerTable).values({
+        userId, coinId, walletType, type: "admin_credit",
+        amount: amt.toFixed(8),
+        balanceBefore: fundBalBefore,
+        balanceAfter: (Number(fundBalBefore) + amt).toFixed(8),
+        refType: "admin_fund", refId: String(ledger.id), note: note ?? "Admin manual credit",
+      });
       return { wallet, ledger, note: note ?? null, by: req.user!.id };
     });
     res.json(result);
@@ -1980,6 +2018,13 @@ router.patch("/admin/crypto-withdrawals/:id", adminOnly, async (req, res): Promi
           updatedAt: new Date(),
         }).where(and(eq(walletsTable.id, w.id), sql`${walletsTable.locked} >= ${amt}`)).returning();
         if (upd.length === 0) { const e: any = new Error("Locked balance mismatch — refusing to settle"); e.code = 409; throw e; }
+        await tx.insert(walletLedgerTable).values({
+          userId: current.userId, coinId: current.coinId, walletType: "spot", type: "withdrawal_crypto",
+          amount: (-amt).toFixed(8),
+          balanceBefore: String((Number(w.balance) + amt).toFixed(8)),
+          balanceAfter: w.balance,
+          refType: "crypto_withdrawal", refId: String(id), note: "Crypto withdrawal completed",
+        });
       } else if (status === "rejected") {
         const upd = await tx.update(walletsTable).set({
           locked: sql`${walletsTable.locked} - ${amt}`,
@@ -1987,6 +2032,13 @@ router.patch("/admin/crypto-withdrawals/:id", adminOnly, async (req, res): Promi
           updatedAt: new Date(),
         }).where(and(eq(walletsTable.id, w.id), sql`${walletsTable.locked} >= ${amt}`)).returning();
         if (upd.length === 0) { const e: any = new Error("Locked balance mismatch — refusing to refund"); e.code = 409; throw e; }
+        await tx.insert(walletLedgerTable).values({
+          userId: current.userId, coinId: current.coinId, walletType: "spot", type: "admin_credit",
+          amount: amt.toFixed(8),
+          balanceBefore: w.balance,
+          balanceAfter: (Number(w.balance) + amt).toFixed(8),
+          refType: "crypto_withdrawal", refId: String(id), note: "Crypto withdrawal rejected — refunded",
+        });
       }
       const [updatedRow] = await tx.update(cryptoWithdrawalsTable).set({
         status, txHash: txHash ?? null, rejectReason: rejectReason ?? null,
@@ -2130,11 +2182,29 @@ router.post("/admin/earn-positions/:id/force-redeem", adminOnly, async (req, res
       const [spot] = await tx.select().from(walletsTable)
         .where(and(eq(walletsTable.userId, pos.userId), eq(walletsTable.coinId, p.coinId), eq(walletsTable.walletType, "spot")))
         .for("update").limit(1);
+      const earnSpotBalBefore = spot?.balance ?? "0";
       if (spot) {
         await tx.update(walletsTable).set({ balance: sql`${walletsTable.balance} + ${payout}`, updatedAt: new Date() }).where(eq(walletsTable.id, spot.id));
       } else {
         await tx.insert(walletsTable).values({ userId: pos.userId, coinId: p.coinId, walletType: "spot", balance: String(payout.toFixed(8)), locked: "0" });
       }
+      const earnedClamped = Math.max(0, earned);
+      await tx.insert(walletLedgerTable).values([
+        {
+          userId: pos.userId, coinId: p.coinId, walletType: "spot", type: "earn_withdrawal",
+          amount: principal.toFixed(8),
+          balanceBefore: earnSpotBalBefore,
+          balanceAfter: (Number(earnSpotBalBefore) + principal).toFixed(8),
+          refType: "earn_position", refId: String(id), note: "Earn principal returned (force-redeem)",
+        },
+        {
+          userId: pos.userId, coinId: p.coinId, walletType: "spot", type: "earn_interest",
+          amount: earnedClamped.toFixed(8),
+          balanceBefore: (Number(earnSpotBalBefore) + principal).toFixed(8),
+          balanceAfter: (Number(earnSpotBalBefore) + payout).toFixed(8),
+          refType: "earn_position", refId: String(id), note: "Earn interest credited (force-redeem)",
+        },
+      ]);
 
       // Update product subscribed
       await tx.update(earnProductsTable).set({

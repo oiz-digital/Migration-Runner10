@@ -23,6 +23,7 @@ import {
   futuresPositionsTable,
   futuresOrdersTable,
   futuresTradesTable,
+  walletLedgerTable,
 } from "@workspace/db";
 import { verifyJwt } from "../lib/jwt";
 import { readSessionCookie, getUserBySession } from "../lib/auth";
@@ -273,6 +274,15 @@ async function applyPnl(tx: any, userId: number, quoteCoinId: number, pnl: numbe
     balance: sql`GREATEST(0, ${walletsTable.balance} + ${net})`,
     updatedAt: new Date(),
   }).where(eq(walletsTable.id, w.id));
+  const settledBal = Math.max(0, Number(w.balance) + net);
+  await tx.insert(walletLedgerTable).values({
+    userId, coinId: quoteCoinId, walletType: "futures", type: "futures_pnl",
+    amount: net.toFixed(8),
+    balanceBefore: w.balance,
+    balanceAfter: settledBal.toFixed(8),
+    refType: "futures_trade",
+    note: `Futures PnL settled — pnl=${pnl.toFixed(8)}, fee=${fee.toFixed(8)}`,
+  });
 }
 
 // ── Position upsert helpers ─────────────────────────────────────────────
