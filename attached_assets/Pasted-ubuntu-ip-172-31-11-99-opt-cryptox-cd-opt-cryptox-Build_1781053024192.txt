@@ -1,0 +1,118 @@
+ubuntu@ip-172-31-11-99:/opt/cryptox$ cd /opt/cryptox
+
+# Build API server
+sudo HOME=/root NODE_ENV=development pnpm --filter @workspace/api-server run build
+
+# DB schema push (competitions table)
+sudo HOME=/root DATABASE_URL="postgresql://zebvix:Tyagi00%40123@localhost:5432/zebvixdb" \
+  NODE_ENV=development pnpm --filter @workspace/db run push
+
+# Season 1 seed
+PGPASSWORD='Tyagi00@123' psql -h localhost -U zebvix -d zebvixdb \
+  -f /opt/cryptox/deploy/seed-leagues.sql
+
+# Restart + verify
+sudo PM2_HOME=/opt/cryptox/.pm2 pm2 restart cryptox-api
+sleep 3
+curl -s -H "Origin: https://zebvix.com" https://zebvix.com/api/leagues | python3 -m json.tool
+
+> @workspace/api-server@0.0.0 build /opt/cryptox/artifacts/api-server
+> node ./build.mjs
+
+
+  dist/index.mjs                       6.3mb ⚠️
+  dist/pino-worker.mjs               153.4kb
+  dist/pino-file.mjs                 142.0kb
+  dist/pino-pretty.mjs               114.6kb
+  dist/thread-stream-worker.mjs        7.3kb
+  dist/index.mjs.map                  11.5mb
+  dist/pino-worker.mjs.map           256.9kb
+  dist/pino-file.mjs.map             229.0kb
+  dist/pino-pretty.mjs.map           204.0kb
+  dist/thread-stream-worker.mjs.map   12.0kb
+
+⚡ Done in 948ms
+
+> @workspace/db@0.0.0 push /opt/cryptox/lib/db
+> drizzle-kit push --config ./drizzle.config.ts
+
+Reading config file '/opt/cryptox/lib/db/drizzle.config.ts'
+Using 'pg' driver for database querying
+[✓] Pulling schema from database...
+[✓] Changes applied
+INSERT 0 1
+ id |          title           | status |       starts_at        |        ends_at         | prize_pool
+----+--------------------------+--------+------------------------+------------------------+------------
+  1 | Zebvix Trading Champions | active | 2026-05-31 18:30:00+00 | 2026-06-30 18:29:59+00 | 25000
+(1 row)
+
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [cryptox-api](ids: [ 0 ])
+[PM2] [cryptox-api](0) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 0  │ cryptox-api        │ fork     │ 26   │ online    │ 0%       │ 20.5mb   │
+│ 1  │ cryptox-go         │ fork     │ 0    │ online    │ 0%       │ 6.7mb    │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[
+    {
+        "id": 1,
+        "title": "Zebvix Trading Champions",
+        "subtitle": "Season 1 \u00b7 June 2026",
+        "description": "A 30-day competition for India's top traders. The highest trading volume across Spot, Futures, and Convert wins a share of the \u20b92,000,000 prize pool. Open to all KYC Level 2+ users.",
+        "prizePool": "25000",
+        "prizeUnit": "USDT",
+        "topPrize": "5000",
+        "rewardTiers": [
+            {
+                "rank": "1",
+                "prize": "5,000 USDT",
+                "extra": "+ Diamond Badge",
+                "tone": "amber"
+            },
+            {
+                "rank": "2-3",
+                "prize": "2,500 USDT",
+                "extra": "+ Gold Badge",
+                "tone": "zinc"
+            },
+            {
+                "rank": "4-10",
+                "prize": "500 USDT",
+                "extra": "+ Silver Badge",
+                "tone": "orange"
+            },
+            {
+                "rank": "11-50",
+                "prize": "100 USDT",
+                "extra": "+ Participant Badge",
+                "tone": "emerald"
+            },
+            {
+                "rank": "51-100",
+                "prize": "50 USDT",
+                "extra": "+ Participant NFT",
+                "tone": "emerald"
+            }
+        ],
+        "rules": [
+            "All KYC Level 2+ users are automatically eligible.",
+            "Volume is counted from Spot, Futures, and Convert trades.",
+            "Leaderboard is computed from real-time trading data.",
+            "Season runs from June 1, 2026 00:00 IST to June 30, 2026 23:59 IST.",
+            "Prizes credited to winner wallets within 7 business days of season end.",
+            "TDS @ 1% applicable on prizes as per Section 194S of the Income Tax Act.",
+            "Zebvix reserves the right to disqualify suspicious or wash-trading activity."
+        ],
+        "scoringRule": "volume",
+        "heroIcon": "trophy",
+        "heroColor": "#f59e0b",
+        "joinUrl": "/trade",
+        "status": "active",
+        "isFeatured": true,
+        "startsAt": "2026-05-31T18:30:00.000Z",
+        "endsAt": "2026-06-30T18:29:59.000Z"
+    }
+]
+ubuntu@ip-172-31-11-99:/opt/cryptox$
