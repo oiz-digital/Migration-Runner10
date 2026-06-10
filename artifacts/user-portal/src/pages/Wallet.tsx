@@ -513,6 +513,7 @@ export default function Wallet() {
             isError={walletQ.isError}
             onRetry={() => walletQ.refetch()}
             usdOf={usdOf}
+            inrRate={serverInrRate}
             mask={mask}
             onDeposit={(currency, type) => setDepositOpen({ currency, type: type === "ALL" ? "SPOT" : type })}
             onWithdraw={(currency, type) => handleWithdraw(currency, type === "ALL" ? "SPOT" : type)}
@@ -607,6 +608,7 @@ function AssetTable({
   isError,
   onRetry,
   usdOf,
+  inrRate,
   mask,
   onDeposit,
   onWithdraw,
@@ -619,6 +621,7 @@ function AssetTable({
   isError: boolean;
   onRetry: () => void;
   usdOf: (s: string) => number;
+  inrRate: number;
   mask: (s: string) => string;
   onDeposit: (currency: string, type: WalletType | "ALL") => void;
   onWithdraw: (currency: string, type: WalletType | "ALL") => void;
@@ -666,7 +669,7 @@ function AssetTable({
               <th className="text-right px-4 py-3 font-medium">Free</th>
               <th className="text-right px-4 py-3 font-medium">Locked</th>
               <th className="text-right px-4 py-3 font-medium">Total</th>
-              <th className="text-right px-4 py-3 font-medium">USDT Value</th>
+              <th className="text-right px-4 py-3 font-medium">₹ Value</th>
               <th className="text-right px-4 py-3 font-medium">Actions</th>
             </tr>
           </thead>
@@ -691,7 +694,7 @@ function AssetTable({
                 <td className="px-4 py-3 text-right font-mono">{mask(fmtNum(r.free, r.currency === "INR" ? 2 : 6))}</td>
                 <td className="px-4 py-3 text-right font-mono text-muted-foreground">{mask(fmtNum(r.locked, r.currency === "INR" ? 2 : 6))}</td>
                 <td className="px-4 py-3 text-right font-mono font-semibold">{mask(fmtNum(r.total, r.currency === "INR" ? 2 : 6))}</td>
-                <td className="px-4 py-3 text-right font-mono">{mask(fmtUsd(r.usd))}</td>
+                <td className="px-4 py-3 text-right font-mono">{mask(fmtInr(r.usd * inrRate))}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-1">
                     <Button size="sm" variant="ghost" className="h-8 px-2 text-xs" onClick={() => onDeposit(r.currency, r.type)} data-testid={`button-deposit-${r.currency}`}>Deposit</Button>
@@ -722,7 +725,7 @@ function AssetTable({
               </div>
               <div className="text-right">
                 <div className="font-mono font-semibold">{mask(fmtNum(r.total, r.currency === "INR" ? 2 : 6))}</div>
-                <div className="text-xs text-muted-foreground font-mono">{mask(fmtUsd(r.usd))}</div>
+                <div className="text-xs text-muted-foreground font-mono">{mask(fmtInr(r.usd * inrRate))}</div>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs mb-3">
