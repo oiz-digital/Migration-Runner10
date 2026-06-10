@@ -227,7 +227,7 @@ export default function Earn() {
           title="Total Locked"
           value={fmtNum(totalLocked, 2)}
           icon={Lock}
-          hint={summary ? `≈ $${fmtNum(summary.totalLockedUsd, 2)} USD` : "Loading…"}
+          hint={summary ? `≈ ${fmtNum(summary.totalLockedUsd, 2)} USDT` : "Loading…"}
           loading={summaryQ.isLoading}
         />
         <PremiumStatCard

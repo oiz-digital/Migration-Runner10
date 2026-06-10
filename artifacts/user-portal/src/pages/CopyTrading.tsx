@@ -213,7 +213,7 @@ function FollowDialog({ trader }: { trader: Trader }) {
         <DialogHeader><DialogTitle>Copy {trader.displayName}</DialogTitle></DialogHeader>
         <div className="space-y-3 py-2">
           <div className="space-y-1.5">
-            <Label className="text-xs">Allocation (USD) — what amount to commit</Label>
+            <Label className="text-xs">Allocation (USDT) — what amount to commit</Label>
             <Input type="number" value={alloc} onChange={(e) => setAlloc(e.target.value)} />
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -290,12 +290,12 @@ function Following() {
                   <StatusPill variant={it.relation.status === "active" ? "success" : "neutral"}>{it.relation.status}</StatusPill>
                 </div>
                 <div className="text-[11px] text-muted-foreground font-mono">
-                  ${Number(it.relation.allocationUsd).toLocaleString()} alloc · {Number(it.relation.copyRatio).toFixed(1)}× ratio · {it.relation.tradesCopied} trades copied
+                  {Number(it.relation.allocationUsd).toFixed(2)} USDT alloc · {Number(it.relation.copyRatio).toFixed(1)}× ratio · {it.relation.tradesCopied} trades copied
                 </div>
               </div>
               <div className="text-right">
                 <div className={`font-mono font-bold text-sm ${Number(it.relation.pnlUsd) >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                  {Number(it.relation.pnlUsd) >= 0 ? "+" : ""}${Number(it.relation.pnlUsd).toFixed(2)}
+                  {Number(it.relation.pnlUsd) >= 0 ? "+" : ""}{Number(it.relation.pnlUsd).toFixed(2)} USDT
                 </div>
                 {it.relation.status === "active" && (
                   <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => stopMut.mutate(it.relation.id)}>

@@ -116,11 +116,11 @@ export default function FuturesPositionsPage() {
 
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 md:gap-4">
         <PremiumStatCard title="Open Positions" value={openPositions.length} icon={Activity} hero hint={`${longCount} long · ${shortCount} short`} />
-        <PremiumStatCard title="Total Notional" value={fmt(totalNotional, 0)} prefix="$" icon={TrendingUp} hint="Open exposure" />
-        <PremiumStatCard title="Total Margin" value={fmt(totalMargin, 0)} prefix="$" icon={Wallet} hint="Locked collateral" />
+        <PremiumStatCard title="Total Notional" value={fmt(totalNotional, 0) + " USDT"} prefix="" icon={TrendingUp} hint="Open exposure" />
+        <PremiumStatCard title="Total Margin" value={fmt(totalMargin, 0) + " USDT"} prefix="" icon={Wallet} hint="Locked collateral" />
         <PremiumStatCard
           title="Total uPnL"
-          value={fmt(Math.abs(totalPnl), 2)} prefix={totalPnl >= 0 ? "+$" : "-$"}
+          value={(totalPnl >= 0 ? "+" : "-") + fmt(Math.abs(totalPnl), 2) + " USDT"} prefix=""
           icon={totalPnl >= 0 ? TrendingUp : TrendingDown}
           hint={totalPnl >= 0 ? "House loss exposure" : "House profit exposure"}
         />

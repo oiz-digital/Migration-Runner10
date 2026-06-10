@@ -752,7 +752,7 @@ export default function Home() {
           {[
             { label: "Registered users", value: 210000, suffix: "+", prefix: "", compact: true },
             { label: "24h trades executed", value: stats.totalTrades24h || 18400, suffix: "", prefix: "", compact: true },
-            { label: "Total volume", value: stats.totalVolumeUsd || 61176470, suffix: "", prefix: "$", compact: true },
+            { label: "Total volume", value: stats.totalVolumeUsd || 61176470, suffix: "", prefix: "₹", compact: true },
             { label: "Active markets", value: stats.markets || 249, suffix: "", prefix: "", compact: false },
           ].map((s) => (
             <div key={s.label} className="flex items-baseline gap-2">
@@ -867,7 +867,7 @@ export default function Home() {
                 <Activity className="h-3.5 w-3.5 text-primary" /> 24h volume
               </div>
               <div className="text-3xl font-bold mt-2">
-                <AnimatedNumber value={stats.totalVolumeUsd} prefix="$" compact />
+                <AnimatedNumber value={stats.totalVolumeUsd} prefix="₹" compact />
               </div>
               <div className="text-xs text-success mt-1">
                 {stats.totalTrades24h > 0

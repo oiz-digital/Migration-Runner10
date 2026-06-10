@@ -127,7 +127,7 @@ export default function ProDashboard() {
                         {ch >= 0 ? "+" : ""}{ch.toFixed(2)}%
                       </span>
                     </div>
-                    <div className="text-[11px] text-muted-foreground font-mono mt-0.5">${px.toLocaleString(undefined, { maximumFractionDigits: px < 1 ? 6 : 2 })}</div>
+                    <div className="text-[11px] text-muted-foreground font-mono mt-0.5">{px.toLocaleString(undefined, { maximumFractionDigits: px < 1 ? 6 : 2 })} USDT</div>
                   </Link>
                 );
               })}
@@ -158,7 +158,7 @@ export default function ProDashboard() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-mono text-sm font-bold">${px.toLocaleString(undefined, { maximumFractionDigits: px < 1 ? 6 : 2 })}</div>
+                      <div className="font-mono text-sm font-bold">{px.toLocaleString(undefined, { maximumFractionDigits: px < 1 ? 6 : 2 })} USDT</div>
                       <div className={`font-mono text-[11px] ${ch >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
                         {ch >= 0 ? "+" : ""}{ch.toFixed(2)}%
                       </div>
@@ -216,7 +216,7 @@ export default function ProDashboard() {
                   <div key={a.id} className="flex items-center justify-between gap-2 text-xs">
                     <span className="font-bold">{a.coinSymbol}</span>
                     <span className="text-muted-foreground font-mono text-[11px]">
-                      {a.condition} ${Number(a.targetPrice).toLocaleString()}
+                      {a.condition} {Number(a.targetPrice).toLocaleString()} USDT
                     </span>
                   </div>
                 ))}

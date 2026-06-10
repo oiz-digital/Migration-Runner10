@@ -245,7 +245,7 @@ export default function DashboardPage() {
         <PremiumStatCard
           title="24h Futures Volume"
           value={fmt(s.futures24hVolume, { compact: true })}
-          prefix="$"
+          prefix="USDT "
           icon={TrendingUp}
           hero
           loading={isLoading}
@@ -274,7 +274,7 @@ export default function DashboardPage() {
         {/* 7-day Spot Volume */}
         <SectionCard
           title="7-Day Spot Volume"
-          description={`${fmt(totalTrades7d, { compact: true })} trades · $${fmt(totalVol7d, { compact: true })} total`}
+          description={`${fmt(totalTrades7d, { compact: true })} trades · ${fmt(totalVol7d, { compact: true })} USDT total`}
           icon={BarChart2}
           actions={
             volumeHistory.isFetching
@@ -301,7 +301,7 @@ export default function DashboardPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(222 16% 18%)" vertical={false} />
                   <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(220 9% 46%)" }} axisLine={false} tickLine={false} interval={0} />
                   <YAxis tick={{ fontSize: 10, fill: "hsl(220 9% 46%)" }} axisLine={false} tickLine={false} tickFormatter={(v) => fmt(v, { compact: true })} />
-                  <Tooltip content={<ChartTooltip prefix="$" />} />
+                  <Tooltip content={<ChartTooltip prefix="USDT " />} />
                   <Area
                     type="monotone"
                     dataKey="spotVolume"

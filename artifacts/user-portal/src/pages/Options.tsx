@@ -128,9 +128,9 @@ function PayoffDiagram({
         )}
       </svg>
       <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1.5">
-        <span>${fmtUsd(low, 0)}</span>
-        <span className="text-blue-400">B/E: ${fmtUsd(bePrice, 0)}</span>
-        <span>${fmtUsd(high, 0)}</span>
+        <span>{fmtUsd(low, 0)} USDT</span>
+        <span className="text-blue-400">B/E: {fmtUsd(bePrice, 0)} USDT</span>
+        <span>{fmtUsd(high, 0)} USDT</span>
       </div>
     </div>
   );
@@ -236,10 +236,10 @@ function ChainRow({
         {row.call ? row.call.theta.toFixed(2) : "—"}
       </td>
       <td className="px-2 py-2 text-right tabular-nums text-xs text-muted-foreground hidden xl:table-cell">
-        {row.call ? `₹${fmtUsd(row.call.intrinsic)}` : "—"}
+        {row.call ? `${fmtUsd(row.call.intrinsic)} USDT` : "—"}
       </td>
       <td className={cn("px-2 py-2 text-right tabular-nums font-semibold text-sm", itm_call ? "text-emerald-300" : "text-emerald-400/80")}>
-        {row.call ? `₹${fmtUsd(row.call.mark)}` : "—"}
+        {row.call ? `${fmtUsd(row.call.mark)} USDT` : "—"}
       </td>
       <td className="px-1.5 py-2 text-center">
         {row.call ? (
@@ -266,7 +266,7 @@ function ChainRow({
         atm ? "text-amber-400" : "text-foreground",
       )}>
         {atm && <span className="text-[9px] text-amber-400/70 block">ATM</span>}
-        ₹{fmtUsd(row.strike, 0)}
+        {fmtUsd(row.strike, 0)} USDT
       </td>
 
       {/* PUT side */}
@@ -289,10 +289,10 @@ function ChainRow({
         ) : null}
       </td>
       <td className={cn("px-2 py-2 text-left tabular-nums font-semibold text-sm", itm_put ? "text-rose-300" : "text-rose-400/80")}>
-        {row.put ? `₹${fmtUsd(row.put.mark)}` : "—"}
+        {row.put ? `${fmtUsd(row.put.mark)} USDT` : "—"}
       </td>
       <td className="px-2 py-2 text-left tabular-nums text-xs text-muted-foreground hidden xl:table-cell">
-        {row.put ? `₹${fmtUsd(row.put.intrinsic)}` : "—"}
+        {row.put ? `${fmtUsd(row.put.intrinsic)} USDT` : "—"}
       </td>
       <td className="px-2 py-2 text-left tabular-nums text-xs text-muted-foreground hidden xl:table-cell">
         {row.put ? row.put.theta.toFixed(2) : "—"}
@@ -402,7 +402,7 @@ export default function OptionsPage() {
   const closePosition = useMutation({
     mutationFn: (id: number) => post(`/options/positions/${id}/close`, {}),
     onSuccess: (r: any) => {
-      toast.success(`Position closed — Realized PnL: ${r.pnl >= 0 ? "+" : ""}$${fmtUsd(r.pnl)} USDT`);
+      toast.success(`Position closed — Realized PnL: ${r.pnl >= 0 ? "+" : ""}${fmtUsd(r.pnl)} USDT`);
       qc.invalidateQueries({ queryKey: ["options-positions"] });
       qc.invalidateQueries({ queryKey: ["options-history"] });
     },
@@ -452,11 +452,11 @@ export default function OptionsPage() {
 
             {/* Live stats strip */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 lg:min-w-[36rem]">
-              <StatTile label={`${underlying} Spot`} value={spot > 0 ? `₹${fmtUsd(spot, 0)}` : "—"} icon={TrendingUp} tone="amber" />
-              <StatTile label="Open Positions" value={String(positions.length)} sub={`₹${fmtUsd(portfolio.totalMargin, 0)} margin`} icon={Shield} />
+              <StatTile label={`${underlying} Spot`} value={spot > 0 ? `${fmtUsd(spot, 0)} USDT` : "—"} icon={TrendingUp} tone="amber" />
+              <StatTile label="Open Positions" value={String(positions.length)} sub={`${fmtUsd(portfolio.totalMargin, 0)} USDT margin`} icon={Shield} />
               <StatTile
                 label="Unrealized PnL"
-                value={`${portfolio.totalPnl >= 0 ? "+" : ""}₹${fmtUsd(portfolio.totalPnl)}`}
+                value={`${portfolio.totalPnl >= 0 ? "+" : ""}${fmtUsd(portfolio.totalPnl)} USDT`}
                 icon={Activity}
                 tone={portfolio.totalPnl >= 0 ? "success" : "danger"}
               />
@@ -610,7 +610,7 @@ export default function OptionsPage() {
                         <th className="px-2 py-2 text-right hidden xl:table-cell">Intrinsic</th>
                         <th className="px-2 py-2 text-right font-bold text-emerald-300/70">Mark</th>
                         <th className="px-2 py-2 text-center w-24">Action</th>
-                        <th className="px-3 py-2 text-center border-x border-border/40 text-foreground/70">USD</th>
+                        <th className="px-3 py-2 text-center border-x border-border/40 text-foreground/70">USDT Strike</th>
                         <th className="px-2 py-2 text-center w-24">Action</th>
                         <th className="px-2 py-2 text-left font-bold text-rose-300/70">Mark</th>
                         <th className="px-2 py-2 text-left hidden xl:table-cell">Intrinsic</th>
@@ -664,7 +664,7 @@ export default function OptionsPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div className="rounded-xl border border-border bg-card/60 p-3">
                     <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Total Margin</div>
-                    <div className="font-bold text-amber-400">${fmtUsd(portfolio.totalMargin)}</div>
+                    <div className="font-bold text-amber-400">{fmtUsd(portfolio.totalMargin)} USDT</div>
                   </div>
                   <div className="rounded-xl border border-border bg-card/60 p-3">
                     <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Net Δ (Delta)</div>
@@ -713,7 +713,7 @@ export default function OptionsPage() {
                               <td className="px-4 py-3">
                                 <div className="font-mono text-xs font-bold">{p.symbol}</div>
                                 <div className="text-[10px] text-muted-foreground mt-0.5">
-                                  {p.optionType === "call" ? "📈" : "📉"} ${fmtUsd(p.strike, 0)} {p.optionType.toUpperCase()}
+                                  {p.optionType === "call" ? "📈" : "📉"} {fmtUsd(p.strike, 0)} USDT {p.optionType.toUpperCase()}
                                 </div>
                               </td>
                               <td className="px-3 py-3">
@@ -727,8 +727,8 @@ export default function OptionsPage() {
                                 </span>
                               </td>
                               <td className="px-3 py-3 text-right tabular-nums font-medium">{p.qty}</td>
-                              <td className="px-3 py-3 text-right tabular-nums text-muted-foreground">${fmtUsd(p.avgEntryPremium)}</td>
-                              <td className="px-3 py-3 text-right tabular-nums font-semibold">${fmtUsd(p.mark)}</td>
+                              <td className="px-3 py-3 text-right tabular-nums text-muted-foreground">{fmtUsd(p.avgEntryPremium)} USDT</td>
+                              <td className="px-3 py-3 text-right tabular-nums font-semibold">{fmtUsd(p.mark)} USDT</td>
                               <td className="px-3 py-3 text-right tabular-nums text-xs text-muted-foreground hidden lg:table-cell">
                                 <span className="text-sky-400">{p.delta.toFixed(2)}</span>
                                 {" / "}
@@ -737,7 +737,7 @@ export default function OptionsPage() {
                                 <span className="text-violet-400">{p.vega.toFixed(2)}</span>
                               </td>
                               <td className="px-3 py-3 text-right hidden md:table-cell">
-                                <div className="text-xs tabular-nums text-amber-400">${fmtUsd(p.marginLocked, 0)}</div>
+                                <div className="text-xs tabular-nums text-amber-400">{fmtUsd(p.marginLocked, 0)} USDT</div>
                                 <MarginBar margin={p.marginLocked} total={p.marginLocked + p.avgEntryPremium * p.qty * 3} />
                               </td>
                               <td className="px-3 py-3 text-right">
@@ -950,9 +950,9 @@ export default function OptionsPage() {
                             </span>
                           </td>
                           <td className="px-3 py-2.5 text-right tabular-nums">{Number(o.qty).toFixed(2)}</td>
-                          <td className="px-3 py-2.5 text-right tabular-nums">${fmtUsd(Number(o.markPriceAtFill))}</td>
-                          <td className="px-3 py-2.5 text-right tabular-nums font-medium">${fmtUsd(Number(o.premium))}</td>
-                          <td className="px-3 py-2.5 text-right tabular-nums text-muted-foreground text-xs">${fmtUsd(Number(o.fee), 4)}</td>
+                          <td className="px-3 py-2.5 text-right tabular-nums">{fmtUsd(Number(o.markPriceAtFill))} USDT</td>
+                          <td className="px-3 py-2.5 text-right tabular-nums font-medium">{fmtUsd(Number(o.premium))} USDT</td>
+                          <td className="px-3 py-2.5 text-right tabular-nums text-muted-foreground text-xs">{fmtUsd(Number(o.fee), 4)} USDT</td>
                           <td className="px-3 py-2.5 text-center">
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                               {o.status}
@@ -995,15 +995,15 @@ export default function OptionsPage() {
               <div className="grid grid-cols-3 gap-2">
                 <div className="rounded-lg bg-muted/20 border border-border/40 p-2.5 text-center">
                   <div className="text-[9px] uppercase tracking-wider text-muted-foreground mb-1">Spot</div>
-                  <div className="text-xs font-bold tabular-nums">${fmtUsd(ticket.contract.spot, 0)}</div>
+                  <div className="text-xs font-bold tabular-nums">{fmtUsd(ticket.contract.spot, 0)} USDT</div>
                 </div>
                 <div className="rounded-lg bg-muted/20 border border-border/40 p-2.5 text-center">
                   <div className="text-[9px] uppercase tracking-wider text-muted-foreground mb-1">Strike</div>
-                  <div className="text-xs font-bold tabular-nums">${fmtUsd(ticket.contract.strike, 0)}</div>
+                  <div className="text-xs font-bold tabular-nums">{fmtUsd(ticket.contract.strike, 0)} USDT</div>
                 </div>
                 <div className="rounded-lg bg-muted/20 border border-border/40 p-2.5 text-center">
                   <div className="text-[9px] uppercase tracking-wider text-muted-foreground mb-1">Mark Price</div>
-                  <div className="text-xs font-bold tabular-nums text-amber-400">${fmtUsd(ticket.contract.mark)}</div>
+                  <div className="text-xs font-bold tabular-nums text-amber-400">{fmtUsd(ticket.contract.mark)} USDT</div>
                 </div>
               </div>
 
@@ -1019,9 +1019,9 @@ export default function OptionsPage() {
               <div className="flex items-center gap-3 text-xs text-muted-foreground bg-muted/20 rounded-lg px-3 py-2 border border-border/30">
                 <span>IV: <span className="text-foreground font-semibold">{fmtPct(ticket.contract.iv)}</span></span>
                 <span className="text-border">|</span>
-                <span>Intrinsic: <span className="text-foreground font-semibold">${fmtUsd(ticket.contract.intrinsic)}</span></span>
+                <span>Intrinsic: <span className="text-foreground font-semibold">{fmtUsd(ticket.contract.intrinsic)} USDT</span></span>
                 <span className="text-border">|</span>
-                <span>Time val: <span className="text-foreground font-semibold">${fmtUsd(ticket.contract.timeValue)}</span></span>
+                <span>Time val: <span className="text-foreground font-semibold">{fmtUsd(ticket.contract.timeValue)} USDT</span></span>
                 <span className="text-border">|</span>
                 <Clock className="h-3 w-3" />
                 <span className={timeUntil(ticket.contract.expiryAt).urgent ? "text-rose-400 font-semibold" : ""}>
@@ -1069,27 +1069,27 @@ export default function OptionsPage() {
               {/* Cost breakdown */}
               <div className="rounded-lg bg-muted/10 border border-border/30 p-3 space-y-2 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Premium ({qtyNum} × ${fmtUsd(ticket.contract.mark)} × {ticket.contract.contractSize})</span>
-                  <span className="font-semibold tabular-nums">${fmtUsd(ticketPremium)}</span>
+                  <span className="text-muted-foreground">Premium ({qtyNum} × {fmtUsd(ticket.contract.mark)} × {ticket.contract.contractSize})</span>
+                  <span className="font-semibold tabular-nums">{fmtUsd(ticketPremium)} USDT</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Trading fee (0.1%)</span>
-                  <span className="tabular-nums">${fmtUsd(ticketFee, 4)}</span>
+                  <span className="tabular-nums">{fmtUsd(ticketFee, 4)} USDT</span>
                 </div>
                 {ticket.side === "sell" && (
                   <div className="flex justify-between text-amber-400">
                     <span>Margin required</span>
-                    <span className="tabular-nums font-semibold">${fmtUsd(ticketMargin)}</span>
+                    <span className="tabular-nums font-semibold">{fmtUsd(ticketMargin)} USDT</span>
                   </div>
                 )}
                 <div className="border-t border-border/40 pt-2 flex justify-between font-bold">
                   <span>{ticket.side === "buy" ? "Total cost" : "Margin to lock"}</span>
-                  <span className="tabular-nums text-amber-400">${fmtUsd(ticketTotal)}</span>
+                  <span className="tabular-nums text-amber-400">{fmtUsd(ticketTotal)} USDT</span>
                 </div>
                 {qtyNum > 0 && (
                   <div className="flex justify-between text-blue-400">
                     <span className="flex items-center gap-1"><Zap className="h-3 w-3" /> Breakeven at expiry</span>
-                    <span className="tabular-nums font-semibold">${fmtUsd(beBreak, 0)}</span>
+                    <span className="tabular-nums font-semibold">{fmtUsd(beBreak, 0)} USDT</span>
                   </div>
                 )}
               </div>

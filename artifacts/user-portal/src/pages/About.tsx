@@ -23,7 +23,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 const STATS = [
   { label: "Registered users", value: "2.4M+" },
-  { label: "24h trading volume", value: "$1.8B" },
+  { label: "24h trading volume", value: "₹15,000 Cr+" },
   { label: "Supported assets", value: "320+" },
   { label: "Countries served", value: "150+" },
 ];

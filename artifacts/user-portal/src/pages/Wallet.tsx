@@ -108,8 +108,8 @@ function fmtNum(n: number, digits = 4): string {
   return n.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
 }
 function fmtUsd(n: number): string {
-  if (!isFinite(n) || n === 0) return "$0.00";
-  return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (!isFinite(n) || n === 0) return "0.00 USDT";
+  return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " USDT";
 }
 function fmtInr(n: number): string {
   if (!isFinite(n) || n === 0) return "₹0.00";
@@ -377,11 +377,11 @@ export default function Wallet() {
                 </button>
               </div>
               <div className="space-y-1">
-                <div className="text-4xl sm:text-5xl font-bold font-mono tracking-tight" data-testid="text-total-usd">
-                  {mask(fmtUsd(totalUsd))}
+                <div className="text-4xl sm:text-5xl font-bold font-mono tracking-tight" data-testid="text-total-inr">
+                  {mask(fmtInr(totalInr))}
                 </div>
-                <div className="text-base text-muted-foreground font-mono" data-testid="text-total-inr">
-                  ≈ {mask(fmtInr(totalInr))}
+                <div className="text-base text-muted-foreground font-mono" data-testid="text-total-usd">
+                  ≈ {mask(fmtUsd(totalUsd))}
                 </div>
               </div>
               {pnlQ.data && (
@@ -392,7 +392,7 @@ export default function Wallet() {
                     </Badge>
                   ) : (
                     <Badge className="bg-rose-500/15 text-rose-400 border-rose-500/30 gap-1">
-                      <TrendingDown className="h-3 w-3" /> -{fmtUsd(Math.abs(pnlQ.data.pnl || 0))} 24h
+                      <TrendingDown className="h-3 w-3" /> {fmtUsd(Math.abs(pnlQ.data.pnl || 0))} 24h
                     </Badge>
                   )}
                   <span className="text-xs text-muted-foreground">vs yesterday</span>
@@ -666,7 +666,7 @@ function AssetTable({
               <th className="text-right px-4 py-3 font-medium">Free</th>
               <th className="text-right px-4 py-3 font-medium">Locked</th>
               <th className="text-right px-4 py-3 font-medium">Total</th>
-              <th className="text-right px-4 py-3 font-medium">USD Value</th>
+              <th className="text-right px-4 py-3 font-medium">USDT Value</th>
               <th className="text-right px-4 py-3 font-medium">Actions</th>
             </tr>
           </thead>
@@ -682,7 +682,7 @@ function AssetTable({
                         {tab === "ALL" && r.byType
                           ? Object.entries(r.byType).filter(([, v]) => v > 0).map(([k, v]) => `${k}: ${fmtNum(v, 4)}`).join(" · ") || "—"
                           : usdOf(r.currency) > 0
-                            ? "@ " + fmtUsd(usdOf(r.currency))
+                            ? "@ " + usdOf(r.currency).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 6 }) + " USDT"
                             : "—"}
                       </div>
                     </div>
@@ -717,7 +717,7 @@ function AssetTable({
                 <CoinIcon symbol={r.currency} />
                 <div>
                   <div className="font-semibold">{r.currency}</div>
-                  <div className="text-xs text-muted-foreground">{usdOf(r.currency) > 0 ? "@ " + fmtUsd(usdOf(r.currency)) : "—"}</div>
+                  <div className="text-xs text-muted-foreground">{usdOf(r.currency) > 0 ? "@ " + usdOf(r.currency).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 6 }) + " USDT" : "—"}</div>
                 </div>
               </div>
               <div className="text-right">

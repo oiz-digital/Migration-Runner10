@@ -36,7 +36,7 @@ function currencySymbol(pair: string): string {
   if (quote === "USDT" || quote === "USDC" || quote === "USD") return "$";
   if (quote === "BTC") return "₿";
   if (quote === "ETH") return "Ξ";
-  return quote ? `${quote} ` : "$";
+  return quote ? `${quote} ` : "₹";
 }
 
 export default function PredictionsPage() {

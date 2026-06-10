@@ -298,7 +298,7 @@ function CreateBotDialog() {
                   <Input type="number" value={grids} onChange={(e) => setGrids(e.target.value)} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Total USD</Label>
+                  <Label className="text-xs">Total (USDT)</Label>
                   <Input type="number" value={total} onChange={(e) => setTotal(e.target.value)} placeholder="1000" />
                 </div>
               </div>
@@ -374,11 +374,11 @@ function BotDetailDialog({ botId, open, onClose }: { botId: number; open: boolea
                 <span className={t.side === "buy" ? "text-emerald-400 inline-flex items-center gap-1" : "text-rose-400 inline-flex items-center gap-1"}>
                   {t.side === "buy" ? <ArrowDown className="h-3 w-3" /> : <ArrowUp className="h-3 w-3" />} {t.side}
                 </span>
-                <span>${Number(t.price).toFixed(2)}</span>
+                <span>{Number(t.price).toFixed(2)} USDT</span>
                 <span>{Number(t.qty).toFixed(6)}</span>
-                <span>${Number(t.notional).toFixed(2)}</span>
+                <span>{Number(t.notional).toFixed(2)} USDT</span>
                 <span className={`text-right ${Number(t.pnlUsd) >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                  {Number(t.pnlUsd) ? `${Number(t.pnlUsd) >= 0 ? "+" : ""}$${Number(t.pnlUsd).toFixed(2)}` : "—"}
+                  {Number(t.pnlUsd) ? `${Number(t.pnlUsd) >= 0 ? "+" : ""}${Number(t.pnlUsd).toFixed(2)} USDT` : "—"}
                 </span>
               </div>
             ))}

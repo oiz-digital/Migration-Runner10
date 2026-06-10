@@ -53,7 +53,7 @@ interface UserDetail {
 const NETWORKS = ["BEP20", "ERC20", "TRC20", "Polygon", "Arbitrum", "Avalanche", "Solana", "Bitcoin", "Other"];
 
 function fmtUsd(n: number) {
-  return "$" + (n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " USDT";
 }
 
 export default function WalletManager() {
@@ -153,8 +153,8 @@ export default function WalletManager() {
           <PremiumStatCard
             hero
             title="Total User Value"
-            value={stats.totalUsd.toLocaleString("en-US", { maximumFractionDigits: 0 })}
-            prefix="$"
+            value={stats.totalUsd.toLocaleString("en-US", { maximumFractionDigits: 0 }) + " USDT"}
+            prefix=""
             icon={DollarSign}
             loading={usersQ.isLoading}
             hint="Combined portfolio across all users"
@@ -194,8 +194,8 @@ export default function WalletManager() {
                 <PremiumStatCard
                   hero
                   title="Total Portfolio"
-                  value={fmtUsd(userDetail.totalUsdValue).replace("$", "")}
-                  prefix="$"
+                  value={fmtUsd(userDetail.totalUsdValue)}
+                  prefix=""
                   icon={Wallet}
                   hint={`User #${userDetail.user?.id}`}
                 />
