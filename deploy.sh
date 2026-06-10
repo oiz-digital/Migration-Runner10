@@ -14,7 +14,7 @@ echo "==> Fixing permissions..."
 sudo chown -R ubuntu:ubuntu /opt/cryptox/artifacts /opt/cryptox/lib /opt/cryptox/node_modules 2>/dev/null || true
 
 echo "==> Installing dependencies..."
-pnpm install --frozen-lockfile --prefer-offline || pnpm install
+pnpm install --no-frozen-lockfile
 
 echo "==> Building API server..."
 pnpm --filter @workspace/api-server run build

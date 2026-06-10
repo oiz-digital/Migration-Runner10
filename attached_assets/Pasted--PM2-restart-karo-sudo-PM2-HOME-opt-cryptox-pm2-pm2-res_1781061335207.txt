@@ -1,0 +1,99 @@
+ PM2 restart karo
+sudo PM2_HOME=/opt/cryptox/.pm2 pm2 restart all
+
+# Status check
+sudo PM2_HOME=/opt/cryptox/.pm2 pm2 list
+remote: Enumerating objects: 58, done.
+remote: Counting objects: 100% (58/58), done.
+remote: Compressing objects: 100% (3/3), done.
+remote: Total 32 (delta 30), reused 31 (delta 29), pack-reused 0 (from 0)
+Unpacking objects: 100% (32/32), 5.22 KiB | 314.00 KiB/s, done.
+From https://github.com/oiz-digital/Migration-Runner10
+ * branch            main       -> FETCH_HEAD
+   731ba36..c10f7c6  main       -> origin/main
+Updating 731ba36..c10f7c6
+Fast-forward
+ artifacts/admin/src/pages/dashboard.tsx                                     |  6 ++--
+ artifacts/admin/src/pages/futures-positions.tsx                             |  6 ++--
+ artifacts/admin/src/pages/wallet-manager.tsx                                | 10 +++---
+ artifacts/user-portal/src/pages/About.tsx                                   |  2 +-
+ artifacts/user-portal/src/pages/Bots.tsx                                    |  8 ++---
+ artifacts/user-portal/src/pages/CopyTrading.tsx                             |  6 ++--
+ artifacts/user-portal/src/pages/Discover.tsx                                | 14 ++++----
+ artifacts/user-portal/src/pages/Earn.tsx                                    |  2 +-
+ artifacts/user-portal/src/pages/Home.tsx                                    |  4 +--
+ artifacts/user-portal/src/pages/Markets.tsx                                 |  2 +-
+ artifacts/user-portal/src/pages/Options.tsx                                 | 64 ++++++++++++++++++-------------------
+ artifacts/user-portal/src/pages/ProDashboard.tsx                            |  6 ++--
+ artifacts/user-portal/src/pages/Profile.tsx                                 |  6 ++--
+ artifacts/user-portal/src/pages/Wallet.tsx                                  | 20 ++++++------
+ artifacts/user-portal/src/pages/tools/Predictions.tsx                       |  2 +-
+ ...buntu-ip-172-31-11-99-opt-cryptox-cd-opt-cryptox-rm-de_1781055849928.txt | 34 ++++++++++++++++++++
+ deploy.sh                                                                   |  3 ++
+ 17 files changed, 116 insertions(+), 79 deletions(-)
+ create mode 100644 attached_assets/Pasted-ubuntu-ip-172-31-11-99-opt-cryptox-cd-opt-cryptox-rm-de_1781055849928.txt
+Scope: all 13 workspace projects
+✔ The modules directories will be removed and reinstalled from scratch. Proceed? (Y/n) · true
+Recreating /opt/cryptox/node_modules
+ ERR_PNPM_LOCKFILE_CONFIG_MISMATCH  Cannot proceed with the frozen installation. The current "overrides" configuration doesn't match the value found in the lockfile
+
+Update your lockfile using "pnpm install --no-frozen-lockfile"
+
+> @workspace/api-server@0.0.0 build /opt/cryptox/artifacts/api-server
+> node ./build.mjs
+
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'esbuild' imported from /opt/cryptox/artifacts/api-server/build.mjs
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:768:81)
+    at moduleResolve (node:internal/modules/esm/resolve:859:18)
+    at defaultResolve (node:internal/modules/esm/resolve:992:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:691:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:708:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:740:52)
+    at #resolve (node:internal/modules/esm/loader:673:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:593:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:163:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v24.16.0
+/opt/cryptox/artifacts/api-server:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/api-server@0.0.0 build: `node ./build.mjs`
+Exit status 1
+
+> @workspace/admin@0.0.0 build /opt/cryptox/artifacts/admin
+> vite build --config vite.config.ts
+
+sh: 1: vite: not found
+/opt/cryptox/artifacts/admin:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/admin@0.0.0 build: `vite build --config vite.config.ts`
+spawn ENOENT
+
+> @workspace/user-portal@0.0.0 build /opt/cryptox/artifacts/user-portal
+> vite build --config vite.config.ts
+
+sh: 1: vite: not found
+/opt/cryptox/artifacts/user-portal:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/user-portal@0.0.0 build: `vite build --config vite.config.ts`
+spawn ENOENT
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [all](ids: [ 0, 1 ])
+[PM2] [cryptox-api](0) ✓
+[PM2] [cryptox-go](1) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 0  │ cryptox-api        │ fork     │ 35   │ online    │ 0%       │ 0b       │
+│ 1  │ cryptox-go         │ fork     │ 7    │ online    │ 0%       │ 0b       │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 0  │ cryptox-api        │ fork     │ 35   │ online    │ 0%       │ 0b       │
+│ 1  │ cryptox-go         │ fork     │ 7    │ online    │ 0%       │ 0b       │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+ubuntu@ip-172-31-11-99:/opt/cryptox$
