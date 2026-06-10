@@ -65,8 +65,8 @@ export default function ProDashboard() {
   const top = coins.slice(0, 12);
   const movers = [...coins].sort((a, b) => Math.abs(Number(b.change24h)) - Math.abs(Number(a.change24h))).slice(0, 6);
 
-  const equity = summary?.totalEquityUsd ?? 0;
-  const pnl24 = summary?.pnl24hUsd ?? 0;
+  const equity = summary?.totalEquityInr ?? 0;
+  const pnl24 = summary?.pnl24hInr ?? 0;
   const pnlPct = summary?.pnl24hPct ?? 0;
   const runningBots = bots?.items?.filter((b) => b.status === "running").length ?? 0;
   const activeAlerts = alerts?.items?.filter((a) => a.status === "active").length ?? 0;
