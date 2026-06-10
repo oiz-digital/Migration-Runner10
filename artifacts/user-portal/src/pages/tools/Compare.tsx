@@ -225,7 +225,7 @@ function CompareCard({
         <span className={`h-2 w-2 rounded-full ${dotColor}`} />
         <span className="text-sm font-semibold">{symbol}</span>
       </div>
-      <div className="text-3xl font-bold font-mono">${fmt(ticker.lastPrice, dpFor(ticker.lastPrice))}</div>
+      <div className="text-3xl font-bold font-mono">{currencySymbol(symbol)}{fmt(ticker.lastPrice, dpFor(ticker.lastPrice))}</div>
       <div className={`mt-1 text-sm font-semibold inline-flex items-center gap-1 ${positive ? "text-emerald-400" : "text-rose-400"}`}>
         {positive ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
         {positive ? "+" : ""}{ticker.priceChangePercent.toFixed(2)}% (24h)
@@ -233,11 +233,11 @@ function CompareCard({
       <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
         <div>
           <div className="text-muted-foreground">24h High</div>
-          <div className="font-mono font-medium">${fmt(ticker.high, dpFor(ticker.high))}</div>
+          <div className="font-mono font-medium">{currencySymbol(symbol)}{fmt(ticker.high, dpFor(ticker.high))}</div>
         </div>
         <div>
           <div className="text-muted-foreground">24h Low</div>
-          <div className="font-mono font-medium">${fmt(ticker.low, dpFor(ticker.low))}</div>
+          <div className="font-mono font-medium">{currencySymbol(symbol)}{fmt(ticker.low, dpFor(ticker.low))}</div>
         </div>
       </div>
     </div>

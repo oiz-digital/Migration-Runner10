@@ -148,8 +148,8 @@ export default function ConverterPage() {
           )}
           {fromUsd > 0 && (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">{from} → USD</span>
-              <span className="font-mono">${fmt(fromUsd, dpFor(fromUsd))}</span>
+              <span className="text-muted-foreground">{from} → USDT</span>
+              <span className="font-mono">{fmt(fromUsd, dpFor(fromUsd))} USDT</span>
             </div>
           )}
         </div>
