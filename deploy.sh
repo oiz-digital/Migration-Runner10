@@ -29,6 +29,11 @@ echo "==> Pushing DB schema (if changed)..."
 sudo HOME=/root DATABASE_URL="postgresql://zebvix:Tyagi00%40123@localhost:5432/zebvixdb" \
   NODE_ENV=development pnpm --filter @workspace/db run push || true
 
+echo "==> Copying build output to nginx serve paths..."
+sudo mkdir -p /opt/cryptox/dist/user /opt/cryptox/dist/admin
+sudo rsync -a --delete /opt/cryptox/artifacts/user-portal/dist/public/ /opt/cryptox/dist/user/
+sudo rsync -a --delete /opt/cryptox/artifacts/admin/dist/public/ /opt/cryptox/dist/admin/
+
 echo "==> Restarting PM2 processes..."
 sudo PM2_HOME="$PM2_HOME" pm2 restart all
 
