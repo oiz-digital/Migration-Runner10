@@ -1,0 +1,34 @@
+ubuntu@ip-172-31-11-99:/opt/cryptox$ cd /opt/cryptox && rm deploy.sh && git pull origin main && pnpm --filter @workspace/api-server run build && sudo PM2_HOME=/opt/cryptox/.pm2 pm2 restart all
+From https://github.com/oiz-digital/Migration-Runner10
+ * branch            main       -> FETCH_HEAD
+Updating ea357b9..731ba36
+Fast-forward
+ artifacts/api-server/src/lib/price-service.ts                               |   3 +
+ artifacts/api-server/src/routes/portfolio-analytics.ts                      |  19 ++++--
+ artifacts/user-portal/src/pages/PortfolioPro.tsx                            |   7 +--
+ ...rtifacts-api-server-typecheck-tsc-p-tsconfig-json-noEm_1781054924610.txt | 113 ++++++++++++++++++++++++++++++++++++
+ ...untu-ip-172-31-11-99-opt-cryptox-cd-opt-cryptox-Sirf-w_1781055039324.txt |  75 ++++++++++++++++++++++++
+ ...untu-ip-172-31-11-99-opt-cryptox-cd-opt-cryptox-git-pu_1781054822810.txt |  62 ++++++++++++++++++++
+ ...buntu-ip-172-31-11-99-opt-cryptox-cd-opt-cryptox-Admin_1781055090310.txt |  65 +++++++++++++++++++++
+ deploy.sh                                                                   |  34 +++++++++++
+ 8 files changed, 369 insertions(+), 9 deletions(-)
+ create mode 100644 attached_assets/Pasted-artifacts-api-server-typecheck-tsc-p-tsconfig-json-noEm_1781054924610.txt
+ create mode 100644 attached_assets/Pasted-buntu-ip-172-31-11-99-opt-cryptox-cd-opt-cryptox-Sirf-w_1781055039324.txt
+ create mode 100644 attached_assets/Pasted-buntu-ip-172-31-11-99-opt-cryptox-cd-opt-cryptox-git-pu_1781054822810.txt
+ create mode 100644 attached_assets/Pasted-ubuntu-ip-172-31-11-99-opt-cryptox-cd-opt-cryptox-Admin_1781055090310.txt
+ create mode 100644 deploy.sh
+
+> @workspace/api-server@0.0.0 build /opt/cryptox/artifacts/api-server
+> node ./build.mjs
+
+[Error: EACCES: permission denied, unlink '/opt/cryptox/artifacts/api-server/dist/index.mjs'] {
+  errno: -13,
+  code: 'EACCES',
+  syscall: 'unlink',
+  path: '/opt/cryptox/artifacts/api-server/dist/index.mjs'
+}
+/opt/cryptox/artifacts/api-server:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/api-server@0.0.0 build: `node ./build.mjs`
+Exit status 1
+ubuntu@ip-172-31-11-99:/opt/cryptox$
+
