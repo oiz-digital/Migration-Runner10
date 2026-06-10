@@ -3,9 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { get } from "@/lib/api";
 import {
-  LayoutDashboard, TrendingUp, Wallet, Bell, Activity, Star, Zap,
+  LayoutDashboard, TrendingUp, TrendingDown, Wallet, Bell, Activity, Star, Zap,
   AlertTriangle, ArrowUpRight, Flame, Newspaper, BarChart3, Coins,
 } from "lucide-react";
+import { encodeSymbol } from "@/lib/marketSocket";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/premium/PageHeader";
 import { SectionCard } from "@/components/premium/SectionCard";
@@ -95,8 +96,8 @@ export default function ProDashboard() {
         />
         <PremiumStatCard
           title="24h P&L"
-          value={`${pnl24 >= 0 ? "+" : ""}₹${pnl24.toFixed(2)} · ${pnlPct.toFixed(2)}%`}
-          icon={pnl24 >= 0 ? TrendingUp : TrendingUp}
+          value={`${pnl24 >= 0 ? "+₹" : "-₹"}${Math.abs(pnl24).toFixed(2)} · ${pnlPct >= 0 ? "+" : ""}${pnlPct.toFixed(2)}%`}
+          icon={pnl24 >= 0 ? TrendingUp : TrendingDown}
           accent={pnl24 > 0}
         />
         <PremiumStatCard title="Active bots" value={String(runningBots)} icon={Activity} />
@@ -109,7 +110,7 @@ export default function ProDashboard() {
           {/* Top movers */}
           <SectionCard
             title="Top movers (24h)"
-            description="Sabse zyada hile coins."
+            description="Biggest price movers in the last 24 hours."
             actions={<Button asChild variant="ghost" size="sm"><Link href="/markets">All markets <ArrowUpRight className="h-3 w-3 ml-1" /></Link></Button>}
           >
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -119,11 +120,11 @@ export default function ProDashboard() {
                 const ch = Number(c.change24h);
                 const px = Number(c.currentPrice);
                 return (
-                  <Link key={c.symbol} href={`/trade/${c.symbol}USDT`} className="rounded-lg border border-border bg-card/40 p-3 hover:border-primary/40 transition-colors">
+                  <Link key={c.symbol} href={`/trade/${encodeSymbol(c.symbol + "/USDT")}`} className="rounded-lg border border-border bg-card/40 p-3 hover:border-primary/40 transition-colors">
                     <div className="flex items-center justify-between gap-1">
                       <span className="font-bold text-sm">{c.symbol}</span>
                       <span className={`text-[11px] font-mono font-bold inline-flex items-center ${ch >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                        {ch >= 0 ? <TrendingUp className="h-3 w-3 mr-0.5" /> : <TrendingUp className="h-3 w-3 mr-0.5 rotate-180" />}
+                        {ch >= 0 ? <TrendingUp className="h-3 w-3 mr-0.5" /> : <TrendingDown className="h-3 w-3 mr-0.5" />}
                         {ch >= 0 ? "+" : ""}{ch.toFixed(2)}%
                       </span>
                     </div>
@@ -137,7 +138,7 @@ export default function ProDashboard() {
           {/* Watchlist (top 12 by default) */}
           <SectionCard
             title="Top markets"
-            description="Want to pin assets? Watchlist pinning is coming soon."
+            description="Top USDT pairs by volume. Click any row to start trading."
             actions={<Button asChild variant="ghost" size="sm"><Link href="/markets">View all <ArrowUpRight className="h-3 w-3 ml-1" /></Link></Button>}
           >
             <div className="space-y-1">
@@ -147,7 +148,7 @@ export default function ProDashboard() {
                 const ch = Number(c.change24h);
                 const px = Number(c.currentPrice);
                 return (
-                  <Link key={c.symbol} href={`/trade/${c.symbol}USDT`} className="flex items-center justify-between gap-2 px-2 py-1.5 rounded hover:bg-muted/30 transition-colors">
+                  <Link key={c.symbol} href={`/trade/${encodeSymbol(c.symbol + "/USDT")}`} className="flex items-center justify-between gap-2 px-2 py-1.5 rounded hover:bg-muted/30 transition-colors">
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="h-7 w-7 rounded-full bg-amber-500/15 text-amber-400 flex items-center justify-center text-[11px] font-bold flex-shrink-0">
                         {c.symbol[0]}
@@ -206,7 +207,7 @@ export default function ProDashboard() {
           {/* Alerts summary */}
           <SectionCard
             title="Active alerts"
-            actions={<Button asChild variant="ghost" size="sm" className="h-7 text-[11px]"><Link href="/notifications">Manage</Link></Button>}
+            actions={<Button asChild variant="ghost" size="sm" className="h-7 text-[11px]"><Link href="/price-alerts">Manage</Link></Button>}
           >
             {(alerts?.items?.length ?? 0) === 0 ? (
               <div className="text-sm text-muted-foreground text-center py-6">No alerts. Set one!</div>
